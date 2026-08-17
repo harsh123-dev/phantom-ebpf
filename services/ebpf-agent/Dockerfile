@@ -16,7 +16,8 @@ COPY Makefile ./Makefile
 # The x86/vmlinux.h entry in eunomia-bpf/vmlinux is a symlink; raw GitHub
 # serves symlink contents as plain text, so fetch the concrete target instead.
 RUN apt-get update -qq && apt-get install -y curl && \
-    curl -fsSL "https://raw.githubusercontent.com/eunomia-bpf/vmlinux/master/x86/vmlinux_508.h" -o ./include/vmlinux.h
+    curl -fsSL "https://raw.githubusercontent.com/eunomia-bpf/vmlinux/master/x86/vmlinux_508.h" -o ./include/vmlinux.h && \
+    grep -q "^#ifndef __VMLINUX_H" ./include/vmlinux.h
 # Build eBPF objects and user-space loader
 RUN make all
 
