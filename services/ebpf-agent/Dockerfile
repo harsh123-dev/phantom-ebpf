@@ -12,9 +12,11 @@ COPY include/ ./include/
 COPY bpf/     ./bpf/
 COPY cmd/     ./cmd/
 COPY Makefile ./Makefile
-# Download a standard x86_64 vmlinux.h (since /sys/kernel/btf/vmlinux is not accessible inside Docker build)
+# Download a standard x86_64 vmlinux.h (since /sys/kernel/btf/vmlinux is not accessible inside Docker build).
+# The x86/vmlinux.h entry in eunomia-bpf/vmlinux is a symlink; raw GitHub
+# serves symlink contents as plain text, so fetch the concrete target instead.
 RUN apt-get update -qq && apt-get install -y curl && \
-    curl -sL "https://raw.githubusercontent.com/eunomia-bpf/vmlinux/master/x86/vmlinux.h" -o ./include/vmlinux.h
+    curl -fsSL "https://raw.githubusercontent.com/eunomia-bpf/vmlinux/master/x86/vmlinux_508.h" -o ./include/vmlinux.h
 # Build eBPF objects and user-space loader
 RUN make all
 
