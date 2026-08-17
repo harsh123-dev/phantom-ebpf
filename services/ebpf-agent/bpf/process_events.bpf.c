@@ -83,6 +83,11 @@ struct {
     __type(value, struct priv_enter_args);
 } priv_args_stash SEC(".maps");
 
+static __always_inline __u64 phantom_cap_to_u64(kernel_cap_t cap)
+{
+    return ((__u64)cap.cap[1] << 32) | cap.cap[0];
+}
+
 /*
  * Tracepoint context for sys_exit_setuid / sys_exit_setresuid.
  * Only the return value (0=success, -errno=failure) is in the exit context.
@@ -111,11 +116,11 @@ static __always_inline void phantom_stash_current_cred(void)
     stash->prev_uid = BPF_CORE_READ(cred, euid.val);
     stash->prev_gid = BPF_CORE_READ(cred, egid.val);
 
-    /* # VERIFY: kernel_cap_t has .val[2] on 64-bit kernels. We use the
-     * first u64 word of the effective capability set as an approximation.
+    /* # VERIFY: kernel_cap_t has cap[2] on 64-bit kernels. We combine both
+     * u32 words of the effective capability set into the ABI's u64 field.
      * CO-RE will resolve this correctly if the BTF includes kernel_cap_t. */
     kernel_cap_t eff = BPF_CORE_READ(cred, cap_effective);
-    stash->cap_before = eff.val[0];
+    stash->cap_before = phantom_cap_to_u64(eff);
 }
 
 /* sys_enter_setuid context. */
@@ -176,7 +181,7 @@ phantom_emit_privilege_event(long ret, __u32 transition_kind)
         evt->new_uid = BPF_CORE_READ(cred, euid.val);
         evt->new_gid = BPF_CORE_READ(cred, egid.val);
         kernel_cap_t eff = BPF_CORE_READ(cred, cap_effective);
-        evt->capability_effective_after = eff.val[0];
+        evt->capability_effective_after = phantom_cap_to_u64(eff);
     } else {
         evt->new_uid = 0;
         evt->new_gid = 0;
