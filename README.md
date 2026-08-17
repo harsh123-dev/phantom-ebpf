@@ -53,10 +53,7 @@ make lint typecheck
 make test
 ```
 
-## Reproducibility
 
-See `docs/` for immutable Codex task handoff documents that serve as the authoritative
-design record for all architectural and algorithmic decisions.
 
 ## License
 
