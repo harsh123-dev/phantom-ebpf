@@ -14,7 +14,7 @@ COPY cmd/     ./cmd/
 COPY Makefile ./Makefile
 # Download a standard x86_64 vmlinux.h (since /sys/kernel/btf/vmlinux is not accessible inside Docker build)
 RUN apt-get update -qq && apt-get install -y curl && \
-    curl -sL "https://raw.githubusercontent.com/libbpf/libbpf-bootstrap/master/src/vmlinux.h" -o ./include/vmlinux.h
+    curl -sL "https://raw.githubusercontent.com/eunomia-bpf/vmlinux/master/x86/vmlinux.h" -o ./include/vmlinux.h
 # Build eBPF objects and user-space loader
 RUN make all
 
