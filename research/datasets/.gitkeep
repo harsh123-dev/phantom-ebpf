@@ -1,0 +1,3 @@
+# Research datasets directory.
+# Dataset manifests, provenance records, and non-secret fixtures.
+# Actual dataset files (CSV, Parquet) are gitignored.

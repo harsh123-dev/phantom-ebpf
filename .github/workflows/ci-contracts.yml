@@ -1,0 +1,30 @@
+name: Contract Compatibility
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate-contracts:
+    name: Validate JSON Schema and API/Event ABI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install phantom-core
+        run: pip install -e ./libs/phantom-core[dev]
+
+      - name: Validate JSON Schema files
+        run: python -m jsonschema --check-metaschema services/contracts/http/*.json services/contracts/events/*.json
+
+      - name: Validate Pydantic/OpenAPI compatibility
+        run: python -m pytest libs/phantom-core/tests/test_schema_compat.py -v
+
+      - name: Check event ABI versioning
+        run: python -m pytest services/ebpf-agent/tests/test_abi.py -v

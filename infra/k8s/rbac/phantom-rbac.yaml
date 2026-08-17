@@ -1,0 +1,130 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: phantom-node-agent
+  namespace: phantom
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: phantom-node-agent-role
+rules:
+  # Required for: mapping cgroup IDs to pod identity.
+  # The agent supplies fieldSelector=spec.nodeName=${NODE_NAME} when listing
+  # and watching pods. Kubernetes RBAC PolicyRules cannot enforce field selectors.
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  # Required for: node metadata in event enrichment.
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: phantom-node-agent-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: phantom-node-agent-role
+subjects:
+  - kind: ServiceAccount
+    name: phantom-node-agent
+    namespace: phantom
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: phantom-api-gateway
+  namespace: phantom
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: phantom-api-gateway-role
+  namespace: phantom
+rules:
+  # Required for: runtime configuration loading.
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["phantom-config"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: phantom-api-gateway-binding
+  namespace: phantom
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: phantom-api-gateway-role
+subjects:
+  - kind: ServiceAccount
+    name: phantom-api-gateway
+    namespace: phantom
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: phantom-causal-engine
+  namespace: phantom
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: phantom-causal-engine-role
+  namespace: phantom
+rules:
+  # Required for: runtime configuration loading.
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["phantom-config"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: phantom-causal-engine-binding
+  namespace: phantom
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: phantom-causal-engine-role
+subjects:
+  - kind: ServiceAccount
+    name: phantom-causal-engine
+    namespace: phantom
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: phantom-sbom-service
+  namespace: phantom
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: phantom-sbom-service-role
+  namespace: phantom
+rules:
+  # Required for: runtime configuration loading.
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["phantom-config"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: phantom-sbom-binding
+  namespace: phantom
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: phantom-sbom-service-role
+subjects:
+  - kind: ServiceAccount
+    name: phantom-sbom-service
+    namespace: phantom

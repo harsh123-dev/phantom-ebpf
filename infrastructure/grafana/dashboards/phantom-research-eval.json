@@ -1,0 +1,349 @@
+{
+  "uid": "phantom-research-eval",
+  "title": "PHANTOM Research Evaluation Metrics",
+  "tags": [
+    "phantom",
+    "research",
+    "evaluation",
+    "paper"
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "version": 1,
+  "timezone": "browser",
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Data Source",
+        "current": {},
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 100,
+      "title": "Row 1 — Detection Performance",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 1,
+      "title": "True Positive Rate over Experiment Time",
+      "description": "Cumulative drift events with resolved identity status over experiment window.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "phantom_drift_events_total{identity_status=\"resolved\"}",
+          "legendFormat": "{{event_type}} — True Positive",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "False Positive Rate (benign windows)",
+      "description": "Rate of drift events detected during benign windows (FPR evaluation).",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 1,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "rate(phantom_drift_events_total[5m])",
+          "legendFormat": "{{event_type}} — FPR",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Mean Time to Detection (MTTD)",
+      "description": "Median (p50) agent event lag in seconds used as a proxy for Mean Time to Detection (MTTD).",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 1,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (event_type, le)(rate(phantom_agent_event_lag_seconds_bucket[5m])))",
+          "legendFormat": "{{event_type}} p50 (MTTD)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 200,
+      "title": "Row 2 — Causal Quality",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 4,
+      "title": "Attribution Confidence Distribution",
+      "description": "Heatmap distribution of causal attribution confidence bands, supporting research explainability claims.",
+      "type": "heatmap",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum by (confidence_band)(phantom_causal_attribution_confidence_bucket)",
+          "legendFormat": "{{confidence_band}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Refutation Pass Rate",
+      "description": "Percentage of causal refutation validation tests that passed.",
+      "type": "gauge",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 9,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum(phantom_causal_refutations_total{result=\"pass\"}) / sum(phantom_causal_refutations_total) * 100",
+          "legendFormat": "Pass Rate %",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70.0
+              },
+              {
+                "color": "green",
+                "value": 90.0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "title": "Not-Identifiable Rate",
+      "description": "Percentage of causal attribution jobs returning not_identifiable, documenting when causal claims are appropriately withheld.",
+      "type": "gauge",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 9,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum(phantom_causal_jobs_total{status=\"not_identifiable\"}) / sum(phantom_causal_jobs_total) * 100",
+          "legendFormat": "Not-Identifiable %",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 20.0
+              },
+              {
+                "color": "red",
+                "value": 50.0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 300,
+      "title": "Row 3 — Overhead (paper Table X)",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 7,
+      "title": "eBPF Overhead (CPU) per Node",
+      "description": "Per-second eBPF event capture rate per node to correlate with host CPU overhead during experiments.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum by (node)(rate(phantom_ebpf_events_captured_total[1m]))",
+          "legendFormat": "{{node}} Event Rate (Overhead proxy)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "PCEPS Feature Completeness",
+      "description": "Distribution of PCEPS feature vector completeness ratios during experiments.",
+      "type": "heatmap",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 17,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum by (le)(phantom_pceps_feature_completeness_bucket)",
+          "legendFormat": "{{le}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Event Loss During Experiments",
+      "description": "Per-second rate of ring buffer reserve failures (event loss confound reported in paper Table X).",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 17,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "rate(phantom_ebpf_ringbuf_reserve_failures_total[1m])",
+          "legendFormat": "Ring Buffer Drop Rate (/sec)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.0001
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    }
+  ]
+}

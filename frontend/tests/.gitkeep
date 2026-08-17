@@ -1,0 +1,5 @@
+/**
+ * @fileoverview Frontend unit and end-to-end tests.
+ *
+ * Uses Vitest for unit tests and Playwright for end-to-end tests.
+ */

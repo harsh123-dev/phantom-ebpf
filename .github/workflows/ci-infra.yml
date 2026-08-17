@@ -1,0 +1,50 @@
+name: Infrastructure Validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  terraform-validate:
+    name: Terraform format, validate, and plan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive infra/terraform/
+
+      - name: Terraform validate
+        run: |
+          for env_dir in infra/terraform/environments/*/; do
+            echo "Validating: $env_dir"
+            terraform -chdir="$env_dir" init -backend=false
+            terraform -chdir="$env_dir" validate
+          done
+
+  helm-validate:
+    name: Helm template and static manifest validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Helm template lint
+        run: |
+          for chart_dir in infra/helm/*/; do
+            echo "Linting: $chart_dir"
+            helm lint "$chart_dir" || true
+          done
+
+      - name: Validate raw k8s manifests
+        run: |
+          if command -v kubectl &>/dev/null; then
+            kubectl apply --dry-run=client -f infra/k8s/policies/ || true
+            kubectl apply --dry-run=client -f infra/k8s/rbac/ || true
+          fi

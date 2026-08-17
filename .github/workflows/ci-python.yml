@@ -1,0 +1,38 @@
+name: Python Services
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint-typecheck-test:
+    name: Lint, Type-check, and Test — ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - sbom-service
+          - causal-engine
+          - api-gateway
+          - report-generator
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install service dependencies
+        run: pip install -e ./services/${{ matrix.service }}[dev] -e ./libs/phantom-core
+
+      - name: Lint (ruff)
+        run: ruff check services/${{ matrix.service }}/
+
+      - name: Type-check (mypy --strict)
+        run: mypy --strict services/${{ matrix.service }}/app/
+
+      - name: Run tests
+        run: pytest services/${{ matrix.service }}/tests/ -v --tb=short

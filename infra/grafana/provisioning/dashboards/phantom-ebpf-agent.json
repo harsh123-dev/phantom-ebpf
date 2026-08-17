@@ -1,0 +1,371 @@
+{
+  "uid": "phantom-ebpf-agent",
+  "title": "PHANTOM eBPF Agent Health",
+  "tags": [
+    "phantom",
+    "ebpf",
+    "agent",
+    "health"
+  ],
+  "refresh": "15s",
+  "schemaVersion": 38,
+  "version": 1,
+  "timezone": "browser",
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Data Source",
+        "current": {},
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 100,
+      "title": "Row 1 — Per-Node Collection",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 1,
+      "title": "Events per Node",
+      "description": "Per-second rate of eBPF events captured broken down by Kubernetes node.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum by (node)(rate(phantom_ebpf_events_captured_total[1m]))",
+          "legendFormat": "{{node}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Ring Buffer Reserve Failures by Node",
+      "description": "Rate of failed eBPF ring buffer reservations per second by Kubernetes node.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 1,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum by (node)(rate(phantom_ebpf_ringbuf_reserve_failures_total[1m]))",
+          "legendFormat": "{{node}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.0001
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "Agent Event Queue Depth",
+      "description": "Current number of events waiting in the agent transport queue per node.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 1,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "phantom_agent_event_queue_depth",
+          "legendFormat": "{{node}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 200,
+      "title": "Row 2 — Event Transport",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 4,
+      "title": "Agent Submission Success Rate by Node",
+      "description": "Percentage of events successfully accepted by downstream sinks per node.",
+      "type": "gauge",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum by (node)(rate(phantom_agent_events_submitted_total{result=\"accepted\"}[5m])) / sum by (node)(rate(phantom_agent_events_submitted_total[5m])) * 100",
+          "legendFormat": "{{node}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 90.0
+              },
+              {
+                "color": "green",
+                "value": 99.0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "title": "Event Lag P99 by Event Type",
+      "description": "99th percentile time lag in seconds between event occurrence in eBPF and agent submission.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 9,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum by (event_type, le)(rate(phantom_agent_event_lag_seconds_bucket[5m])))",
+          "legendFormat": "{{event_type}} p99",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "title": "SBOM Verification Status",
+      "description": "Breakdown of SBOM verification results (verified vs failed).",
+      "type": "piechart",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 9,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum by (result)(phantom_sbom_verification_total)",
+          "legendFormat": "{{result}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 300,
+      "title": "Row 3 — Worker Pipelines",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 7,
+      "title": "Redis Stream Lag by Stream",
+      "description": "Lag in message count for Redis stream consumer groups. Alert threshold at >1000 unread messages.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "phantom_redis_stream_lag",
+          "legendFormat": "{{stream}} / {{consumer_group}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1000
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 8,
+      "title": "BDG Update Duration P95",
+      "description": "95th percentile duration in seconds to update or construct the Behavioral Dependency Graph.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 17,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (mutation_trigger, le)(rate(phantom_bdg_update_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{mutation_trigger}} p95",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 9,
+      "title": "BDG Snapshot Age",
+      "description": "Age in seconds of the current active Behavioral Dependency Graph snapshot.",
+      "type": "gauge",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 17,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "phantom_bdg_snapshot_age_seconds",
+          "legendFormat": "Age (seconds)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 300
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    }
+  ]
+}

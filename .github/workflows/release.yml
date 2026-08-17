@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  build-sign-publish:
+    name: Build, sign, and publish images and versioned contract artifacts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      id-token: write  # Required for cosign keyless signing
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Build and push service images
+        run: |
+          for service in sbom-service causal-engine api-gateway report-generator; do
+            IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/phantom-${service}:${{ github.ref_name }}"
+            docker buildx build \
+              --platform linux/amd64,linux/arm64 \
+              --push \
+              -t "$IMAGE" \
+              services/$service/
+          done
+
+      - name: Sign images with cosign (keyless)
+        run: |
+          for service in sbom-service causal-engine api-gateway report-generator; do
+            IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/phantom-${service}:${{ github.ref_name }}"
+            cosign sign --yes "$IMAGE"
+          done
+
+      - name: Publish versioned contract artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: contracts-${{ github.ref_name }}
+          path: services/contracts/

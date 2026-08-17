@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://phantom.research/contracts/events/v1/live_drift_event.json",
+  "title": "LiveDriftEvent",
+  "description": "Canonical JSON Schema for WebSocket server-sent LiveDriftEvent messages.",
+  "type": "object",
+  "$comment": "Stub — full schema will be generated from the Pydantic model in phantom-core."
+}

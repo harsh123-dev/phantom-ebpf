@@ -1,0 +1,92 @@
+{
+  "run_id": "20260808T143614Z_dep-confusion-001_rep3",
+  "attack_id": "dep-confusion-001",
+  "attack_family": "dependency_confusion",
+  "repetition": 3,
+  "namespace": "phantom-eval",
+  "pod_name": "dry-run-pod",
+  "ground_truth_label": 1,
+  "injection_timestamp": "2026-08-08T14:36:45.455274+00:00",
+  "first_phantom_detection_timestamp": null,
+  "mttd_s": null,
+  "is_true_positive": false,
+  "phases": [
+    {
+      "name": "baseline",
+      "start_time": "2026-08-08T14:36:14.114923+00:00",
+      "end_time": "2026-08-08T14:36:45.455012+00:00",
+      "duration_s": 31.340089,
+      "notes": ""
+    },
+    {
+      "name": "inject",
+      "start_time": "2026-08-08T14:36:45.455179+00:00",
+      "end_time": "2026-08-08T14:36:45.455281+00:00",
+      "duration_s": 0.000102,
+      "notes": "inject_ok=True"
+    },
+    {
+      "name": "attack",
+      "start_time": "2026-08-08T14:36:45.455361+00:00",
+      "end_time": "2026-08-08T14:37:19.567675+00:00",
+      "duration_s": 34.112314,
+      "notes": ""
+    },
+    {
+      "name": "recover",
+      "start_time": "2026-08-08T14:37:19.567772+00:00",
+      "end_time": "2026-08-08T14:37:19.567836+00:00",
+      "duration_s": 6.4e-05,
+      "notes": "recover_ok=True"
+    },
+    {
+      "name": "post_recovery",
+      "start_time": "2026-08-08T14:37:19.567898+00:00",
+      "end_time": "2026-08-08T14:37:31.278476+00:00",
+      "duration_s": 11.710578,
+      "notes": ""
+    }
+  ],
+  "phantom_detections": [],
+  "falco_detections": [],
+  "metrics_snapshots": [
+    {
+      "timestamp": "2026-08-08T14:36:14.114974+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "baseline"
+    },
+    {
+      "timestamp": "2026-08-08T14:37:18.111552+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "attack"
+    },
+    {
+      "timestamp": "2026-08-08T14:37:29.987681+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "post_recovery"
+    }
+  ],
+  "scenario_label": {
+    "attack_id": "dep-confusion-001",
+    "attack_family": "dependency_confusion",
+    "target_service": "emailservice",
+    "target_purl": "pkg:pypi/acme-email-templates@9.9.9",
+    "clean_purl": "pkg:pypi/acme-email-templates@0.9.4",
+    "label": 1,
+    "injection_time_offset_s": 0.0,
+    "expected_changes": [
+      "unexpected_process_spawn",
+      "unexpected_network_connect",
+      "unexpected_file_access"
+    ],
+    "detection_window_s": 180.0,
+    "control_endpoint": "phantom-sink.phantom-eval.svc.cluster.local:4445"
+  },
+  "error": ""
+}

@@ -1,0 +1,3 @@
+# PHANTOM Helm chart — phantom-platform
+# Coordinated platform chart for all PHANTOM services.
+# This directory is intentionally empty until the Helm implementation task is approved.

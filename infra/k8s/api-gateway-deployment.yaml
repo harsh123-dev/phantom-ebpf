@@ -1,0 +1,332 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phantom-api-gateway
+  namespace: phantom
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: phantom-api-gateway
+  template:
+    metadata:
+      labels:
+        app: phantom-api-gateway
+    spec:
+      serviceAccountName: phantom-api-gateway
+      containers:
+        - name: api-gateway
+          image: ACCOUNT.dkr.ecr.REGION.amazonaws.com/phantom/api-gateway:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-api-gateway-secret
+                  key: database_url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-api-gateway-secret
+                  key: redis_url
+            - name: PHANTOM_JWT_ISSUER
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-api-gateway-secret
+                  key: jwt_issuer
+            - name: PHANTOM_JWT_AUDIENCE
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-api-gateway-secret
+                  key: jwt_audience
+            - name: PHANTOM_JWKS_URI
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-api-gateway-secret
+                  key: jwks_uri
+            - name: SBOM_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: sbom_service_url
+            - name: CAUSAL_ENGINE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: causal_engine_url
+            - name: REPORT_GENERATOR_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: report_generator_url
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: log_level
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phantom-api-gateway
+  namespace: phantom
+spec:
+  type: ClusterIP
+  selector:
+    app: phantom-api-gateway
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: phantom-api-gateway
+  namespace: phantom
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: phantom-api-gateway
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phantom-causal-engine
+  namespace: phantom
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phantom-causal-engine
+  template:
+    metadata:
+      labels:
+        app: phantom-causal-engine
+    spec:
+      serviceAccountName: phantom-causal-engine
+      containers:
+        - name: causal-engine
+          image: ACCOUNT.dkr.ecr.REGION.amazonaws.com/phantom/causal-engine:latest
+          imagePullPolicy: Always
+          ports:
+            - name: health
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-causal-engine-secret
+                  key: database_url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-causal-engine-secret
+                  key: redis_url
+            - name: HEALTH_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: health_port
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: log_level
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2000m"
+              memory: "4Gi"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phantom-sbom-service
+  namespace: phantom
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: phantom-sbom-service
+  template:
+    metadata:
+      labels:
+        app: phantom-sbom-service
+    spec:
+      serviceAccountName: phantom-sbom-service
+      containers:
+        - name: sbom-service
+          image: ACCOUNT.dkr.ecr.REGION.amazonaws.com/phantom/sbom-service:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: SBOM_SERVICE_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-sbom-service-secret
+                  key: database_url
+            - name: SBOM_SERVICE_S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-sbom-service-secret
+                  key: s3_bucket
+            - name: SBOM_SERVICE_S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-sbom-service-secret
+                  key: s3_access_key_id
+            - name: SBOM_SERVICE_S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-sbom-service-secret
+                  key: s3_secret_access_key
+            - name: SBOM_SERVICE_S3_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-sbom-service-secret
+                  key: s3_region
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: log_level
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phantom-report-generator
+  namespace: phantom
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phantom-report-generator
+  template:
+    metadata:
+      labels:
+        app: phantom-report-generator
+    spec:
+      serviceAccountName: default
+      containers:
+        - name: report-generator
+          image: ACCOUNT.dkr.ecr.REGION.amazonaws.com/phantom/report-generator:latest
+          imagePullPolicy: Always
+          ports:
+            - name: health
+              containerPort: 8082
+              protocol: TCP
+          env:
+            - name: POSTGRES_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-report-generator-secret
+                  key: database_url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-report-generator-secret
+                  key: redis_url
+            - name: REPORT_S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-report-generator-secret
+                  key: s3_bucket
+            - name: AWS_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-report-generator-secret
+                  key: aws_region
+            - name: REPORT_STORE_BACKEND
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: report_store_backend
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: log_level
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3

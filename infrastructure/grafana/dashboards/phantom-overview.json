@@ -1,0 +1,458 @@
+{
+  "uid": "phantom-overview",
+  "title": "PHANTOM Platform Overview",
+  "tags": [
+    "phantom",
+    "overview",
+    "platform"
+  ],
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "schemaVersion": 38,
+  "version": 1,
+  "timezone": "browser",
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Data Source",
+        "current": {},
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 100,
+      "title": "Row 1 — Detection",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 1,
+      "title": "Drift Events / min",
+      "description": "Rate of runtime drift events detected per minute, broken down by event type and severity.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "rate(phantom_drift_events_total[5m]) * 60",
+          "legendFormat": "{{event_type}} — {{severity}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Detection by Identity Status",
+      "description": "Shows how much evidence is ambiguous vs resolved.",
+      "type": "piechart",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 1,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum by (identity_status)(phantom_drift_events_total)",
+          "legendFormat": "{{identity_status}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Active Contracts",
+      "description": "Total number of active behavioral contracts with verified verification status.",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 1,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum(phantom_contract_active_total{verification_status=\"verified\"})",
+          "legendFormat": "Active Verified Contracts",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 200,
+      "title": "Row 2 — Causal Attribution",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 4,
+      "title": "Attribution Jobs",
+      "description": "Rate of causal attribution jobs executed per second by status and estimator.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "rate(phantom_causal_jobs_total[5m])",
+          "legendFormat": "{{status}} — {{estimator}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Attribution Success Rate",
+      "description": "Percentage of causal attribution jobs completing successfully over the last 1 hour.",
+      "type": "gauge",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 9,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "rate(phantom_causal_jobs_total{status=\"completed\"}[1h]) / rate(phantom_causal_jobs_total[1h]) * 100",
+          "legendFormat": "Success %",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 40.0001
+              },
+              {
+                "color": "green",
+                "value": 70.0001
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "title": "Attribution Confidence Distribution",
+      "description": "Heatmap distribution of causal attribution confidence scores by confidence band.",
+      "type": "heatmap",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 9,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum by (confidence_band)(phantom_causal_attribution_confidence_bucket)",
+          "legendFormat": "{{confidence_band}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 300,
+      "title": "Row 3 — Collection Health",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 7,
+      "title": "Event Collection Rate",
+      "description": "Per-second rate of eBPF kernel events captured broken down by event type.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "rate(phantom_ebpf_events_captured_total[5m])",
+          "legendFormat": "{{event_type}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Ring Buffer Loss Rate",
+      "description": "Percentage of ring buffer reserve failures relative to total events attempted. >1% is concerning.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 17,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "rate(phantom_ebpf_ringbuf_reserve_failures_total[5m]) / (rate(phantom_ebpf_events_captured_total[5m]) + rate(phantom_ebpf_ringbuf_reserve_failures_total[5m])) * 100",
+          "legendFormat": "Loss Rate %",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1.0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 9,
+      "title": "Identity Resolution Status",
+      "description": "Shows resolved vs ambiguous vs missing vs stale identity resolution attempts.",
+      "type": "bargauge",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 17,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum by (status)(phantom_identity_resolution_total)",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 400,
+      "title": "Row 4 — API Health",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 10,
+      "title": "API Request Rate",
+      "description": "Total HTTP requests handled by the API Gateway per second by route and status code.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum by (route, status_code)(rate(phantom_api_requests_total[5m]))",
+          "legendFormat": "{{route}} — {{status_code}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "API P95 Latency",
+      "description": "95th percentile latency of HTTP API requests in seconds by route.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 25,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (route, le)(rate(phantom_api_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{route}} p95",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 12,
+      "title": "API Error Rate",
+      "description": "Percentage of 5xx HTTP server error responses.",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 25,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(phantom_api_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(phantom_api_requests_total[5m])) * 100",
+          "legendFormat": "Error Rate %",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 5.0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    }
+  ]
+}

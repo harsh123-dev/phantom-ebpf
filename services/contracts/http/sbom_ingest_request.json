@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://phantom.research/contracts/http/v1/sbom_ingest_request.json",
+  "title": "SbomIngestRequest",
+  "description": "Canonical JSON Schema for POST /api/v1/sboms request body.",
+  "type": "object",
+  "$comment": "Stub — full schema will be generated from the Pydantic model in phantom-core."
+}

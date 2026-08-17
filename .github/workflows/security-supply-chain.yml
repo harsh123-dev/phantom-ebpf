@@ -1,0 +1,41 @@
+name: Supply Chain Security
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+jobs:
+  sbom-scan-sign:
+    name: Generate SBOMs, scan dependencies, sign artifacts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # Required for cosign keyless signing
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Generate SBOMs for Python services
+        run: |
+          for service in sbom-service causal-engine api-gateway report-generator; do
+            syft dir:services/$service -o cyclonedx-json > services/$service/sbom.cyclonedx.json
+          done
+
+      - name: Scan dependencies (Grype)
+        uses: anchore/scan-action@v4
+        with:
+          path: "."
+          fail-build: false
+
+      - name: Sign release images with cosign (release only)
+        if: github.event_name == 'release'
+        run: |
+          echo "Signing images on release — implement in release.yml"

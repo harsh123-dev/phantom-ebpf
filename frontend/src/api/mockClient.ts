@@ -1,0 +1,62 @@
+export const MOCK_BDG_SUBGRAPH = {
+  snapshot_id: 'snap-001',
+  truncated: false,
+  query_hash: 'sha256:' + 'a'.repeat(64),
+  nodes: [
+    {
+      node_id: 'node-001',
+      node_type: 'workload' as const,
+      label: 'online-boutique',
+      attributes: { namespace: 'default', causal_tier: 0 },
+      first_seen_at: new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
+      confidence: 0.95,
+    },
+    {
+      node_id: 'node-002',
+      node_type: 'purl' as const,
+      label: 'pkg:pypi/requests@2.31.0',
+      attributes: { causal_tier: 1 },
+      first_seen_at: new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
+      confidence: 0.88,
+    },
+    {
+      node_id: 'node-003',
+      node_type: 'drift_event' as const,
+      label: 'Contract Violation',
+      attributes: { 
+        causal_tier: 5,
+        violation_types: ['unexpected_network_connect'],
+        severity: 'high'
+      },
+      first_seen_at: new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
+      confidence: 0.72,
+    },
+  ],
+  edges: [
+    {
+      edge_id: 'edge-001',
+      source_node_id: 'node-001',
+      target_node_id: 'node-002',
+      edge_type: 'loads' as const,
+      attributes: {},
+      first_seen_at: new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
+      observation_count: 42,
+      confidence: 0.9,
+    },
+    {
+      edge_id: 'edge-002',
+      source_node_id: 'node-002',
+      target_node_id: 'node-003',
+      edge_type: 'violates' as const,
+      attributes: {},
+      first_seen_at: new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
+      observation_count: 3,
+      confidence: 0.85,
+    },
+  ],
+}

@@ -1,0 +1,114 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.so
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+htmlcov/
+
+# Type checking / linting
+.mypy_cache/
+.ruff_cache/
+
+# Environment / secrets
+.env
+*.env.local
+
+# Docker
+.dockerignore
+
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.next/
+*.tsbuildinfo
+
+# Terraform
+infra/terraform/.terraform/
+infra/terraform/**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+infra/terraform/**/.terraform.lock.hcl
+
+# Build artefacts / eBPF
+services/ebpf-agent/**/*.o
+services/ebpf-agent/**/*.skel.h
+services/ebpf-agent/cmd/phantom-agent
+
+# Research / notebooks
+research/notebooks/.ipynb_checkpoints/
+research/datasets/*.csv
+research/datasets/*.parquet
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kubernetes credentials — NEVER commit these
+kubeconfig
+*.kubeconfig
+.kube/
+
+# Research output (large files, not for repo)
+research/datasets/raw/
+research/datasets/phantom-v1/
+research/evaluation/results/
+research/evaluation/oracles/
+
+# AWS / cloud credentials
+*.pem
+*.key
+aws-credentials

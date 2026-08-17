@@ -1,0 +1,34 @@
+# PHANTOM Prometheus configuration — local development
+#
+# In production this is managed by the Helm observability chart.
+# Scrape targets here point to host.docker.internal because PHANTOM
+# services run on the host during development.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "phantom-api-gateway"
+    static_configs:
+      - targets: ["host.docker.internal:8080"]
+        labels:
+          service: "api-gateway"
+
+  - job_name: "phantom-sbom-service"
+    static_configs:
+      - targets: ["host.docker.internal:8000"]
+        labels:
+          service: "sbom-service"
+
+  - job_name: "phantom-causal-engine"
+    static_configs:
+      - targets: ["host.docker.internal:8001"]
+        labels:
+          service: "causal-engine"
+
+  - job_name: "phantom-report-generator"
+    static_configs:
+      - targets: ["host.docker.internal:8002"]
+        labels:
+          service: "report-generator"

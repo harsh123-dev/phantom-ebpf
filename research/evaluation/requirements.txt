@@ -1,0 +1,29 @@
+# research/evaluation/requirements.txt
+# Dependencies for the PHANTOM evaluation framework.
+# Install with: pip install -r research/evaluation/requirements.txt
+
+# HTTP client for PHANTOM API polling and Prometheus queries.
+httpx>=0.27.0
+
+# YAML serialization for oracle manifests.
+PyYAML>=6.0.2
+
+# Python packaging utilities (for building malicious wheel).
+setuptools>=70.0.0
+wheel>=0.43.0
+
+# Kubernetes Python client (optional; kubectl CLI is used directly in most places).
+# kubernetes>=29.0.0
+
+# Prometheus client (for writing evaluation metrics, not for querying).
+prometheus-client>=0.20.0
+
+# Parquet dataset packaging (used by dataset_packager.py in task 8B).
+pyarrow>=16.0.0
+pandas>=2.2.0
+
+# scikit-learn for Isolation Forest baseline.
+scikit-learn>=1.5.0
+
+# Structured logging.
+structlog>=24.1.0

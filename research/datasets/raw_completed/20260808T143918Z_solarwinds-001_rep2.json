@@ -1,0 +1,92 @@
+{
+  "run_id": "20260808T143918Z_solarwinds-001_rep2",
+  "attack_id": "solarwinds-001",
+  "attack_family": "build_pipeline_tampering",
+  "repetition": 2,
+  "namespace": "phantom-eval",
+  "pod_name": "dry-run-pod",
+  "ground_truth_label": 1,
+  "injection_timestamp": "2026-08-08T14:39:49.639881+00:00",
+  "first_phantom_detection_timestamp": null,
+  "mttd_s": null,
+  "is_true_positive": false,
+  "phases": [
+    {
+      "name": "baseline",
+      "start_time": "2026-08-08T14:39:18.339021+00:00",
+      "end_time": "2026-08-08T14:39:49.639550+00:00",
+      "duration_s": 31.300529,
+      "notes": ""
+    },
+    {
+      "name": "inject",
+      "start_time": "2026-08-08T14:39:49.639732+00:00",
+      "end_time": "2026-08-08T14:39:49.639888+00:00",
+      "duration_s": 0.000156,
+      "notes": "inject_ok=True"
+    },
+    {
+      "name": "attack",
+      "start_time": "2026-08-08T14:39:49.639982+00:00",
+      "end_time": "2026-08-08T14:40:23.543697+00:00",
+      "duration_s": 33.903715,
+      "notes": ""
+    },
+    {
+      "name": "recover",
+      "start_time": "2026-08-08T14:40:23.543783+00:00",
+      "end_time": "2026-08-08T14:40:23.543846+00:00",
+      "duration_s": 6.3e-05,
+      "notes": "recover_ok=True"
+    },
+    {
+      "name": "post_recovery",
+      "start_time": "2026-08-08T14:40:23.543901+00:00",
+      "end_time": "2026-08-08T14:40:35.346385+00:00",
+      "duration_s": 11.802484,
+      "notes": ""
+    }
+  ],
+  "phantom_detections": [],
+  "falco_detections": [],
+  "metrics_snapshots": [
+    {
+      "timestamp": "2026-08-08T14:39:18.339098+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "baseline"
+    },
+    {
+      "timestamp": "2026-08-08T14:40:22.242564+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "attack"
+    },
+    {
+      "timestamp": "2026-08-08T14:40:33.990147+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "post_recovery"
+    }
+  ],
+  "scenario_label": {
+    "attack_id": "solarwinds-001",
+    "attack_family": "build_pipeline_tampering",
+    "target_service": "cartservice",
+    "target_purl": "pkg:generic/phantom-background-worker@0.1.0",
+    "clean_purl": "pkg:nuget/StackExchange.Redis@2.6.122",
+    "label": 1,
+    "injection_time_offset_s": 0.0,
+    "expected_changes": [
+      "unexpected_process_spawn",
+      "unexpected_network_connect",
+      "unexpected_file_access"
+    ],
+    "detection_window_s": 120.0,
+    "control_endpoint": "phantom-sink.phantom-eval.svc.cluster.local:4446"
+  },
+  "error": ""
+}

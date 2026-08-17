@@ -1,0 +1,88 @@
+{
+  "run_id": "20260808T144900Z_benign-load-001_rep2",
+  "attack_id": "benign-load-001",
+  "attack_family": "high_load",
+  "repetition": 2,
+  "namespace": "phantom-eval",
+  "pod_name": "dry-run-pod",
+  "ground_truth_label": 0,
+  "injection_timestamp": "2026-08-08T14:49:32.279649+00:00",
+  "first_phantom_detection_timestamp": null,
+  "mttd_s": null,
+  "is_true_positive": false,
+  "phases": [
+    {
+      "name": "baseline",
+      "start_time": "2026-08-08T14:49:00.913968+00:00",
+      "end_time": "2026-08-08T14:49:32.279357+00:00",
+      "duration_s": 31.365389,
+      "notes": ""
+    },
+    {
+      "name": "inject",
+      "start_time": "2026-08-08T14:49:32.279533+00:00",
+      "end_time": "2026-08-08T14:49:32.279655+00:00",
+      "duration_s": 0.000122,
+      "notes": "inject_ok=True"
+    },
+    {
+      "name": "attack",
+      "start_time": "2026-08-08T14:49:32.279756+00:00",
+      "end_time": "2026-08-08T14:50:06.195035+00:00",
+      "duration_s": 33.915279,
+      "notes": ""
+    },
+    {
+      "name": "recover",
+      "start_time": "2026-08-08T14:50:06.195163+00:00",
+      "end_time": "2026-08-08T14:50:06.195220+00:00",
+      "duration_s": 5.7e-05,
+      "notes": "recover_ok=True"
+    },
+    {
+      "name": "post_recovery",
+      "start_time": "2026-08-08T14:50:06.195270+00:00",
+      "end_time": "2026-08-08T14:50:17.966744+00:00",
+      "duration_s": 11.771474,
+      "notes": ""
+    }
+  ],
+  "phantom_detections": [],
+  "falco_detections": [],
+  "metrics_snapshots": [
+    {
+      "timestamp": "2026-08-08T14:49:00.914042+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "baseline"
+    },
+    {
+      "timestamp": "2026-08-08T14:50:04.919929+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "attack"
+    },
+    {
+      "timestamp": "2026-08-08T14:50:16.613321+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "post_recovery"
+    }
+  ],
+  "scenario_label": {
+    "attack_id": "benign-load-001",
+    "attack_family": "high_load",
+    "target_service": "recommendationservice",
+    "target_purl": "",
+    "clean_purl": "",
+    "label": 0,
+    "injection_time_offset_s": 0.0,
+    "expected_changes": [],
+    "detection_window_s": 120.0,
+    "control_endpoint": ""
+  },
+  "error": ""
+}

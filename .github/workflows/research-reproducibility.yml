@@ -1,0 +1,31 @@
+name: Evaluation Reproducibility
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  run-evaluation:
+    name: Run declared evaluation pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install evaluation dependencies
+        run: pip install -e ./libs/phantom-core -r research/evaluation/requirements.txt
+
+      - name: Run evaluation pipeline
+        run: python research/evaluation/run_evaluation.py
+
+      - name: Upload figures and metrics as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-results-${{ github.sha }}
+          path: research/evaluation/results/
+          retention-days: 90

@@ -1,0 +1,261 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: phantom
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ebpf-agent-egress
+  namespace: phantom
+spec:
+  podSelector:
+    matchLabels:
+      app: phantom-ebpf-agent
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Kubelet probe traffic originates from node IPs and cannot be selected by
+    # Kubernetes NetworkPolicy. Node firewall policy restricts the source.
+    - ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: phantom
+          podSelector:
+            matchLabels:
+              app: phantom-api-gateway
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-gateway
+  namespace: phantom
+spec:
+  podSelector:
+    matchLabels:
+      app: phantom-api-gateway
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+  egress:
+    - to:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8080
+    # Render RDS_CIDR from the deployment environment before applying.
+    - to:
+        - ipBlock:
+            cidr: "${RDS_CIDR}"
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Render ELASTICACHE_CIDR from the deployment environment before applying.
+    - to:
+        - ipBlock:
+            cidr: "${ELASTICACHE_CIDR}"
+      ports:
+        - protocol: TCP
+          port: 6379
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-causal-engine
+  namespace: phantom
+spec:
+  podSelector:
+    matchLabels:
+      app: phantom-causal-engine
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: phantom
+          podSelector:
+            matchLabels:
+              app: phantom-api-gateway
+  egress:
+    # Render RDS_CIDR from the deployment environment before applying.
+    - to:
+        - ipBlock:
+            cidr: "${RDS_CIDR}"
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Render ELASTICACHE_CIDR from the deployment environment before applying.
+    - to:
+        - ipBlock:
+            cidr: "${ELASTICACHE_CIDR}"
+      ports:
+        - protocol: TCP
+          port: 6379
+    # NVD API has no stable CIDR; restrict by DNS policy
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-sbom-service
+  namespace: phantom
+spec:
+  podSelector:
+    matchLabels:
+      app: phantom-sbom-service
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: phantom
+  egress:
+    # Render RDS_CIDR from the deployment environment before applying.
+    - to:
+        - ipBlock:
+            cidr: "${RDS_CIDR}"
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Render ELASTICACHE_CIDR from the deployment environment before applying.
+    - to:
+        - ipBlock:
+            cidr: "${ELASTICACHE_CIDR}"
+      ports:
+        - protocol: TCP
+          port: 6379
+    # Sigstore/Rekor transparency log external access
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-report-generator
+  namespace: phantom
+spec:
+  podSelector:
+    matchLabels:
+      app: phantom-report-generator
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: phantom
+  egress:
+    # Render RDS_CIDR from the deployment environment before applying.
+    - to:
+        - ipBlock:
+            cidr: "${RDS_CIDR}"
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Render ELASTICACHE_CIDR from the deployment environment before applying.
+    - to:
+        - ipBlock:
+            cidr: "${ELASTICACHE_CIDR}"
+      ports:
+        - protocol: TCP
+          port: 6379
+    # S3 endpoint; consider VPC endpoint for production
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

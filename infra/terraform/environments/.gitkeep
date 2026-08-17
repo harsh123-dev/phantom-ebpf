@@ -1,0 +1,3 @@
+# PHANTOM Terraform environments
+# Environment-specific compositions and variable files.
+# This directory is intentionally empty until the Terraform implementation task is approved.

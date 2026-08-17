@@ -1,0 +1,3 @@
+# PHANTOM Terraform modules
+# Reusable Terraform modules for AWS EKS, ECR, RDS, ElastiCache, IAM, VPC, and observability.
+# This directory is intentionally empty until the Terraform implementation task is approved.
