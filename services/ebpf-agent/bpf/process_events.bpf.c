@@ -114,7 +114,7 @@ static __always_inline void phantom_stash_current_cred(void)
     /* # VERIFY: kernel_cap_t has .val[2] on 64-bit kernels. We use the
      * first u64 word of the effective capability set as an approximation.
      * CO-RE will resolve this correctly if the BTF includes kernel_cap_t. */
-    struct kernel_cap_t eff = BPF_CORE_READ(cred, cap_effective);
+    kernel_cap_t eff = BPF_CORE_READ(cred, cap_effective);
     stash->cap_before = eff.val[0];
 }
 
@@ -175,7 +175,7 @@ phantom_emit_privilege_event(long ret, __u32 transition_kind)
     if (cred) {
         evt->new_uid = BPF_CORE_READ(cred, euid.val);
         evt->new_gid = BPF_CORE_READ(cred, egid.val);
-        struct kernel_cap_t eff = BPF_CORE_READ(cred, cap_effective);
+        kernel_cap_t eff = BPF_CORE_READ(cred, cap_effective);
         evt->capability_effective_after = eff.val[0];
     } else {
         evt->new_uid = 0;
