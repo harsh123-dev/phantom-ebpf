@@ -18,7 +18,9 @@
 #ifndef PHANTOM_MAPS_H
 #define PHANTOM_MAPS_H
 
+#ifndef __VMLINUX_H__
 #include <linux/bpf.h>
+#endif
 #include <bpf/bpf_helpers.h>
 
 /* ---- Per-category ring buffers --------------------------------------- */

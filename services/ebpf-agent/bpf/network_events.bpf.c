@@ -33,13 +33,13 @@
  *   We convert to host order with __builtin_bswap16.
  */
 
-#include <linux/bpf.h>
+#include "vmlinux.h"
+
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_core_read.h>
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_endian.h>
 
-#include "vmlinux.h"
 #include "phantom_events.h"
 #include "phantom_maps.h"
 #include "phantom_helpers.h"

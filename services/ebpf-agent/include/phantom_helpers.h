@@ -17,11 +17,6 @@
 #ifndef PHANTOM_HELPERS_H
 #define PHANTOM_HELPERS_H
 
-#include <linux/bpf.h>
-#include <bpf/bpf_helpers.h>
-#include <bpf/bpf_core_read.h>
-#include <bpf/bpf_tracing.h>
-
 /* vmlinux.h must be generated via `bpftool btf dump file /sys/kernel/btf/vmlinux
  * format c` and placed in include/. It provides all kernel struct definitions
  * without depending on kernel headers.
@@ -30,6 +25,11 @@
  *           combination in the CI matrix.
  */
 #include "vmlinux.h"
+
+#include <bpf/bpf_helpers.h>
+#include <bpf/bpf_core_read.h>
+#include <bpf/bpf_tracing.h>
+
 #include "phantom_events.h"
 
 /* -------------------------------------------------------------------------

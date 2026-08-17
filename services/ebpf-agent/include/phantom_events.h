@@ -21,7 +21,9 @@
 #ifndef PHANTOM_EVENTS_H
 #define PHANTOM_EVENTS_H
 
+#ifndef __VMLINUX_H__
 #include <linux/types.h>
+#endif
 
 /* ABI version embedded in every event for decoder compatibility checks. */
 #define PHANTOM_ABI_VERSION  1

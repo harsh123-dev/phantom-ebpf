@@ -29,15 +29,15 @@
  *           The fields used here (ret) are stable from 4.7+.
  */
 
-#include <linux/bpf.h>
-#include <bpf/bpf_helpers.h>
-#include <bpf/bpf_core_read.h>
-#include <bpf/bpf_tracing.h>
-
 /* vmlinux.h provides kernel struct definitions for CO-RE.
  * Generated with: bpftool btf dump file /sys/kernel/btf/vmlinux format c
  * # VERIFY: Must be regenerated for each target kernel/arch in CI matrix. */
 #include "vmlinux.h"
+
+#include <bpf/bpf_helpers.h>
+#include <bpf/bpf_core_read.h>
+#include <bpf/bpf_tracing.h>
+
 #include "phantom_events.h"
 #include "phantom_maps.h"
 #include "phantom_helpers.h"
