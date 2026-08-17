@@ -6,12 +6,15 @@
 FROM ubuntu:22.04 AS builder
 RUN apt-get update -qq && apt-get install -y --no-install-recommends \
     clang llvm libelf-dev libbpf-dev linux-headers-generic \
-    make gcc pkg-config && rm -rf /var/lib/apt/lists/*
+    make gcc pkg-config linux-tools-generic && rm -rf /var/lib/apt/lists/*
 WORKDIR /build
 COPY include/ ./include/
 COPY bpf/     ./bpf/
 COPY cmd/     ./cmd/
 COPY Makefile ./Makefile
+# Download a standard x86_64 vmlinux.h (since /sys/kernel/btf/vmlinux is not accessible inside Docker build)
+RUN apt-get update -qq && apt-get install -y curl && \
+    curl -sL "https://raw.githubusercontent.com/libbpf/libbpf-bootstrap/master/src/vmlinux.h" -o ./include/vmlinux.h
 # Build eBPF objects and user-space loader
 RUN make all
 
