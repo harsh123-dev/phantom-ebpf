@@ -18,6 +18,10 @@
 #ifndef PHANTOM_MAPS_H
 #define PHANTOM_MAPS_H
 
+#ifndef __BPF__
+#error "phantom_maps.h is for eBPF programs only; user space should include phantom_events.h"
+#endif
+
 #ifndef __VMLINUX_H__
 #include <linux/bpf.h>
 #endif

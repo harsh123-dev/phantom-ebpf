@@ -12,7 +12,7 @@ CLANG   := clang
 LLC     := llc
 
 CFLAGS  := -Wall -Wextra -O2
-BPF_CFLAGS := -O2 -g -target bpf -D__TARGET_ARCH_x86 \
+BPF_CFLAGS := -O2 -g -target bpf -D__BPF__ -D__TARGET_ARCH_x86 \
               -I/usr/include/$(shell uname -m)-linux-gnu \
               -I./include
 

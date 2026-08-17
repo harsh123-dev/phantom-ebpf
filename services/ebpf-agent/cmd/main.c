@@ -22,4 +22,8 @@
 #include <bpf/libbpf.h>
 #include <bpf/bpf.h>
 #include "../include/phantom_events.h"
-#include "../include/phantom_maps.h"
+
+int main(void)
+{
+    return 0;
+}
