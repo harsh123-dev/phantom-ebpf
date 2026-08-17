@@ -11,8 +11,8 @@ WORKDIR /build
 COPY include/ ./include/
 COPY bpf/     ./bpf/
 COPY cmd/     ./cmd/
+COPY Makefile ./Makefile
 # Build eBPF objects and user-space loader
-# VERIFY: Makefile targets must be validated against the build toolchain versions above
 RUN make all
 
 FROM ubuntu:22.04 AS runtime
