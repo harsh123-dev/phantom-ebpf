@@ -21,7 +21,7 @@ BPF_OBJS  := $(BPF_SRCS:.bpf.c=.bpf.o)
 
 AGENT_SRCS := cmd/main.c cmd/normalizer.c
 AGENT_BIN  := phantom-agent
-AGENT_LIBS := -lbpf -lelf -lz
+AGENT_LIBS := -lbpf -lelf -lz -lpthread
 
 .PHONY: all bpf agent clean
 
