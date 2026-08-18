@@ -84,9 +84,10 @@ spec:
             httpGet:
               path: /readyz
               port: http
-            initialDelaySeconds: 10
+            initialDelaySeconds: 15
             periodSeconds: 10
-            failureThreshold: 3
+            failureThreshold: 5
+            timeoutSeconds: 10
           livenessProbe:
             httpGet:
               path: /healthz
@@ -94,6 +95,7 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 30
             failureThreshold: 3
+            timeoutSeconds: 10
 ---
 apiVersion: v1
 kind: Service
@@ -180,9 +182,10 @@ spec:
             httpGet:
               path: /readyz
               port: health
-            initialDelaySeconds: 10
+            initialDelaySeconds: 15
             periodSeconds: 10
-            failureThreshold: 3
+            failureThreshold: 5
+            timeoutSeconds: 10
           livenessProbe:
             httpGet:
               path: /healthz
@@ -190,6 +193,7 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 30
             failureThreshold: 3
+            timeoutSeconds: 10
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -320,9 +324,10 @@ spec:
             httpGet:
               path: /readyz
               port: health
-            initialDelaySeconds: 10
+            initialDelaySeconds: 15
             periodSeconds: 10
-            failureThreshold: 3
+            failureThreshold: 5
+            timeoutSeconds: 10
           livenessProbe:
             httpGet:
               path: /healthz
@@ -330,3 +335,4 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 30
             failureThreshold: 3
+            timeoutSeconds: 10
