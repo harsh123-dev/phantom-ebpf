@@ -72,18 +72,19 @@ resource "aws_security_group" "rds" {
 resource "aws_db_instance" "phantom" {
   identifier        = var.identifier
   engine            = "postgres"
-  engine_version    = "15.4"
+  engine_version    = "15"   # Major version only — AWS picks the latest patch
   instance_class    = var.instance_class
   allocated_storage = 20
-  storage_encrypted = true
+  storage_encrypted = false  # Free tier does not support encrypted storage
   multi_az          = var.multi_az
 
   db_name  = "phantom"
   username = "phantom_admin"
   password = random_password.db_password.result
 
-  backup_retention_period = 7
-  # 7 days: sufficient for research artifact forensics.
+  backup_retention_period = 0
+  # Free tier restriction: automated backups must be disabled (retention = 0).
+  # Set to 7+ in production when upgrading away from free tier.
 
   skip_final_snapshot       = var.environment == "dev"
   final_snapshot_identifier = var.environment == "dev" ? null : "${var.identifier}-final"

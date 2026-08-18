@@ -12,7 +12,7 @@ terraform {
 variable "cluster_name" {}
 
 variable "kubernetes_version" {
-  default = "1.29"
+  default = "1.31"  # 1.29 is end-of-life; 1.31 is current AWS EKS stable
 }
 
 variable "node_instance_type" {
