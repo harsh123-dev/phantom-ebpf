@@ -149,7 +149,7 @@ XZUTILS_MANIFEST = AttackManifest(
     attack_family="supply_chain_backdoor",
     target_service="recommendationservice",
     target_image="gcr.io/google-samples/microservices-demo/recommendationservice:phantom-backdoor",
-    target_component_purl="pkg:pypi/lzmaffi@1.0.1-phantom-backdoor",
+    target_component_purl="pkg:pypi/lzmaffi@1.0.1+phantom",
     clean_component_purl="pkg:pypi/lzmaffi@1.0.0",
     injection_time_offset_s=0.0,
     expected_behavioral_changes=[
@@ -180,7 +180,7 @@ XZUTILS_MANIFEST = AttackManifest(
 
 _SINK_HOST = "phantom-sink.phantom-eval.svc.cluster.local"
 _SINK_PORT = 8443
-_MALICIOUS_VERSION = "1.0.1-phantom-backdoor"
+_MALICIOUS_VERSION = "1.0.1+phantom"
 _CLEAN_VERSION = "1.0.0"
 _BEACON_PATH_IN_POD = "/tmp/.phantom_beacon.py"
 

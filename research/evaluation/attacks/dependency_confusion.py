@@ -90,6 +90,8 @@ _PYPISERVER_MANIFEST = textwrap.dedent("""\
           containers:
           - name: pypiserver
             image: pypiserver/pypiserver:latest
+            securityContext:
+              runAsUser: 0
             args: ["run", "-p", "8080", "/data/packages", "--overwrite"]
             ports:
             - containerPort: 8080

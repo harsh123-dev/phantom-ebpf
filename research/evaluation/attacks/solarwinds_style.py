@@ -76,7 +76,7 @@ _SINK_HOST = "phantom-sink.phantom-eval.svc.cluster.local"
 _SINK_PORT = 4446
 _WORKER_BIN = "/usr/local/bin/phantom-worker"
 _WORKER_PROCESS_NAME = "phantom-worker"
-_DEPLOYMENT_NAME = "cartservice"
+_DEPLOYMENT_NAME = "emailservice"
 
 # The phantom-worker beacon script (written into the attack image).
 _WORKER_SCRIPT = textwrap.dedent("""\
@@ -126,7 +126,7 @@ _DOCKERFILE_TEMPLATE = textwrap.dedent("""\
 # Attack manifest
 # ---------------------------------------------------------------------------
 
-_CLEAN_IMAGE = "gcr.io/google-samples/microservices-demo/cartservice:v0.10.1"
+_CLEAN_IMAGE = "gcr.io/google-samples/microservices-demo/emailservice:latest"
 _ATTACK_IMAGE_TAG = "phantom-eval-solarwinds:latest"
 
 SOLARWINDS_MANIFEST = AttackManifest(
