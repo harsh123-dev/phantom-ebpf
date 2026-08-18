@@ -283,6 +283,22 @@ class DriftEventRepository(_TimedRepository):
             self._do_get_by_event_id(event_id, tenant_id),
         )
 
+    async def _do_list_events(self, since: datetime, limit: int) -> list[dict[str, Any]]:
+        async with self._pool.acquire() as conn:
+            rows = await conn.fetch(
+                "SELECT * FROM drift_events WHERE observed_at >= $1 ORDER BY observed_at ASC LIMIT $2",
+                since, limit
+            )
+            # asyncpg returns Record objects, convert to dicts
+            return [dict(r) for r in rows]
+
+    async def list_events(self, since: datetime, limit: int) -> list[dict[str, Any]]:
+        """List drift events since a specific time for evaluation runner."""
+        return await self._timed_query(
+            "list_events",
+            self._do_list_events(since, limit),
+        )
+
     async def _do_insert_outbox_record(
         self,
         conn: asyncpg.Connection,

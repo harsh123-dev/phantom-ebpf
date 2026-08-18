@@ -17,9 +17,23 @@ from app.application.commands import IngestDriftEventCommand
 from app.domain.entities import AuthenticatedPrincipal, PhantomRole
 from app.interface.dependencies import require_role
 
+from datetime import datetime
+
 router = fastapi.APIRouter(tags=["Drift Events"])
 log: structlog.BoundLogger = structlog.get_logger(__name__)
 
+
+@router.get("/drift-events", status_code=200)
+async def list_drift_events(
+    request: fastapi.Request,
+    since: datetime,
+    limit: int = 200,
+) -> dict[str, Any]:
+    from app.infrastructure.postgres_repository import DriftEventRepository
+    pool = request.app.state.db_pool
+    repo = DriftEventRepository(pool)
+    events = await repo.list_events(since, limit)
+    return {"items": events}
 
 @router.post(
     "/drift-events",
