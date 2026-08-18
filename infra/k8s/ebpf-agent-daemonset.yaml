@@ -43,7 +43,7 @@ spec:
             # Required for: eBPF BTF and tracing infrastructure.
       containers:
         - name: ebpf-agent
-          image: ACCOUNT.dkr.ecr.REGION.amazonaws.com/phantom/ebpf-agent:latest
+          image: 596717729313.dkr.ecr.ap-south-1.amazonaws.com/phantom/ebpf-agent:latest
           imagePullPolicy: Always
           ports:
             - name: health

@@ -21,7 +21,7 @@ spec:
       serviceAccountName: phantom-api-gateway
       containers:
         - name: api-gateway
-          image: ACCOUNT.dkr.ecr.REGION.amazonaws.com/phantom/api-gateway:latest
+          image: 596717729313.dkr.ecr.ap-south-1.amazonaws.com/phantom/api-gateway:latest
           imagePullPolicy: Always
           ports:
             - name: http
@@ -142,7 +142,7 @@ spec:
       serviceAccountName: phantom-causal-engine
       containers:
         - name: causal-engine
-          image: ACCOUNT.dkr.ecr.REGION.amazonaws.com/phantom/causal-engine:latest
+          image: 596717729313.dkr.ecr.ap-south-1.amazonaws.com/phantom/causal-engine:latest
           imagePullPolicy: Always
           ports:
             - name: health
@@ -209,7 +209,7 @@ spec:
       serviceAccountName: phantom-sbom-service
       containers:
         - name: sbom-service
-          image: ACCOUNT.dkr.ecr.REGION.amazonaws.com/phantom/sbom-service:latest
+          image: 596717729313.dkr.ecr.ap-south-1.amazonaws.com/phantom/sbom-service:latest
           imagePullPolicy: Always
           ports:
             - name: http
@@ -272,7 +272,7 @@ spec:
       serviceAccountName: default
       containers:
         - name: report-generator
-          image: ACCOUNT.dkr.ecr.REGION.amazonaws.com/phantom/report-generator:latest
+          image: 596717729313.dkr.ecr.ap-south-1.amazonaws.com/phantom/report-generator:latest
           imagePullPolicy: Always
           ports:
             - name: health
