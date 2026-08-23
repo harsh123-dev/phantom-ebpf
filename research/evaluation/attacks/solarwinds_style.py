@@ -362,47 +362,48 @@ class SolarWindsStyleAttack(BaseAttack):
     def verify_injection(self, target_namespace: str, pod_name: str) -> bool:
         """Verify phantom-worker is running in the new pod.
 
-        Finds the new pod (post-rollout) and checks ps aux for the worker.
+        Finds live pods (post-rollout) and checks /proc/*/cmdline for the worker process.
 
         Args:
             target_namespace: Kubernetes namespace.
             pod_name: Pod name hint (may be stale; re-discover pod).
 
         Returns:
-            True if phantom-worker is found in the process list.
+            True if phantom-worker is found in any running pod.
         """
         try:
-            # Find the current live pod name (may differ from pre-rollout pod).
             result = self._kubectl(
                 [
                     "get", "pods",
                     "-n", target_namespace,
                     "-l", f"app={_DEPLOYMENT_NAME}",
                     "--field-selector", "status.phase=Running",
-                    "-o", "jsonpath={.items[0].metadata.name}",
+                    "-o", "jsonpath={.items[*].metadata.name}",
                 ],
                 timeout=15,
             )
-            live_pod = result.stdout.strip()
-            if not live_pod:
+            pods = result.stdout.strip().split()
+            if not pods:
                 log.warning("solarwinds.verify.no_running_pod")
                 return False
 
-            proc_out = self._kubectl_exec(
-                namespace=target_namespace,
-                pod_name=live_pod,
-                command=["sh", "-c", "cat /proc/*/cmdline 2>/dev/null | tr '\\0' ' ' || true"],
-                timeout=15,
-            )
-            if _WORKER_PROCESS_NAME in proc_out:
-                log.info("solarwinds.verify.ok", extra={"pod": live_pod})
-                return True
+            for live_pod in pods:
+                proc_out = self._kubectl_exec(
+                    namespace=target_namespace,
+                    pod_name=live_pod,
+                    command=["sh", "-c", "cat /proc/*/cmdline 2>/dev/null | tr '\\0' ' ' || true"],
+                    timeout=15,
+                )
+                if _WORKER_PROCESS_NAME in proc_out or "phantom-worker" in proc_out:
+                    log.info("solarwinds.verify.ok", extra={"pod": live_pod})
+                    return True
+
             log.warning(
                 "solarwinds.verify.worker_not_found",
-                extra={"proc_excerpt": proc_out[:400]},
+                extra={"proc_excerpt": proc_out[:400] if 'proc_out' in locals() else ""},
             )
             return False
-        except subprocess.CalledProcessError as exc:
+        except Exception as exc:
             log.error("solarwinds.verify.error", extra={"error": str(exc)})
             return False
 
