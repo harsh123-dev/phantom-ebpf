@@ -317,12 +317,24 @@ class SolarWindsStyleAttack(BaseAttack):
         if self._build_attack_image:
             self._build_image()
 
-        # 3. Set the attack image on the deployment.
+        # 3. Discover the actual container name in the deployment.
+        container_name_result = self._kubectl(
+            [
+                "get", "deployment", _DEPLOYMENT_NAME,
+                "-n", target_namespace,
+                "-o", "jsonpath={.spec.template.spec.containers[0].name}",
+            ],
+            timeout=15,
+        )
+        container_name = container_name_result.stdout.strip() or "server"
+        log.info("solarwinds.inject.container_name", extra={"name": container_name})
+
+        # 4. Set the attack image on the deployment.
         self._kubectl(
             [
                 "set", "image",
                 f"deployment/{_DEPLOYMENT_NAME}",
-                f"server={self._attack_image}",
+                f"{container_name}={self._attack_image}",
                 "-n", target_namespace,
             ],
             timeout=30,

