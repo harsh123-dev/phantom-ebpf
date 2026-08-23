@@ -327,7 +327,7 @@ class SolarWindsStyleAttack(BaseAttack):
             timeout=15,
         )
         container_name = container_name_result.stdout.strip() or "server"
-        log.info("solarwinds.inject.container_name", extra={"name": container_name})
+        log.info("solarwinds.inject.container_name", extra={"container_name": container_name})
 
         # 4. Set the attack image on the deployment.
         self._kubectl(
