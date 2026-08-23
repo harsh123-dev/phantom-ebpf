@@ -1,0 +1,57 @@
+{
+  "run_id": "20260818T195240Z_dep-confusion-001_rep1",
+  "attack_id": "dep-confusion-001",
+  "attack_family": "dependency_confusion",
+  "repetition": 1,
+  "namespace": "phantom-eval",
+  "pod_name": "emailservice-5d48449559-8nqj6",
+  "ground_truth_label": 1,
+  "injection_timestamp": "2026-08-18T19:54:18.691904+00:00",
+  "first_phantom_detection_timestamp": null,
+  "mttd_s": null,
+  "is_true_positive": false,
+  "phases": [
+    {
+      "name": "baseline",
+      "start_time": "2026-08-18T19:52:40.694928+00:00",
+      "end_time": "2026-08-18T19:53:40.775704+00:00",
+      "duration_s": 60.080776,
+      "notes": ""
+    },
+    {
+      "name": "inject",
+      "start_time": "2026-08-18T19:53:40.775885+00:00",
+      "end_time": "2026-08-18T19:54:18.691912+00:00",
+      "duration_s": 37.916027,
+      "notes": "inject_ok=False"
+    }
+  ],
+  "phantom_detections": [],
+  "falco_detections": [],
+  "metrics_snapshots": [
+    {
+      "timestamp": "2026-08-18T19:52:40.694967+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "baseline"
+    }
+  ],
+  "scenario_label": {
+    "attack_id": "dep-confusion-001",
+    "attack_family": "dependency_confusion",
+    "target_service": "emailservice",
+    "target_purl": "pkg:pypi/acme-email-templates@9.9.9",
+    "clean_purl": "pkg:pypi/acme-email-templates@0.9.4",
+    "label": 1,
+    "injection_time_offset_s": 0.0,
+    "expected_changes": [
+      "unexpected_process_spawn",
+      "unexpected_network_connect",
+      "unexpected_file_access"
+    ],
+    "detection_window_s": 180.0,
+    "control_endpoint": "phantom-sink.phantom-eval.svc.cluster.local:4445"
+  },
+  "error": "Command '['kubectl', 'cp', '/root/phantom-ebpf/research/evaluation/artifacts/dep_confusion/acme_email_templates_confusion/dist/acme_email_templates-9.9.9-py3-none-any.whl', 'phantom-eval/pypiserver-mirror-7cb59f794d-k24bl:/data/packages/acme_email_templates-9.9.9-py3-none-any.whl']' returned non-zero exit status 1."
+}

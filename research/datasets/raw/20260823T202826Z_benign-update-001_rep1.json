@@ -1,0 +1,88 @@
+{
+  "run_id": "20260823T202826Z_benign-update-001_rep1",
+  "attack_id": "benign-update-001",
+  "attack_family": "benign_update",
+  "repetition": 1,
+  "namespace": "phantom-eval",
+  "pod_name": "recommendationservice-6d6bfc9ff6-g8zkn",
+  "ground_truth_label": 0,
+  "injection_timestamp": "2026-08-23T20:29:26.694275+00:00",
+  "first_phantom_detection_timestamp": null,
+  "mttd_s": null,
+  "is_true_positive": false,
+  "phases": [
+    {
+      "name": "baseline",
+      "start_time": "2026-08-23T20:28:26.611322+00:00",
+      "end_time": "2026-08-23T20:29:26.694059+00:00",
+      "duration_s": 60.082737,
+      "notes": ""
+    },
+    {
+      "name": "inject",
+      "start_time": "2026-08-23T20:29:26.694222+00:00",
+      "end_time": "2026-08-23T20:29:26.694280+00:00",
+      "duration_s": 5.8e-05,
+      "notes": "inject_ok=True"
+    },
+    {
+      "name": "attack",
+      "start_time": "2026-08-23T20:29:26.694311+00:00",
+      "end_time": "2026-08-23T20:30:37.312455+00:00",
+      "duration_s": 70.618144,
+      "notes": ""
+    },
+    {
+      "name": "recover",
+      "start_time": "2026-08-23T20:30:37.312584+00:00",
+      "end_time": "2026-08-23T20:30:37.312652+00:00",
+      "duration_s": 6.8e-05,
+      "notes": "recover_ok=True"
+    },
+    {
+      "name": "post_recovery",
+      "start_time": "2026-08-23T20:30:37.312688+00:00",
+      "end_time": "2026-08-23T20:31:27.410257+00:00",
+      "duration_s": 50.097569,
+      "notes": ""
+    }
+  ],
+  "phantom_detections": [],
+  "falco_detections": [],
+  "metrics_snapshots": [
+    {
+      "timestamp": "2026-08-23T20:28:26.611353+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "baseline"
+    },
+    {
+      "timestamp": "2026-08-23T20:30:07.224228+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "attack"
+    },
+    {
+      "timestamp": "2026-08-23T20:30:57.334297+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "post_recovery"
+    }
+  ],
+  "scenario_label": {
+    "attack_id": "benign-update-001",
+    "attack_family": "benign_update",
+    "target_service": "recommendationservice",
+    "target_purl": "pkg:pypi/lzmaffi@1.0.1",
+    "clean_purl": "pkg:pypi/lzmaffi@1.0.0",
+    "label": 0,
+    "injection_time_offset_s": 0.0,
+    "expected_changes": [],
+    "detection_window_s": 120.0,
+    "control_endpoint": ""
+  },
+  "error": ""
+}
