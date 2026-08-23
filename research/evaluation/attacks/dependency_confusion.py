@@ -191,8 +191,9 @@ _SETUP_PY = textwrap.dedent("""\
 
 _PIP_CONF_TEMPLATE = textwrap.dedent("""\
     [global]
-    extra-index-url = http://{mirror_host}:{mirror_port}/simple/
-    index-url = https://pypi.org/simple/
+    index-url = http://{mirror_host}:{mirror_port}/simple/
+    trusted-host = {mirror_host}
+    extra-index-url = https://pypi.org/simple/
 """)
 
 # ---------------------------------------------------------------------------

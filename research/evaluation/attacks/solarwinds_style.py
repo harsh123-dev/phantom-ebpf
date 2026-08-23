@@ -127,7 +127,9 @@ _DOCKERFILE_TEMPLATE = textwrap.dedent("""\
 # ---------------------------------------------------------------------------
 
 _CLEAN_IMAGE = "python:3.11-slim"
-_ATTACK_IMAGE_TAG = "phantom-eval-solarwinds:latest"
+_ECR_REGISTRY = "596717729313.dkr.ecr.ap-south-1.amazonaws.com"
+_ECR_REGION = "ap-south-1"
+_ATTACK_IMAGE_TAG = f"{_ECR_REGISTRY}/phantom/api-gateway:solarwinds-eval"
 
 SOLARWINDS_MANIFEST = AttackManifest(
     attack_id="solarwinds-001",
@@ -249,6 +251,25 @@ class SolarWindsStyleAttack(BaseAttack):
                 f"docker build failed: {result.stderr[:400]}"
             )
         log.info("solarwinds.image_built", extra={"tag": self._attack_image})
+
+        # Push to ECR so cluster nodes can pull the attack image.
+        # Login to ECR first.
+        login_result = subprocess.run(
+            ["bash", "-c",
+             f"aws ecr get-login-password --region {_ECR_REGION} "
+             f"| docker login --username AWS --password-stdin {_ECR_REGISTRY}"],
+            capture_output=True, text=True, timeout=60, check=False,
+        )
+        if login_result.returncode != 0:
+            raise RuntimeError(f"ECR login failed: {login_result.stderr[:200]}")
+
+        push_result = subprocess.run(
+            ["docker", "push", self._attack_image],
+            capture_output=True, text=True, timeout=300, check=False,
+        )
+        if push_result.returncode != 0:
+            raise RuntimeError(f"docker push failed: {push_result.stderr[:200]}")
+        log.info("solarwinds.image_pushed", extra={"tag": self._attack_image})
 
     def _get_current_image(self) -> str:
         """Read the current container image from the deployment.
