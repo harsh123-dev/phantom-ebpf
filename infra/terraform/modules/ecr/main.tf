@@ -9,8 +9,9 @@ locals {
 }
 
 resource "aws_ecr_repository" "phantom" {
-  for_each = toset(local.repositories)
-  name     = each.value
+  for_each     = toset(local.repositories)
+  name         = each.value
+  force_delete = true
 
   image_scanning_configuration {
     scan_on_push = true
