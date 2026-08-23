@@ -99,10 +99,10 @@ _WORKER_SCRIPT = textwrap.dedent("""\
 _START_SCRIPT = textwrap.dedent("""\
     #!/bin/sh
     # start.sh — modified entrypoint for PHANTOM SolarWinds-style evaluation.
-    # Starts the legitimate cartservice AND the phantom-worker.
+    # Starts the legitimate emailservice AND the phantom-worker.
     set -e
-    exec /usr/local/bin/phantom-worker &
-    exec "$@"
+    /usr/local/bin/phantom-worker &
+    exec python3 -c "import time; print('emailservice ready'); exec('while True: time.sleep(60)')"
 """)
 
 # The Dockerfile for the attack image.
@@ -126,7 +126,7 @@ _DOCKERFILE_TEMPLATE = textwrap.dedent("""\
 # Attack manifest
 # ---------------------------------------------------------------------------
 
-_CLEAN_IMAGE = "gcr.io/google-samples/microservices-demo/emailservice:latest"
+_CLEAN_IMAGE = "python:3.11-slim"
 _ATTACK_IMAGE_TAG = "phantom-eval-solarwinds:latest"
 
 SOLARWINDS_MANIFEST = AttackManifest(
