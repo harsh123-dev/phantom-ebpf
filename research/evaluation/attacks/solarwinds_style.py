@@ -388,18 +388,18 @@ class SolarWindsStyleAttack(BaseAttack):
                 log.warning("solarwinds.verify.no_running_pod")
                 return False
 
-            ps_out = self._kubectl_exec(
+            proc_out = self._kubectl_exec(
                 namespace=target_namespace,
                 pod_name=live_pod,
-                command=["ps", "aux"],
+                command=["sh", "-c", "cat /proc/*/cmdline 2>/dev/null | tr '\\0' ' ' || true"],
                 timeout=15,
             )
-            if _WORKER_PROCESS_NAME in ps_out:
+            if _WORKER_PROCESS_NAME in proc_out:
                 log.info("solarwinds.verify.ok", extra={"pod": live_pod})
                 return True
             log.warning(
                 "solarwinds.verify.worker_not_found",
-                extra={"ps_excerpt": ps_out[:400]},
+                extra={"proc_excerpt": proc_out[:400]},
             )
             return False
         except subprocess.CalledProcessError as exc:
@@ -470,13 +470,13 @@ class SolarWindsStyleAttack(BaseAttack):
             )
             live_pod = result.stdout.strip()
             if live_pod:
-                ps_out = self._kubectl_exec(
+                proc_out = self._kubectl_exec(
                     namespace=target_namespace,
                     pod_name=live_pod,
-                    command=["ps", "aux"],
+                    command=["sh", "-c", "cat /proc/*/cmdline 2>/dev/null | tr '\\0' ' ' || true"],
                     timeout=15,
                 )
-                if _WORKER_PROCESS_NAME in ps_out:
+                if _WORKER_PROCESS_NAME in proc_out:
                     log.error("solarwinds.recover.worker_still_present")
                     ok = False
                 else:
