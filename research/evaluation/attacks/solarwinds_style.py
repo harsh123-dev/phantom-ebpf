@@ -102,7 +102,7 @@ _START_SCRIPT = textwrap.dedent("""\
     # Starts the legitimate emailservice AND the phantom-worker.
     set -e
     /usr/local/bin/phantom-worker &
-    exec python3 -c "import time; print('emailservice ready'); exec('while True: time.sleep(60)')"
+    exec /entrypoint.sh "$@"
 """)
 
 # The Dockerfile for the attack image.
@@ -126,7 +126,7 @@ _DOCKERFILE_TEMPLATE = textwrap.dedent("""\
 # Attack manifest
 # ---------------------------------------------------------------------------
 
-_CLEAN_IMAGE = "python:3.11-slim"
+_CLEAN_IMAGE = "tiangolo/uwsgi-nginx-flask:python3.11"
 _ECR_REGISTRY = "596717729313.dkr.ecr.ap-south-1.amazonaws.com"
 _ECR_REGION = "ap-south-1"
 _ATTACK_IMAGE_TAG = f"{_ECR_REGISTRY}/phantom/api-gateway:solarwinds-eval"

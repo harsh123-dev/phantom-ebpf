@@ -29,10 +29,9 @@ spec:
           # The real Google v0.10.1 images are "distroless" and have no pip or tar!
           # Because the synthetic attacks inject via kubectl cp and pip install,
           # they require a standard container base image.
-          image: python:3.11-slim
-          command: ["python", "-c", "import time; print('recommendationservice ready'); [time.sleep(60) for _ in iter(int,1)]"]
+          image: tiangolo/uwsgi-nginx-flask:python3.11
           ports:
-            - containerPort: 8080
+            - containerPort: 80
           env:
             - name: PIP_BREAK_SYSTEM_PACKAGES
               value: "1"
@@ -41,18 +40,20 @@ spec:
               cpu: "100m"
               memory: "128Mi"
             limits:
-              cpu: "500m"
-              memory: "512Mi"
+              cpu: "200m"
+              memory: "256Mi"
           readinessProbe:
-            exec:
-              command: ["python", "-c", "import sys; sys.exit(0)"]
-            initialDelaySeconds: 15
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
-            exec:
-              command: ["python", "-c", "import sys; sys.exit(0)"]
-            initialDelaySeconds: 20
-            periodSeconds: 15
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
 ---
 apiVersion: v1
 kind: Service
@@ -64,7 +65,7 @@ spec:
     app: recommendationservice
   ports:
     - port: 8080
-      targetPort: 8080
+      targetPort: 80
 ---
 # emailservice — Python service targeted by dependency-confusion + SolarWinds attacks
 apiVersion: apps/v1
@@ -85,30 +86,31 @@ spec:
       containers:
         - name: server
           # python:3.11-slim is REQUIRED for the evaluation scripts.
-          image: python:3.11-slim
-          command: ["python", "-c", "import time; print('emailservice ready'); [time.sleep(60) for _ in iter(int,1)]"]
+          image: tiangolo/uwsgi-nginx-flask:python3.11
           ports:
-            - containerPort: 8080
+            - containerPort: 80
           env:
             - name: PIP_BREAK_SYSTEM_PACKAGES
               value: "1"
           resources:
             requests:
               cpu: "100m"
-              memory: "64Mi"
+              memory: "128Mi"
             limits:
-              cpu: "500m"
+              cpu: "200m"
               memory: "256Mi"
           readinessProbe:
-            exec:
-              command: ["python", "-c", "import sys; sys.exit(0)"]
-            initialDelaySeconds: 15
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
-            exec:
-              command: ["python", "-c", "import sys; sys.exit(0)"]
-            initialDelaySeconds: 20
-            periodSeconds: 15
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 2015
 ---
 apiVersion: v1
 kind: Service
@@ -120,7 +122,7 @@ spec:
     app: emailservice
   ports:
     - port: 8080
-      targetPort: 8080
+      targetPort: 80
 ---
 # cartservice — Go service targeted by benign-restart scenario
 apiVersion: apps/v1
@@ -141,20 +143,25 @@ spec:
       containers:
         - name: server
           # python:3.11-slim is REQUIRED for the evaluation scripts.
-          image: python:3.11-slim
-          command: ["python", "-c", "import time; print('cartservice ready'); [time.sleep(60) for _ in iter(int,1)]"]
+          image: tiangolo/uwsgi-nginx-flask:python3.11
           ports:
-            - containerPort: 7070
+            - containerPort: 80
           env:
             - name: PIP_BREAK_SYSTEM_PACKAGES
               value: "1"
           resources:
             requests:
               cpu: "100m"
-              memory: "64Mi"
+              memory: "128Mi"
             limits:
-              cpu: "500m"
+              cpu: "200m"
               memory: "256Mi"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service
