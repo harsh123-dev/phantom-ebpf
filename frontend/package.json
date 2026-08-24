@@ -1,6 +1,7 @@
 {
   "name": "phantom-frontend",
   "version": "0.1.0",
+  "type": "module",
   "description": "PHANTOM analyst application — React, TypeScript, Tailwind, D3",
   "private": true,
   "scripts": {
