@@ -46,12 +46,12 @@ spec:
               memory: "512Mi"
           readinessProbe:
             exec:
-              command: ["python3", "-c", "import sys; sys.exit(0)"]
+              command: ["python", "-c", "import sys; sys.exit(0)"]
             initialDelaySeconds: 15
             periodSeconds: 10
           livenessProbe:
             exec:
-              command: ["python3", "-c", "import sys; sys.exit(0)"]
+              command: ["python", "-c", "import sys; sys.exit(0)"]
             initialDelaySeconds: 20
             periodSeconds: 15
 ---
@@ -103,12 +103,12 @@ spec:
               memory: "256Mi"
           readinessProbe:
             exec:
-              command: ["python3", "-c", "import sys; sys.exit(0)"]
+              command: ["python", "-c", "import sys; sys.exit(0)"]
             initialDelaySeconds: 15
             periodSeconds: 10
           livenessProbe:
             exec:
-              command: ["python3", "-c", "import sys; sys.exit(0)"]
+              command: ["python", "-c", "import sys; sys.exit(0)"]
             initialDelaySeconds: 20
             periodSeconds: 15
 ---
@@ -157,16 +157,6 @@ spec:
             limits:
               cpu: "500m"
               memory: "256Mi"
-          readinessProbe:
-            exec:
-              command: ["/bin/sh", "-c", "exit 0"]
-            initialDelaySeconds: 15
-            periodSeconds: 10
-          livenessProbe:
-            exec:
-              command: ["/bin/sh", "-c", "exit 0"]
-            initialDelaySeconds: 20
-            periodSeconds: 15
 ---
 apiVersion: v1
 kind: Service
