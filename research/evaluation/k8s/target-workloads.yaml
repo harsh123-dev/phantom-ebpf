@@ -25,18 +25,14 @@ spec:
     spec:
       containers:
         - name: server
-          # Real Google Online Boutique recommendationservice (Python).
-          # Moved from gcr.io to Google Artifact Registry in 2024.
-          image: us-central1-docker.pkg.dev/google-samples/microservices-demo/recommendationservice:v0.10.1
+          # python:3.11-slim is REQUIRED for the evaluation scripts.
+          # The real Google v0.10.1 images are "distroless" and have no pip or tar!
+          # Because the synthetic attacks inject via kubectl cp and pip install,
+          # they require a standard container base image.
+          image: python:3.11-slim
+          command: ["python", "-c", "import time; print('recommendationservice ready'); [time.sleep(60) for _ in iter(int,1)]"]
           ports:
             - containerPort: 8080
-          env:
-            - name: PORT
-              value: "8080"
-            - name: PRODUCT_CATALOG_SERVICE_ADDR
-              value: "productcatalogservice:3550"
-            - name: DISABLE_PROFILER
-              value: "1"
           resources:
             requests:
               cpu: "100m"
@@ -85,15 +81,11 @@ spec:
     spec:
       containers:
         - name: server
-          # Real Google Online Boutique emailservice (Python).
-          image: us-central1-docker.pkg.dev/google-samples/microservices-demo/emailservice:v0.10.1
+          # python:3.11-slim is REQUIRED for the evaluation scripts.
+          image: python:3.11-slim
+          command: ["python", "-c", "import time; print('emailservice ready'); [time.sleep(60) for _ in iter(int,1)]"]
           ports:
             - containerPort: 8080
-          env:
-            - name: PORT
-              value: "8080"
-            - name: DISABLE_PROFILER
-              value: "1"
           resources:
             requests:
               cpu: "100m"
@@ -142,14 +134,11 @@ spec:
     spec:
       containers:
         - name: server
-          # Real Google Online Boutique cartservice (Go/dotnet).
-          # SolarWinds attack deploys a backdoored version of this exact image.
-          image: us-central1-docker.pkg.dev/google-samples/microservices-demo/cartservice:v0.10.1
+          # python:3.11-slim is REQUIRED for the evaluation scripts.
+          image: python:3.11-slim
+          command: ["python", "-c", "import time; print('cartservice ready'); [time.sleep(60) for _ in iter(int,1)]"]
           ports:
             - containerPort: 7070
-          env:
-            - name: REDIS_ADDR
-              value: ""
           resources:
             requests:
               cpu: "100m"
