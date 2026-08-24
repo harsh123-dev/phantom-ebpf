@@ -101,7 +101,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # ---------- Startup ----------
     log.info("gateway.startup")
 
-    # Asyncpg pool.
+    # Asyncpg pool — non-fatal: gateway starts even if DB is unavailable.
     try:
         pool = await create_pool()
         app.state.db_pool = pool
@@ -114,7 +114,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         log.warning("gateway.db_connect_failed_continuing", error=str(exc))
         app.state.db_pool = None
 
-    # Redis async client.
+    # Redis async client — non-fatal: gateway starts even if Redis is unavailable.
+    redis_client: aioredis.Redis | None = None
     try:
         redis_client = aioredis.from_url(
             _redis_url(),
@@ -135,10 +136,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     log.info("gateway.shutdown")
     if app.state.db_pool is not None:
         await close_pool()
-    if app.state.redis is not None:
+    if redis_client is not None:
         await redis_client.aclose()
     log.info("gateway.shutdown_complete")
-
 
 
 # ---------------------------------------------------------------------------
