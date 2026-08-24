@@ -33,6 +33,9 @@ spec:
           command: ["python", "-c", "import time; print('recommendationservice ready'); [time.sleep(60) for _ in iter(int,1)]"]
           ports:
             - containerPort: 8080
+          env:
+            - name: PIP_BREAK_SYSTEM_PACKAGES
+              value: "1"
           resources:
             requests:
               cpu: "100m"
@@ -86,6 +89,9 @@ spec:
           command: ["python", "-c", "import time; print('emailservice ready'); [time.sleep(60) for _ in iter(int,1)]"]
           ports:
             - containerPort: 8080
+          env:
+            - name: PIP_BREAK_SYSTEM_PACKAGES
+              value: "1"
           resources:
             requests:
               cpu: "100m"
@@ -139,6 +145,9 @@ spec:
           command: ["python", "-c", "import time; print('cartservice ready'); [time.sleep(60) for _ in iter(int,1)]"]
           ports:
             - containerPort: 7070
+          env:
+            - name: PIP_BREAK_SYSTEM_PACKAGES
+              value: "1"
           resources:
             requests:
               cpu: "100m"
