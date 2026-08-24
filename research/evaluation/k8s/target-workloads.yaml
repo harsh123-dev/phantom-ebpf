@@ -25,12 +25,18 @@ spec:
     spec:
       containers:
         - name: server
-          # python:3.11-slim: replaces deprecated gcr.io image; attack scripts
-          # use kubectl exec + pip so Python must be present in the container.
-          image: python:3.11-slim
-          command: ["python3", "-c", "import time; print('recommendationservice ready'); [time.sleep(60) for _ in iter(int,1)]"]
+          # Real Google Online Boutique recommendationservice (Python).
+          # Moved from gcr.io to Google Artifact Registry in 2024.
+          image: us-central1-docker.pkg.dev/google-samples/microservices-demo/recommendationservice:v0.10.1
           ports:
             - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: PRODUCT_CATALOG_SERVICE_ADDR
+              value: "productcatalogservice:3550"
+            - name: DISABLE_PROFILER
+              value: "1"
           resources:
             requests:
               cpu: "100m"
@@ -41,12 +47,12 @@ spec:
           readinessProbe:
             exec:
               command: ["python3", "-c", "import sys; sys.exit(0)"]
-            initialDelaySeconds: 5
+            initialDelaySeconds: 15
             periodSeconds: 10
           livenessProbe:
             exec:
               command: ["python3", "-c", "import sys; sys.exit(0)"]
-            initialDelaySeconds: 10
+            initialDelaySeconds: 20
             periodSeconds: 15
 ---
 apiVersion: v1
@@ -79,11 +85,15 @@ spec:
     spec:
       containers:
         - name: server
-          # python:3.11-slim: replaces deprecated gcr.io image.
-          image: python:3.11-slim
-          command: ["python3", "-c", "import time; print('emailservice ready'); [time.sleep(60) for _ in iter(int,1)]"]
+          # Real Google Online Boutique emailservice (Python).
+          image: us-central1-docker.pkg.dev/google-samples/microservices-demo/emailservice:v0.10.1
           ports:
             - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: DISABLE_PROFILER
+              value: "1"
           resources:
             requests:
               cpu: "100m"
@@ -94,12 +104,12 @@ spec:
           readinessProbe:
             exec:
               command: ["python3", "-c", "import sys; sys.exit(0)"]
-            initialDelaySeconds: 5
+            initialDelaySeconds: 15
             periodSeconds: 10
           livenessProbe:
             exec:
               command: ["python3", "-c", "import sys; sys.exit(0)"]
-            initialDelaySeconds: 10
+            initialDelaySeconds: 20
             periodSeconds: 15
 ---
 apiVersion: v1
@@ -132,12 +142,14 @@ spec:
     spec:
       containers:
         - name: server
-          # python:3.11-slim: replaces deprecated gcr.io cartservice image.
-          # SolarWinds attack builds a modified version of this image.
-          image: python:3.11-slim
-          command: ["python3", "-c", "import time; print('cartservice ready'); [time.sleep(60) for _ in iter(int,1)]"]
+          # Real Google Online Boutique cartservice (Go/dotnet).
+          # SolarWinds attack deploys a backdoored version of this exact image.
+          image: us-central1-docker.pkg.dev/google-samples/microservices-demo/cartservice:v0.10.1
           ports:
             - containerPort: 7070
+          env:
+            - name: REDIS_ADDR
+              value: ""
           resources:
             requests:
               cpu: "100m"
@@ -147,13 +159,13 @@ spec:
               memory: "256Mi"
           readinessProbe:
             exec:
-              command: ["python3", "-c", "import sys; sys.exit(0)"]
-            initialDelaySeconds: 5
+              command: ["/bin/sh", "-c", "exit 0"]
+            initialDelaySeconds: 15
             periodSeconds: 10
           livenessProbe:
             exec:
-              command: ["python3", "-c", "import sys; sys.exit(0)"]
-            initialDelaySeconds: 10
+              command: ["/bin/sh", "-c", "exit 0"]
+            initialDelaySeconds: 20
             periodSeconds: 15
 ---
 apiVersion: v1
