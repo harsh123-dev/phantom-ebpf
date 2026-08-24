@@ -102,35 +102,43 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     log.info("gateway.startup")
 
     # Asyncpg pool.
-    pool = await create_pool()
-    app.state.db_pool = pool
-
-    # Run pending migrations.
     try:
-        applied = await run_migrations()
-        log.info("gateway.migrations_complete", applied=applied)
+        pool = await create_pool()
+        app.state.db_pool = pool
+        try:
+            applied = await run_migrations()
+            log.info("gateway.migrations_complete", applied=applied)
+        except Exception as exc:
+            log.warning("gateway.migrations_failed", error=str(exc))
     except Exception as exc:
-        log.error("gateway.migrations_failed", error=str(exc))
-        raise
+        log.warning("gateway.db_connect_failed_continuing", error=str(exc))
+        app.state.db_pool = None
 
     # Redis async client.
-    redis_client = aioredis.from_url(
-        _redis_url(),
-        decode_responses=True,
-        socket_connect_timeout=5,
-        socket_timeout=5,
-    )
-    app.state.redis = redis_client
-    log.info("gateway.redis_connected")
+    try:
+        redis_client = aioredis.from_url(
+            _redis_url(),
+            decode_responses=True,
+            socket_connect_timeout=5,
+            socket_timeout=5,
+        )
+        app.state.redis = redis_client
+        log.info("gateway.redis_connected")
+    except Exception as exc:
+        log.warning("gateway.redis_connect_failed_continuing", error=str(exc))
+        app.state.redis = None
 
     log.info("gateway.ready")
     yield
 
     # ---------- Shutdown ----------
     log.info("gateway.shutdown")
-    await close_pool()
-    await redis_client.aclose()
+    if app.state.db_pool is not None:
+        await close_pool()
+    if app.state.redis is not None:
+        await redis_client.aclose()
     log.info("gateway.shutdown_complete")
+
 
 
 # ---------------------------------------------------------------------------
