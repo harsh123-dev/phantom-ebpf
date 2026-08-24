@@ -64,9 +64,27 @@ async def get_current_principal(
     if credentials is None:
         raise AuthenticationError("No bearer token provided.")
 
+    # ---------------------------------------------------------------------------
+    # Dev bypass: when AUTH_BYPASS_ENABLED=true, accept the bypass token without
+    # verifying against a real JWKS server. NEVER enable in production.
+    # ---------------------------------------------------------------------------
+    import os as _os
+    _bypass_enabled = _os.environ.get("AUTH_BYPASS_ENABLED", "").lower() in ("1", "true", "yes")
+    _bypass_token = _os.environ.get("AUTH_BYPASS_TOKEN", "dev-bypass-token-for-local-testing")
+    if _bypass_enabled and credentials.credentials == _bypass_token:
+        log.info("auth.bypass_token_accepted")
+        return AuthenticatedPrincipal(
+            tenant_id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
+            user_id="dev-user",
+            roles=frozenset({PhantomRole.ADMIN}),
+            token_jti="dev-bypass-jti",
+        )
+    # ---------------------------------------------------------------------------
+
     settings = get_auth_settings()
     principal = verify_jwt(credentials.credentials, settings)
     return principal
+
 
 
 # ---------------------------------------------------------------------------

@@ -25,6 +25,7 @@ import redis.asyncio as aioredis
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from prometheus_client import make_asgi_app
 
@@ -155,6 +156,24 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json",
         lifespan=lifespan,
     )
+
+    # ---- CORS (must be added before other middleware) ----
+    # CORS_ALLOW_ORIGINS: comma-separated list of allowed origins, or "*" for all.
+    # In production, set this to the exact frontend origin only.
+    _cors_origins_raw = os.environ.get("CORS_ALLOW_ORIGINS", "")
+    _cors_origins = (
+        [o.strip() for o in _cors_origins_raw.split(",") if o.strip()]
+        if _cors_origins_raw
+        else []
+    )
+    if _cors_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=_cors_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     # ---- Middleware (added in reverse: first added = outermost) ----
     app.add_middleware(PrometheusMiddleware)

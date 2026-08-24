@@ -73,6 +73,14 @@ spec:
                 configMapKeyRef:
                   name: phantom-config
                   key: log_level
+            # Dev: allow the frontend dev-bypass token without a real JWKS server.
+            - name: AUTH_BYPASS_ENABLED
+              value: "true"
+            - name: AUTH_BYPASS_TOKEN
+              value: "dev-bypass-token-for-local-testing"
+            # Dev: allow the local React dev server to call the API without CORS errors.
+            - name: CORS_ALLOW_ORIGINS
+              value: "*"
           resources:
             requests:
               cpu: "50m"
@@ -103,7 +111,9 @@ metadata:
   name: phantom-api-gateway
   namespace: phantom
 spec:
-  type: ClusterIP
+  # NodePort: exposes the API on a static port on every cluster node so
+  # the browser frontend (running outside the cluster) can reach it directly.
+  type: NodePort
   selector:
     app: phantom-api-gateway
   ports:
@@ -111,6 +121,7 @@ spec:
       port: 8080
       targetPort: http
       protocol: TCP
+      nodePort: 30080
 ---
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
