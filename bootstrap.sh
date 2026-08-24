@@ -5,30 +5,31 @@ echo "==========================================="
 echo "   PHANTOM Environment Bootstrap Script    "
 echo "==========================================="
 
-if [ "$#" -ne 3 ]; then
-    echo "Usage: ./bootstrap.sh <RDS_ENDPOINT> <REDIS_ENDPOINT> <RDS_PASSWORD>"
-    echo ""
-    echo "Run 'terraform output' on your Windows machine to get these values,"
-    echo "then run this script on your EC2 instance."
+echo ""
+echo "[1/5] Extracting Terraform Outputs..."
+cd infra/terraform/environments/dev
+RDS_ENDPOINT=$(terraform output -raw rds_endpoint)
+REDIS_ENDPOINT=$(terraform output -raw redis_endpoint)
+RDS_PASSWORD=$(terraform output -raw rds_password)
+cd ../../../../
+
+if [ -z "$RDS_ENDPOINT" ] || [ -z "$REDIS_ENDPOINT" ]; then
+    echo "Error: Could not extract Terraform outputs. Are you sure 'terraform apply' succeeded?"
     exit 1
 fi
 
-RDS_ENDPOINT=$1
-REDIS_ENDPOINT=$2
-RDS_PASSWORD=$3
-
 echo ""
-echo "[1/4] Configuring Kubernetes Namespaces & RBAC..."
+echo "[2/5] Configuring Kubernetes Namespaces & RBAC..."
 kubectl apply -f infra/k8s/rbac/phantom-rbac.yaml
 
-echo "[2/4] Configuring ConfigMap..."
+echo "[3/5] Configuring ConfigMap..."
 cp infra/k8s/configmaps.yaml infra/k8s/configmaps.tmp.yaml
 sed -i "s/REPLACE_WITH_RDS_ENDPOINT/$RDS_ENDPOINT/g" infra/k8s/configmaps.tmp.yaml
 sed -i "s/REPLACE_WITH_ELASTICACHE_ENDPOINT/$REDIS_ENDPOINT/g" infra/k8s/configmaps.tmp.yaml
 kubectl apply -f infra/k8s/configmaps.tmp.yaml
 rm infra/k8s/configmaps.tmp.yaml
 
-echo "[3/4] Creating Kubernetes Secrets..."
+echo "[4/5] Creating Kubernetes Secrets..."
 # Delete old secrets if they exist to prevent errors
 kubectl delete secret phantom-api-gateway-secret phantom-causal-engine-secret phantom-sbom-service-secret phantom-report-generator-secret phantom-agent-secret -n phantom --ignore-not-found 2>/dev/null
 
@@ -55,7 +56,7 @@ kubectl create secret generic phantom-report-generator-secret -n phantom \
 kubectl create secret generic phantom-agent-secret -n phantom \
   --from-literal=api_key="$API_KEY"
 
-echo "[4/4] Deploying Microservices..."
+echo "[5/5] Deploying Microservices..."
 kubectl apply -f infra/k8s/api-gateway-deployment.yaml
 
 echo ""
