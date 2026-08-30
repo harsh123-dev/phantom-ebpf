@@ -24,6 +24,8 @@ aws eks update-kubeconfig --region ap-south-1 --name phantom-dev
 
 echo ""
 echo "[3/6] Configuring Kubernetes Namespaces & RBAC..."
+kubectl create namespace phantom --dry-run=client -o yaml | kubectl apply -f -
+kubectl create namespace phantom-eval --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -f infra/k8s/rbac/phantom-rbac.yaml
 
 echo "[4/6] Configuring ConfigMap..."
