@@ -129,14 +129,6 @@ resource "aws_security_group" "node" {
     self        = true
   }
 
-  ingress {
-    description     = "Cluster control plane to worker nodes (kubelet, extension APIs)"
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    security_groups = [aws_security_group.cluster.id]
-  }
-
   egress {
     description = "Worker access to AWS services and external dependencies"
     from_port   = 0
@@ -150,6 +142,16 @@ resource "aws_security_group" "node" {
     Environment = var.environment
     Service     = "phantom"
   }
+}
+
+resource "aws_security_group_rule" "cluster_to_node" {
+  type                     = "ingress"
+  security_group_id        = aws_security_group.node.id
+  source_security_group_id = aws_security_group.cluster.id
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
+  description              = "Cluster control plane to worker nodes (kubelet, extension APIs)"
 }
 
 resource "aws_eks_cluster" "phantom" {
