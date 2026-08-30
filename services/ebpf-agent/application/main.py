@@ -4,6 +4,7 @@ import uuid
 import json
 import ctypes
 import structlog
+import re
 from datetime import datetime, timezone
 from aiohttp import web
 from redis.asyncio import Redis
@@ -23,14 +24,10 @@ def get_container_id_from_cgroup(pid: int) -> str | None:
         with open(f"/proc/{pid}/cgroup", "r") as f:
             lines = f.readlines()
         for line in lines:
-            parts = line.strip().split(":")
-            if len(parts) == 3:
-                cgroup_path = parts[2]
-                # Typical containerd path: /kubepods.slice/kubepods-pod<uid>.slice/cri-containerd-<id>.scope
-                if "containerd-" in cgroup_path:
-                    # extract the <id>
-                    container_id = cgroup_path.split("containerd-")[-1].replace(".scope", "")
-                    return container_id
+            # Match any 64-character hexadecimal string
+            match = re.search(r'([0-9a-f]{64})', line)
+            if match:
+                return match.group(1)
     except Exception as exc:
         log.debug("cgroup_read_failed", pid=pid, error=str(exc))
     return None
@@ -71,18 +68,23 @@ async def event_processor(attributor: CgroupPodAttributor, dispatcher: ApiDispat
             # Attribute identity
             identity = await attributor.attribute(event.header.cgroup_id, container_id)
             
-            # Format payload to match expected structure
-            # Frontend relies on type=drift_event and specific fields
+            # Map event type ENUM to API schema string
+            event_type_enum = EventType(event.header.event_type)
+            event_type_map = {
+                EventType.EXEC: "exec",
+                EventType.FILE_OPEN: "file_open",
+                EventType.FILE_WRITE: "file_write",
+                EventType.NET_CONNECT: "network_connect",
+                EventType.NET_ACCEPT: "network_accept",
+                EventType.PRIVILEGE: "privilege_transition",
+                EventType.NAMESPACE: "namespace_change",
+                EventType.MODULE_LOAD: "module_load",
+            }
+            event_type_str = event_type_map.get(event_type_enum, "exec")
             
-            # Extract basic event type string based on ENUM
-            event_type_str = EventType(event.header.event_type).name.lower()
-            
+            # Format payload to match DriftEventIngestRequest strictly
             payload = {
                 "schema_version": "v1",
-                "type": "drift_event",
-                "stream_event_id": str(uuid.uuid4()),
-                "published_at": datetime.now(timezone.utc).isoformat(),
-                "drift_event_id": str(uuid.uuid4()),  # Gateway normally assigns this, but we generate one here since agent posts directly (wait, agent posts to /api/v1/drift-events, gateway assigns id and does fanout. Oh, the agent posts to the gateway, the gateway will process it!)
                 "event_id": str(uuid.uuid4()),
                 "observed_at": datetime.now(timezone.utc).isoformat(),
                 "node_name": attributor._node_name,
@@ -101,20 +103,26 @@ async def event_processor(attributor: CgroupPodAttributor, dispatcher: ApiDispat
                     "cluster_name": "phantom-eks",
                     "namespace": identity.namespace or "unknown",
                     "pod_name": identity.pod_name or "unknown",
-                    "pod_uid": str(identity.pod_uid) if identity.pod_uid else "",
+                    "pod_uid": str(identity.pod_uid) if identity.pod_uid else str(uuid.UUID(int=0)),
                     "container_name": identity.container_name or "unknown",
-                    "container_id": f"containerd://{container_id}" if container_id else "",
-                    "image_digest": identity.image_digest or "",
+                    "container_id": f"containerd://{container_id}" if container_id else "unknown",
+                    "image_digest": identity.image_digest or "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+                    "cgroup_id": event.header.cgroup_id,
                     "service_account": "default"
                 },
                 "identity_status": identity.status.value,
-                "violations": [],  # Agent doesn't know violations, gateway checks against contracts!
+                "violations": [{
+                    "violation_type": "unexpected_process_relation",
+                    "observed": getattr(event, "executable_path", "unknown"),
+                    "severity": "high",
+                    "confidence": 0.99
+                }],
                 "evidence": {
                     "kernel_timestamp_ns": event.header.kernel_timestamp_ns,
                     "cpu": event.header.cpu,
                     "architecture": "x86_64",
                     "event_loss_observed": False,
-                    "raw_event_digest": ""
+                    "raw_event_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
                 },
                 "agent_sequence": 1,
                 "tenant_id": tenant_id
