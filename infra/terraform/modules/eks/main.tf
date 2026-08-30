@@ -33,6 +33,10 @@ variable "node_desired_size" {
 
 variable "vpc_id" {}
 
+data "aws_vpc" "selected" {
+  id = var.vpc_id
+}
+
 variable "subnet_ids" {
   type = list(string)
 }
@@ -86,6 +90,14 @@ resource "aws_security_group" "cluster" {
     to_port         = 443
     protocol        = "tcp"
     security_groups = [aws_security_group.node.id]
+  }
+
+  ingress {
+    description = "Kubernetes API access from within the VPC (e.g. Bastion EC2)"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [data.aws_vpc.selected.cidr_block]
   }
 
   egress {
