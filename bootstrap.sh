@@ -70,7 +70,8 @@ kubectl create secret generic phantom-report-generator-secret -n phantom \
   --from-literal=aws_region="ap-south-1"
 
 kubectl create secret generic phantom-agent-secret -n phantom \
-  --from-literal=api_key="$API_KEY"
+  --from-literal=api_key="$API_KEY" \
+  --from-literal=token="$API_KEY"
 
 echo "[6/6] Deploying Microservices & Evaluation Targets..."
 kubectl apply -f infra/k8s/api-gateway-deployment.yaml
