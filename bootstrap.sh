@@ -43,8 +43,11 @@ JWT_SECRET=$(openssl rand -hex 32)
 API_KEY=$(openssl rand -hex 16)
 
 kubectl create secret generic phantom-api-gateway-secret -n phantom \
-  --from-literal=postgres_password="$RDS_PASSWORD" \
-  --from-literal=jwks_uri="https://cognito-idp.us-east-1.amazonaws.com/us-east-1_xxxx/.well-known/jwks.json"
+  --from-literal=database_url="postgresql://phantom:$RDS_PASSWORD@$RDS_ENDPOINT:5432/phantom" \
+  --from-literal=redis_url="redis://$REDIS_ENDPOINT:6379/0" \
+  --from-literal=jwt_issuer="phantom-auth" \
+  --from-literal=jwt_audience="phantom-users" \
+  --from-literal=jwks_uri="http://localhost:8080/.well-known/jwks.json"
 
 kubectl create secret generic phantom-causal-engine-secret -n phantom \
   --from-literal=database_url="postgresql://phantom:$RDS_PASSWORD@$RDS_ENDPOINT:5432/phantom" \
