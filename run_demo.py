@@ -10,7 +10,7 @@ def run_solarwinds_attack():
     print("=========================================================")
     print("Initiating SolarWinds-style Build Tampering Attack Demo")
     print("=========================================================")
-    attack = SolarWindsStyleAttack()
+    attack = SolarWindsStyleAttack(target_namespace="phantom-eval")
     
     print("\n[+] Injecting attack (building image & deploying)...")
     success = attack.inject(target_namespace="phantom-eval", pod_name="emailservice")
@@ -35,7 +35,7 @@ def recover_solarwinds_attack():
     print("=========================================================")
     print("Recovering from SolarWinds-style Attack")
     print("=========================================================")
-    attack = SolarWindsStyleAttack()
+    attack = SolarWindsStyleAttack(target_namespace="phantom-eval")
     attack.recover(target_namespace="phantom-eval", pod_name="emailservice")
     print("\n[+] Recovery complete.")
 
