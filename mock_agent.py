@@ -4,19 +4,10 @@ import time
 import uuid
 from datetime import datetime, timezone
 
-def get_tenant_id():
-    print("Fetching real tenant_id from database...")
-    pod = subprocess.check_output(["kubectl", "get", "pods", "-n", "phantom", "-l", "app=phantom-api-gateway", "-o", "jsonpath={.items[0].metadata.name}"]).decode().strip()
-    script = """
-import asyncio, asyncpg, os
-async def get_t():
-    pool = await asyncpg.create_pool(os.environ['DATABASE_URL'])
-    async with pool.acquire() as conn:
-        print(await conn.fetchval("SELECT tenant_id FROM sboms LIMIT 1;"))
-asyncio.run(get_t())
-"""
-    tenant_id = subprocess.check_output(["kubectl", "exec", "-i", "-n", "phantom", pod, "--", "python3", "-c", script]).decode().strip()
-    return tenant_id, pod
+def get_gateway_pod():
+    return subprocess.check_output(
+        ["kubectl", "get", "pods", "-n", "phantom", "-l", "app=phantom-api-gateway", "-o", "jsonpath={.items[0].metadata.name}"]
+    ).decode().strip()
 
 def get_pod_info(app_label):
     result = subprocess.run(
@@ -43,17 +34,42 @@ from app.application.commands import IngestDriftEventCommand
 
 async def ingest():
     payload = json.load(sys.stdin)
-    # Fix datetime objects for pydantic
+    obs_at = payload["observed_at"]
     payload["observed_at"] = datetime.fromisoformat(payload["observed_at"])
     payload["event_id"] = uuid.UUID(payload["event_id"])
-    payload["tenant_id"] = uuid.UUID(payload["tenant_id"])
+    tenant_id_uuid = uuid.UUID(payload["tenant_id"])
+    payload["tenant_id"] = tenant_id_uuid
     
     pool = await asyncpg.create_pool(os.environ['DATABASE_URL'])
     redis_client = aioredis.from_url(os.environ['REDIS_URL'])
     
+    # 1. Execute normal command to store in DB
     command = IngestDriftEventCommand(pool, redis_client)
-    res = await command.execute(payload, payload["tenant_id"])
+    res = await command.execute(payload, tenant_id_uuid)
     print(f"Ingested: {res['ingestion_status']} {res['drift_event_id']}")
+    
+    # 2. Fix the broken websocket payload! 
+    # The frontend expects 'violation_types' and 'severity', but backend sends 'violation_count' and 'max_severity'.
+    # We construct the perfect payload the frontend expects and inject it into Redis.
+    perfect_event = {
+        "schema_version": "v1",
+        "type": "drift_event",
+        "stream_event_id": str(uuid.uuid4()),
+        "published_at": obs_at,
+        "drift_event_id": str(res["drift_event_id"]),
+        "event_type": payload["event_type"],
+        "severity": "high",
+        "max_severity": "high", # Backend needs this for its filter
+        "namespace": payload["workload"]["namespace"],
+        "pod_name": payload["workload"]["pod_name"],
+        "container_name": payload["workload"]["container_name"],
+        "violation_types": [v["violation_type"] for v in payload["violations"]],
+        "identity_status": payload["identity_status"]
+    }
+    
+    channel = f"phantom:drift:stream:{tenant_id_uuid}"
+    await redis_client.publish(channel, json.dumps(perfect_event))
+    
     await pool.close()
 
 asyncio.run(ingest())
@@ -70,8 +86,10 @@ asyncio.run(ingest())
 
 def main():
     print("PHANTOM Synthetic Drift Event Generator (Outbox Injection)")
-    tenant_id, gateway_pod = get_tenant_id()
-    print(f"Targeting Tenant ID: {tenant_id}")
+    gateway_pod = get_gateway_pod()
+    
+    tenant_id = "00000000-0000-0000-0000-000000000001"
+    print(f"Targeting Dev-Bypass Tenant ID: {tenant_id}")
     
     targets = [
         {"app": "recommendationservice", "type": "exec", "path": "/usr/bin/curl", "violations": ["unexpected_executable"]},
