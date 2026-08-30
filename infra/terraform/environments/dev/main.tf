@@ -89,6 +89,10 @@ output "ecr_repository_urls" {
   value = module.ecr.repository_urls
 }
 
-# After terraform apply, update infra/k8s/configmaps.yaml with:
-# postgres_host: module.rds.endpoint
-# redis_host: module.elasticache.primary_endpoint_address
+output "rds_password" {
+  value     = module.rds.db_password
+  sensitive = true
+}
+
+# After terraform apply, the bootstrap script will automatically update infra/k8s/configmaps.yaml
+# and inject the RDS password into the Kubernetes secrets.
