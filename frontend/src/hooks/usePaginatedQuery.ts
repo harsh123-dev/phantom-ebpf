@@ -54,6 +54,15 @@ export const usePaginatedQuery = <T, P extends CursorParams>(
     };
   }, [fetchFn, params, paramsKey]);
 
+  useEffect(() => {
+    if (!loading) return;
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      setError("Request timed out. Is the API running?");
+    }, 15000);
+    return () => clearTimeout(timeout);
+  }, [loading]);
+
   const fetchNext = useCallback(async (): Promise<void> => {
     if (nextCursor === null || loading) return;
     setLoading(true);

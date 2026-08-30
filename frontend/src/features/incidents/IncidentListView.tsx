@@ -43,6 +43,15 @@ export const IncidentListView = (): JSX.Element => {
     loadIncidents(true);
   }, [statusFilter, classFilter, createdAfter, createdBefore, loadIncidents]);
 
+  useEffect(() => {
+    if (!loading) return;
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      setError("Request timed out. Is the API running?");
+    }, 15000);
+    return () => clearTimeout(timeout);
+  }, [loading]);
+
   const handleLoadMore = () => {
     if (nextCursor) {
       setCursor(nextCursor);

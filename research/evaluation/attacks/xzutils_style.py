@@ -248,7 +248,7 @@ class XZUtilsStyleAttack(BaseAttack):
         # Build the wheel (no shell=True; explicit args).
         if not self.dry_run:
             result = subprocess.run(
-                ["python", "setup.py", "bdist_wheel", "--quiet"],
+                ["python3", "setup.py", "bdist_wheel", "--quiet"],
                 cwd=str(pkg_dir),
                 capture_output=True,
                 text=True,

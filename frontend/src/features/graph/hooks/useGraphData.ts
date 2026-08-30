@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import type { BdgNode, BdgEdge, UUID, SubgraphResponse } from "../../../types/phantom";
 import { usePhantomClient } from "../../../hooks/usePhantomClient";
 import { MOCK_BDG_SUBGRAPH } from "../../../api/mockClient";
+import { ApiError } from "../../../api/apiError";
 
 export interface GraphNode extends BdgNode {
   x: number;
@@ -99,7 +100,11 @@ export const useGraphData = ({ snapshotId }: UseGraphDataOptions = {}) => {
       }
       processGraphData(response.nodes, response.edges);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to load full graph");
+      if (err instanceof ApiError && err.status === 404) {
+        setData({ nodes: [], links: [] });
+      } else {
+        setError(err instanceof Error ? err.message : "Failed to load full graph");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -128,7 +133,11 @@ export const useGraphData = ({ snapshotId }: UseGraphDataOptions = {}) => {
         }
         processGraphData(response.nodes, response.edges);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Failed to query subgraph");
+        if (err instanceof ApiError && err.status === 404) {
+          setData({ nodes: [], links: [] });
+        } else {
+          setError(err instanceof Error ? err.message : "Failed to query subgraph");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -139,6 +148,15 @@ export const useGraphData = ({ snapshotId }: UseGraphDataOptions = {}) => {
   useEffect(() => {
     loadFullGraph();
   }, [loadFullGraph]);
+
+  useEffect(() => {
+    if (!isLoading) return;
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+      setError("Request timed out. Is the API running?");
+    }, 15000);
+    return () => clearTimeout(timeout);
+  }, [isLoading]);
 
   return {
     data,

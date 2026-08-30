@@ -147,7 +147,7 @@ class SbomServiceClient:
             ServiceUnavailableError: On network or upstream errors.
         """
         try:
-            resp = await self._client.post("/internal/v1/sboms", json=payload)
+            resp = await self._client.post("/api/v1/sboms", json=payload)
         except (httpx.ConnectError, httpx.TimeoutException) as exc:
             log.warning("service_client.sbom.ingest_failed", error=str(exc))
             raise ServiceUnavailableError("SBOM service is unreachable.") from exc
@@ -169,7 +169,7 @@ class SbomServiceClient:
         """
         try:
             resp = await self._client.get(
-                f"/internal/v1/sboms/{sbom_id}",
+                f"/api/v1/sboms/{sbom_id}",
                 params={"tenant_id": str(tenant_id)},
             )
         except (httpx.ConnectError, httpx.TimeoutException) as exc:

@@ -41,6 +41,15 @@ export const ContractCoverage = (): JSX.Element => {
     };
   }, [client]);
 
+  useEffect(() => {
+    if (!loading) return;
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      setError("Request timed out. Is the API running?");
+    }, 15000);
+    return () => clearTimeout(timeout);
+  }, [loading]);
+
   const summary = useMemo<CoverageSummary>(() => ({
     total: contracts.length,
     verified: contracts.filter((item) => item.verification_status === "verified").length,

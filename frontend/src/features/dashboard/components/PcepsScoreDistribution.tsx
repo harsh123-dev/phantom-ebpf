@@ -30,6 +30,15 @@ export const PcepsScoreDistribution = (): JSX.Element => {
     };
   }, [client, createdAfter]);
 
+  useEffect(() => {
+    if (!loading) return;
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      setError("Request timed out. Is the API running?");
+    }, 15000);
+    return () => clearTimeout(timeout);
+  }, [loading]);
+
   const chartData = useMemo<SeverityBarDatum[]>(() => severityOrder.map((severity) => ({
     severity,
     count: incidents.filter((incident) => classificationSeverity(incident.classification) === severity).length,
@@ -40,7 +49,11 @@ export const PcepsScoreDistribution = (): JSX.Element => {
       <h2 className="mb-4 text-base font-semibold text-gray-900">PCEPS Score Distribution</h2>
       {loading ? <div className="h-56 animate-pulse rounded bg-gray-100" /> : null}
       {error ? <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
-      {!loading && error === null ? <SeverityBarChart data={chartData} /> : null}
+      {!loading && error === null ? (
+        incidents.length === 0 ? (
+          <div className="flex h-56 items-center justify-center text-sm text-gray-500">Scores will appear after causal attribution runs</div>
+        ) : <SeverityBarChart data={chartData} />
+      ) : null}
     </section>
   );
 };

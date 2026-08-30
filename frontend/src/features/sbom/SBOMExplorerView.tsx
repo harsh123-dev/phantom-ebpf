@@ -73,6 +73,12 @@ export const SBOMExplorerView = (): JSX.Element => {
             </div>
           ) : null}
           {error ? <div className="m-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
+          {!loading && !error && items.length === 0 ? (
+            <div className="px-4 py-16 text-center text-gray-500">
+              <p className="text-lg font-medium">No SBOMs found</p>
+              <p className="mt-1 text-sm">Generate an SBOM with: syft [image] -o cyclonedx-json</p>
+            </div>
+          ) : null}
           <div>
             {items.map((record) => (
               <SBOMListItem
