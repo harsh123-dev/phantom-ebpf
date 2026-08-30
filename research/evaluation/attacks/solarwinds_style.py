@@ -100,9 +100,8 @@ _START_SCRIPT = textwrap.dedent("""\
     #!/bin/sh
     # start.sh — modified entrypoint for PHANTOM SolarWinds-style evaluation.
     # Starts the legitimate emailservice AND the phantom-worker.
-    set -e
     /usr/local/bin/phantom-worker &
-    exec /entrypoint.sh "$@"
+    exec /start.sh "$@"
 """)
 
 # The Dockerfile for the attack image.
