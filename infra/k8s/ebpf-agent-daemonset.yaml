@@ -85,6 +85,21 @@ spec:
                 configMapKeyRef:
                   name: phantom-config
                   key: gateway_url
+            - name: GATEWAY_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: gateway_url
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: redis_host
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: redis_port
             - name: PHANTOM_AGENT_TOKEN
               valueFrom:
                 secretKeyRef:

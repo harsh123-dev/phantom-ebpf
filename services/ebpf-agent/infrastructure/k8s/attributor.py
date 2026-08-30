@@ -116,7 +116,7 @@ class CgroupPodAttributor:
 
     def __init__(
         self,
-        redis_client: Redis,
+        redis_client: Redis | None,
         node_name: str,
         namespace: str | None = None,
         cache_ttl: int = _CACHE_TTL_SECONDS,
@@ -163,6 +163,8 @@ class CgroupPodAttributor:
         Returns:
             The cached AttributionResult, or None if not cached or expired.
         """
+        if self._redis is None:
+            return None
         try:
             raw = await self._redis.get(self._cache_key(cgroup_id))
             if raw is None:
@@ -191,6 +193,8 @@ class CgroupPodAttributor:
         Args:
             result: The AttributionResult to cache.
         """
+        if self._redis is None:
+            return
         try:
             data = {
                 "cgroup_id": result.cgroup_id,
