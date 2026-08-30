@@ -25,9 +25,19 @@ FROM ubuntu:22.04 AS runtime
 LABEL org.opencontainers.image.title="PHANTOM ebpf-agent"
 LABEL org.opencontainers.image.source="https://github.com/phantom-research/phantom"
 RUN apt-get update -qq && apt-get install -y --no-install-recommends \
-    libelf1 libbpf0 ca-certificates && rm -rf /var/lib/apt/lists/*
+    libelf1 libbpf0 ca-certificates python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
 WORKDIR /agent
 COPY --from=builder /build/phantom-agent ./phantom-agent
 COPY --from=builder /build/bpf/*.o       ./bpf/
+
+# Install python dependencies
+COPY pyproject.toml ./
+COPY application/ ./application/
+COPY infrastructure/ ./infrastructure/
+COPY domain/ ./domain/
+COPY include/ ./include/
+
+RUN pip3 install --no-cache-dir . aiohttp
+
 # NOTE: Requires privileged + hostPID + hostNetwork in DaemonSet spec.
-ENTRYPOINT ["/agent/phantom-agent"]
+ENTRYPOINT ["python3", "-m", "application.main"]

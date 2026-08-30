@@ -118,6 +118,13 @@ def _configure_libbpf_prototypes(lib: ctypes.CDLL) -> None:
     lib.ring_buffer__free.restype  = None
     lib.ring_buffer__free.argtypes = [c_void_p]
 
+    # ring_buffer__add(ring_buffer *, int map_fd, ring_buffer_sample_fn fn, void *ctx) -> int
+    lib.ring_buffer__add.restype = c_int
+    lib.ring_buffer__add.argtypes = [c_void_p, c_int, c_void_p, c_void_p]
+
+# Callback signature: int (*ring_buffer_sample_fn)(void *ctx, void *data, size_t size)
+RING_BUFFER_SAMPLE_FN = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t)
+
 
 # ---------------------------------------------------------------------------
 # Ring-buffer map names (must match SEC(".maps") names in .bpf.c files)
@@ -324,3 +331,41 @@ class PhantomBpfLoader:
     def __exit__(self, *args: object) -> None:
         """Context manager: close all objects on exit."""
         self.close_all()
+
+
+class RingBufferManager:
+    """Manages the lifecycle of a libbpf ring_buffer and polls it."""
+
+    def __init__(self, callback: RING_BUFFER_SAMPLE_FN):
+        self._callback = callback
+        self._rb_ptr = None
+        self._lib = _get_libbpf()
+
+    def add_map(self, map_fd: int) -> None:
+        """Add a map to the ring buffer manager."""
+        if not self._rb_ptr:
+            # Create a new ring buffer manager with the first map
+            # libbpf ring_buffer__new(int map_fd, ring_buffer_sample_fn fn, void *ctx, const struct ring_buffer_opts *opts)
+            self._rb_ptr = self._lib.ring_buffer__new(map_fd, self._callback, None, None)
+            if not self._rb_ptr:
+                raise RuntimeError(f"ring_buffer__new failed for fd {map_fd}, errno={ctypes.get_errno()}")
+        else:
+            # Add additional map
+            rc = self._lib.ring_buffer__add(self._rb_ptr, map_fd, self._callback, None)
+            if rc < 0:
+                raise RuntimeError(f"ring_buffer__add failed for fd {map_fd}, rc={rc}")
+
+    def poll(self, timeout_ms: int = 100) -> int:
+        """Poll the ring buffer for events.
+
+        Returns the number of events processed or negative error.
+        """
+        if not self._rb_ptr:
+            return 0
+        return self._lib.ring_buffer__poll(self._rb_ptr, timeout_ms)
+
+    def close(self) -> None:
+        """Free the ring buffer manager."""
+        if self._rb_ptr:
+            self._lib.ring_buffer__free(self._rb_ptr)
+            self._rb_ptr = None

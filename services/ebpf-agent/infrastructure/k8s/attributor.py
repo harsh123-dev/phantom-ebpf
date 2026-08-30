@@ -244,7 +244,7 @@ class CgroupPodAttributor:
         # and stores it in a local dict that is used before calling this method.
         return None
 
-    async def attribute(self, cgroup_id: int) -> AttributionResult:
+    async def attribute(self, cgroup_id: int, container_id: str | None = None) -> AttributionResult:
         """Attribute a cgroup ID to a Kubernetes pod and SBOM PURL.
 
         Checks the Redis cache first; on miss, queries the k8s API.
@@ -253,6 +253,7 @@ class CgroupPodAttributor:
 
         Args:
             cgroup_id: The cgroup ID from the eBPF event header.
+            container_id: Explicit container ID string if known.
 
         Returns:
             An AttributionResult describing the attribution quality.
@@ -267,7 +268,7 @@ class CgroupPodAttributor:
 
         # 2. Query k8s API.
         bound_log.debug("attributor.k8s_lookup")
-        result = await self._query_k8s(cgroup_id, bound_log)
+        result = await self._query_k8s(cgroup_id, bound_log, container_id)
 
         # 3. Cache and return.
         await self._set_cached(result)
@@ -277,6 +278,7 @@ class CgroupPodAttributor:
         self,
         cgroup_id: int,
         bound_log: structlog.BoundLogger,
+        container_id: str | None = None,
     ) -> AttributionResult:
         """Query the Kubernetes API to find the pod for a given cgroup ID.
 
@@ -320,15 +322,18 @@ class CgroupPodAttributor:
         # In a full deployment, the scanner pre-populates Redis with
         # container_id → cgroup_id mappings, and this method correlates.
 
-        # For now: search running pods and return MISSING to signal that
-        # the lookup needs the /proc cgroup scanner.
+        # For now: search running pods and match by container_id if available
         matches = []
         for pod in pod_list.items:
             if pod.status is None:
                 continue
             for cs in (pod.status.container_statuses or []):
-                # Container ID format: "containerd://<sha256>"
                 if cs.container_id and cs.state and cs.state.running:
+                    # Match logic: if container_id is provided, check if it's a substring
+                    # of cs.container_id (which is typically 'containerd://<id>')
+                    if container_id and container_id not in cs.container_id:
+                        continue
+                    
                     matches.append({
                         "pod_uid": str(pod.metadata.uid),
                         "pod_name": pod.metadata.name,
