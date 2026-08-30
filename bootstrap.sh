@@ -47,14 +47,14 @@ API_KEY=$(openssl rand -hex 16)
 
 kubectl create secret generic phantom-api-gateway-secret -n phantom \
   --from-literal=database_url="postgresql://phantom_admin:$RDS_PASSWORD_ENCODED@$RDS_ENDPOINT:5432/phantom" \
-  --from-literal=redis_url="redis://$REDIS_ENDPOINT:6379/0" \
+  --from-literal=redis_url="rediss://$REDIS_ENDPOINT:6379/0" \
   --from-literal=jwt_issuer="phantom-auth" \
   --from-literal=jwt_audience="phantom-users" \
   --from-literal=jwks_uri="http://localhost:8080/.well-known/jwks.json"
 
 kubectl create secret generic phantom-causal-engine-secret -n phantom \
   --from-literal=database_url="postgresql://phantom_admin:$RDS_PASSWORD_ENCODED@$RDS_ENDPOINT:5432/phantom" \
-  --from-literal=redis_url="redis://$REDIS_ENDPOINT:6379/0"
+  --from-literal=redis_url="rediss://$REDIS_ENDPOINT:6379/0"
 
 kubectl create secret generic phantom-sbom-service-secret -n phantom \
   --from-literal=database_url="postgresql://phantom_admin:$RDS_PASSWORD_ENCODED@$RDS_ENDPOINT:5432/phantom" \
@@ -65,7 +65,7 @@ kubectl create secret generic phantom-sbom-service-secret -n phantom \
 
 kubectl create secret generic phantom-report-generator-secret -n phantom \
   --from-literal=database_url="postgresql://phantom_admin:$RDS_PASSWORD_ENCODED@$RDS_ENDPOINT:5432/phantom" \
-  --from-literal=redis_url="redis://$REDIS_ENDPOINT:6379/0" \
+  --from-literal=redis_url="rediss://$REDIS_ENDPOINT:6379/0" \
   --from-literal=s3_bucket="phantom-report-bucket" \
   --from-literal=aws_region="ap-south-1"
 
