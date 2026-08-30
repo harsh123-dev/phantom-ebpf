@@ -54,9 +54,23 @@ async def _authenticate_ws(
     Returns:
         Tuple of (tenant_id, user_id) on success, None on auth failure.
     """
+    import os
+
     if not token:
         await websocket.close(code=WS_CLOSE_UNAUTHENTICATED, reason="missing token")
         return None
+
+    # Dev bypass: when AUTH_BYPASS_ENABLED=true, accept the bypass token without
+    # verifying against a real JWKS server. NEVER enable in production.
+    _bypass_enabled = os.environ.get("AUTH_BYPASS_ENABLED", "").lower() in ("1", "true", "yes")
+    _bypass_token = os.environ.get("AUTH_BYPASS_TOKEN", "dev-bypass-token-for-local-testing")
+    if _bypass_enabled and token == _bypass_token:
+        log.info("ws_drift_stream.bypass_token_accepted")
+        from app.domain.entities import PhantomRole
+        return (
+            uuid.UUID("00000000-0000-0000-0000-000000000001"),
+            "dev-user",
+        )
 
     try:
         from app.domain.entities import PhantomRole
