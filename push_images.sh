@@ -14,7 +14,11 @@ for SERVICE in "${SERVICES[@]}"; do
     echo "======================================="
     IMAGE_TAG="$REGISTRY/phantom/$SERVICE:latest"
     
-    docker build -t $IMAGE_TAG -f services/$SERVICE/Dockerfile .
+    if [ "$SERVICE" == "ebpf-agent" ]; then
+        docker build -t $IMAGE_TAG -f services/$SERVICE/Dockerfile services/$SERVICE/
+    else
+        docker build -t $IMAGE_TAG -f services/$SERVICE/Dockerfile .
+    fi
     docker push $IMAGE_TAG
 done
 
