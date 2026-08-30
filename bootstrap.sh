@@ -19,17 +19,21 @@ if [ -z "$RDS_ENDPOINT" ] || [ -z "$REDIS_ENDPOINT" ]; then
 fi
 
 echo ""
-echo "[2/5] Configuring Kubernetes Namespaces & RBAC..."
+echo "[2/6] Updating Kubernetes Config..."
+aws eks update-kubeconfig --region ap-south-1 --name phantom-dev
+
+echo ""
+echo "[3/6] Configuring Kubernetes Namespaces & RBAC..."
 kubectl apply -f infra/k8s/rbac/phantom-rbac.yaml
 
-echo "[3/5] Configuring ConfigMap..."
+echo "[4/6] Configuring ConfigMap..."
 cp infra/k8s/configmaps.yaml infra/k8s/configmaps.tmp.yaml
 sed -i "s/REPLACE_WITH_RDS_ENDPOINT/$RDS_ENDPOINT/g" infra/k8s/configmaps.tmp.yaml
 sed -i "s/REPLACE_WITH_ELASTICACHE_ENDPOINT/$REDIS_ENDPOINT/g" infra/k8s/configmaps.tmp.yaml
 kubectl apply -f infra/k8s/configmaps.tmp.yaml
 rm infra/k8s/configmaps.tmp.yaml
 
-echo "[4/5] Creating Kubernetes Secrets..."
+echo "[5/6] Creating Kubernetes Secrets..."
 # Delete old secrets if they exist to prevent errors
 kubectl delete secret phantom-api-gateway-secret phantom-causal-engine-secret phantom-sbom-service-secret phantom-report-generator-secret phantom-agent-secret -n phantom --ignore-not-found 2>/dev/null
 
@@ -56,7 +60,7 @@ kubectl create secret generic phantom-report-generator-secret -n phantom \
 kubectl create secret generic phantom-agent-secret -n phantom \
   --from-literal=api_key="$API_KEY"
 
-echo "[5/5] Deploying Microservices & Evaluation Targets..."
+echo "[6/6] Deploying Microservices & Evaluation Targets..."
 kubectl apply -f infra/k8s/api-gateway-deployment.yaml
 kubectl apply -f research/evaluation/k8s/target-workloads.yaml
 
