@@ -129,6 +129,14 @@ resource "aws_security_group" "node" {
     self        = true
   }
 
+  ingress {
+    description     = "Cluster control plane to worker nodes (kubelet, extension APIs)"
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = [aws_security_group.cluster.id]
+  }
+
   egress {
     description = "Worker access to AWS services and external dependencies"
     from_port   = 0
