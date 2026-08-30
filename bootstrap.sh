@@ -47,17 +47,21 @@ kubectl create secret generic phantom-api-gateway-secret -n phantom \
   --from-literal=jwks_uri="https://cognito-idp.us-east-1.amazonaws.com/us-east-1_xxxx/.well-known/jwks.json"
 
 kubectl create secret generic phantom-causal-engine-secret -n phantom \
-  --from-literal=postgres_password="$RDS_PASSWORD" \
-  --from-literal=api_key="$API_KEY"
+  --from-literal=database_url="postgresql://phantom:$RDS_PASSWORD@$RDS_ENDPOINT:5432/phantom" \
+  --from-literal=redis_url="redis://$REDIS_ENDPOINT:6379/0"
 
 kubectl create secret generic phantom-sbom-service-secret -n phantom \
-  --from-literal=postgres_password="$RDS_PASSWORD" \
+  --from-literal=database_url="postgresql://phantom:$RDS_PASSWORD@$RDS_ENDPOINT:5432/phantom" \
+  --from-literal=s3_bucket="phantom-sbom-bucket" \
   --from-literal=s3_access_key_id="dummy" \
-  --from-literal=s3_secret_access_key="dummy"
+  --from-literal=s3_secret_access_key="dummy" \
+  --from-literal=s3_region="ap-south-1"
 
 kubectl create secret generic phantom-report-generator-secret -n phantom \
-  --from-literal=postgres_password="$RDS_PASSWORD" \
-  --from-literal=api_key="$API_KEY"
+  --from-literal=database_url="postgresql://phantom:$RDS_PASSWORD@$RDS_ENDPOINT:5432/phantom" \
+  --from-literal=redis_url="redis://$REDIS_ENDPOINT:6379/0" \
+  --from-literal=s3_bucket="phantom-report-bucket" \
+  --from-literal=aws_region="ap-south-1"
 
 kubectl create secret generic phantom-agent-secret -n phantom \
   --from-literal=api_key="$API_KEY"
