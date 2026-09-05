@@ -7,7 +7,6 @@ Runs:
   Attack scenarios (3 repetitions each):
     1. XZ-Utils style library backdoor      (recommendationservice)
     2. Dependency confusion beacon package  (emailservice)
-    3. SolarWinds-style build tampering     (cartservice)
 
   Benign control scenarios (3 repetitions each):
     4. Benign dependency patch update       (should NOT trigger PHANTOM)
@@ -56,7 +55,6 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from research.evaluation.attacks.dependency_confusion import DependencyConfusionAttack
-from research.evaluation.attacks.solarwinds_style import SolarWindsStyleAttack
 from research.evaluation.attacks.xzutils_style import XZUtilsStyleAttack
 from research.evaluation.attacks.base_attack import AttackManifest, BaseAttack
 from research.evaluation.scenarios.scenario_runner import ScenarioRunner, ScenarioResult
@@ -429,14 +427,6 @@ def main() -> None:
                 eval_namespace=args.namespace,
             ),
             "emailservice",
-        ),
-        (
-            SolarWindsStyleAttack(
-                kubectl_context=args.kubectl_context,
-                dry_run=args.dry_run,
-                target_namespace=args.namespace,
-            ),
-            "cartservice",
         ),
     ]
 
