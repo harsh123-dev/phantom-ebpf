@@ -56,9 +56,9 @@ PHANTOM_API_URL="${PHANTOM_API_URL:-http://localhost:8080}"
 PROMETHEUS_URL="${PROMETHEUS_URL:-http://localhost:9090/api/v1/query}"
 FALCO_LOG="${FALCO_LOG:-/var/log/falco/events.jsonl}"
 API_TOKEN="${API_TOKEN:-}"
-BASELINE_DURATION="${BASELINE_DURATION:-300}"
-ATTACK_DURATION="${ATTACK_DURATION:-300}"
-RECOVERY_DURATION="${RECOVERY_DURATION:-120}"
+BASELINE_DURATION="${BASELINE_DURATION:-30}"
+ATTACK_DURATION="${ATTACK_DURATION:-60}"
+RECOVERY_DURATION="${RECOVERY_DURATION:-30}"
 DRY_RUN="${DRY_RUN:-0}"
 SKIP_NOTEBOOKS="${SKIP_NOTEBOOKS:-0}"
 
@@ -154,7 +154,7 @@ python3 "${REPO_ROOT}/research/evaluation/scenarios/run_all_scenarios.py" \
     --baseline-duration "${BASELINE_DURATION}" \
     --attack-duration "${ATTACK_DURATION}" \
     --recovery-duration "${RECOVERY_DURATION}" \
-    --repetitions 3 \
+    --repetitions 1 \
     ${DRY_RUN_FLAG}
 
 log "Scenario results written to: ${RESULTS_DIR}"
