@@ -53,7 +53,15 @@ PROC_ROOT: str = "/host/proc"
 _CONTAINER_ID_CACHE: dict[tuple[int, int, int], str | None] = {}
 
 # Asyncio queue between the C ring-buffer callback and the Python processor.
-event_queue: asyncio.Queue[ParsedEvent] = asyncio.Queue(maxsize=10000)
+event_queue: asyncio.Queue[ParsedEvent] = asyncio.Queue(maxsize=50000)
+
+# Namespaces the agent should forward events for.
+# Read from WATCH_NAMESPACES (comma-separated).  Empty → forward everything.
+_WATCH_NAMESPACES: frozenset[str] = frozenset(
+    ns.strip()
+    for ns in os.environ.get("WATCH_NAMESPACES", "phantom-eval").split(",")
+    if ns.strip()
+)
 
 
 # ---------------------------------------------------------------------------
@@ -257,6 +265,19 @@ async def event_processor(
                 "agent_sequence": 1,
                 "tenant_id": tenant_id,
             }
+
+            # Namespace filter: skip events from unmonitored namespaces.
+            # This prevents system-wide kernel event floods from saturating
+            # the queue and crowding out real phantom-eval workload events.
+            event_ns: str = identity.namespace or "unknown"
+            if _WATCH_NAMESPACES and event_ns not in _WATCH_NAMESPACES:
+                log.debug(
+                    "event_processor.namespace_filtered",
+                    namespace=event_ns,
+                    pid=pid,
+                )
+                event_queue.task_done()
+                continue
 
             await dispatcher.dispatch_event(payload)
             event_queue.task_done()

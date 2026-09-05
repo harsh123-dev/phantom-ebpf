@@ -105,6 +105,8 @@ spec:
                 secretKeyRef:
                   name: phantom-agent-secret
                   key: token
+            - name: WATCH_NAMESPACES
+              value: "phantom-eval"
           livenessProbe:
             httpGet:
               path: /healthz
