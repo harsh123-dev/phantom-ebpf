@@ -24,10 +24,14 @@ WORKDIR /app
 # Install native deps for DoWhy/XGBoost (e.g. libgomp)
 RUN apt-get update -qq && apt-get install -y --no-install-recommends \
     libgomp1 && rm -rf /var/lib/apt/lists/*
-# Install phantom-core first (local dep), then the service
+# Install phantom-core first (local dep), then the service.
+# Use the PyTorch CPU-only index so torch+cpu resolves without a CUDA wheel.
 COPY --from=core-builder /build/dist/*.whl /tmp/
 COPY --from=svc-builder  /build/dist/*.whl /tmp/
-RUN pip install --no-cache-dir /tmp/*.whl && rm /tmp/*.whl
+RUN pip install --no-cache-dir \
+    --extra-index-url https://download.pytorch.org/whl/cpu \
+    /tmp/*.whl \
+    && rm /tmp/*.whl
 COPY services/causal-engine/app/ ./app/
 RUN useradd -r -u 1000 -g root phantom && chown -R phantom:root /app
 USER phantom

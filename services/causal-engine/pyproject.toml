@@ -26,8 +26,8 @@ dependencies = [
     "numpy==1.26.4",
     "pandas==2.2.2",
     "scikit-learn==1.5.0",
-    # Optional PyTorch backend for DoWhy (CPU-only)
-    "torch==2.3.1",
+    # Optional PyTorch backend for DoWhy — CPU-only (no CUDA; saves ~1.5 GB)
+    "torch==2.3.1+cpu",
     # Structured logging
     "structlog==24.2.0",
     # Prometheus metrics
