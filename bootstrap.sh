@@ -75,6 +75,7 @@ kubectl create secret generic phantom-agent-secret -n phantom \
 
 echo "[6/6] Deploying Microservices & Evaluation Targets..."
 kubectl apply -f infra/k8s/api-gateway-deployment.yaml
+kubectl apply -f infra/k8s/ebpf-agent-daemonset.yaml
 kubectl apply -f research/evaluation/k8s/target-workloads.yaml
 
 echo ""
