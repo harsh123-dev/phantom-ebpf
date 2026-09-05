@@ -104,9 +104,9 @@ log "Prometheus: ${PROMETHEUS_URL}"
 check_cmd kubectl
 check_cmd python3
 
-# Auto-install python requirements (bypass PEP 668 on EC2)
+# Auto-install python requirements (bypass PEP 668 and system uninstall errors on EC2)
 log "Installing Python dependencies..."
-python3 -m pip install -r "${REPO_ROOT}/research/evaluation/requirements.txt" --break-system-packages --quiet || log "[WARN] pip install failed."
+python3 -m pip install -r "${REPO_ROOT}/research/evaluation/requirements.txt" --break-system-packages --ignore-installed --quiet || log "[WARN] pip install failed."
 
 mkdir -p "${RESULTS_DIR}" "${DATASET_DIR}" "${TABLES_DIR}" "${NOTEBOOKS_DIR}"
 
