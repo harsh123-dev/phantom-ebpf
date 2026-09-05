@@ -37,8 +37,13 @@ export const ContractExplorerView = (): JSX.Element => {
   }, [items, selectedId]);
 
   useEffect(() => {
+    // Only fetch details for contract IDs not already in the cache.
+    // Previously fetching ALL items on every [client, items] change caused an
+    // infinite loop: setDetailMap → re-render → new items ref → re-fetch → ...
+    const unfetched = items.filter((record) => !(record.contract_id in detailMap));
+    if (unfetched.length === 0) return;
     let active = true;
-    void Promise.allSettled(items.map((record) => client.getContract(record.contract_id))).then((results) => {
+    void Promise.allSettled(unfetched.map((record) => client.getContract(record.contract_id))).then((results) => {
       if (!active) return;
       const next: Record<string, BehavioralContractDetailResponse> = {};
       results.forEach((result) => {
@@ -49,6 +54,7 @@ export const ContractExplorerView = (): JSX.Element => {
     return () => {
       active = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, items]);
 
   useEffect(() => {

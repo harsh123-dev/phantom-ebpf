@@ -31,12 +31,18 @@ export const useDriftStream = (): DriftStreamResult => {
   const setErrorCode = useDriftStreamState((state) => state.setErrorCode);
   const client = useMemo(() => new DriftStreamClient(getDriftStreamUrl(), getStoredAuthToken), []);
 
+  // Use a stable string key instead of the filters object reference.
+  // The object reference changes every render even when values are identical,
+  // which caused an infinite disconnect→reconnect loop previously.
+  const filtersKey = JSON.stringify(filters);
+
   useEffect(() => {
+    const currentFilters = JSON.parse(filtersKey) as typeof filters;
     const subscription: DriftStreamSubscribe = {
       schema_version: "v1",
       type: "subscribe",
-      namespace_filters: filters.namespaces,
-      minimum_severity: toRuntimeSeverity(filters.minSeverity),
+      namespace_filters: currentFilters.namespaces,
+      minimum_severity: toRuntimeSeverity(currentFilters.minSeverity),
       resume_after_event_id: null,
     };
     setConnectionStatus("connecting");
@@ -60,7 +66,9 @@ export const useDriftStream = (): DriftStreamResult => {
       client.disconnect();
       setConnectionStatus("disconnected");
     };
-  }, [addEvent, client, filters, setConnectionStatus, setErrorCode]);
+  // filtersKey is the stable serialized version of filters - intentional dep
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addEvent, client, filtersKey, setConnectionStatus, setErrorCode]);
 
   return { events, connectionStatus, setFilters };
 };

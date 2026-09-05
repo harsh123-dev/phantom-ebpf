@@ -52,7 +52,7 @@ export const usePaginatedQuery = <T, P extends CursorParams>(
     return () => {
       active = false;
     };
-  }, [fetchFn, params, paramsKey]);
+  }, [fetchFn, paramsKey]);
 
   useEffect(() => {
     if (!loading) return;
@@ -68,7 +68,8 @@ export const usePaginatedQuery = <T, P extends CursorParams>(
     setLoading(true);
     setError(null);
     try {
-      const page = await fetchFn({ ...params, cursor: nextCursor } as P);
+      const currentParams = JSON.parse(paramsKey) as Omit<P, "cursor">;
+      const page = await fetchFn({ ...currentParams, cursor: nextCursor } as P);
       setItems((current) => appendPage(current, page));
       setNextCursor(page.next_cursor);
     } catch (reason: unknown) {
@@ -76,7 +77,7 @@ export const usePaginatedQuery = <T, P extends CursorParams>(
     } finally {
       setLoading(false);
     }
-  }, [fetchFn, loading, nextCursor, params]);
+  }, [fetchFn, loading, nextCursor, paramsKey]);
 
   return { items, loading, error, fetchNext, hasMore: nextCursor !== null };
 };
