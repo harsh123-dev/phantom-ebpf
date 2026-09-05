@@ -1,0 +1,5 @@
+detector_name,tpr,fpr,precision,recall,f1,mttd_mean_s,mttd_p50_s,mttd_p95_s,cpu_overhead_pct,memory_overhead_mb,false_positives_per_hour,attribution_accuracy,brier_score,tp,fp,fn,tn,n_attack_scenarios,n_benign_scenarios
+phantom,0.6667,0.0000,1.0000,0.6667,0.8000,15.7400,5.5200,54.7200,0.0000,0.0000,0.0000,0.0000,,6,0,3,0,9,0
+falco-default-rules,0.0000,0.0000,0.0000,0.0000,0.0000,,,,0.0000,0.0000,0.0000,,,0,0,9,0,9,0
+trivy-sbom-static,0.0000,0.0000,0.0000,0.0000,0.0000,,,,0.0000,0.0000,0.0000,,,0,0,9,0,9,0
+isolation-forest-syscall-frequency,0.0000,0.0000,0.0000,0.0000,0.0000,,,,0.0000,0.0000,0.0000,,,0,0,9,0,9,0

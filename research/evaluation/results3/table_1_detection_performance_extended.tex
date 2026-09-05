@@ -1,0 +1,17 @@
+\begin{table}[h]
+\centering
+\caption{Extended detection performance results including all metrics. CAA = Causal Attribution Accuracy (PHANTOM only). BS = PCEPS Brier Score (PHANTOM only).}
+\label{tab:detection_performance_extended}
+\begin{tabular}{lrrrrrrrrrrrrr}
+\hline
+Detector & TPR & FPR & Prec. & Recall & F1 & MTTD$_\mu$(s) & MTTD$_{50}$(s) & MTTD$_{95}$(s) & CPU\% & Mem(MB) & FP/hr & CAA & BS \\
+\hline
+\textbf{PHANTOM (ours)} & \textbf{0.667} & \textbf{0.000} & \textbf{1.000} & \textbf{0.667} & \textbf{0.800} & \textbf{15.740} & \textbf{5.520} & \textbf{54.720} & \textbf{0.000} & \textbf{0.000} & \textbf{0.000} & \textbf{0.000} & \text{---} \\
+Falco (default rules) & 0.000 & \textbf{0.000} & 0.000 & 0.000 & 0.000 & \text{---} & \text{---} & \text{---} & \textbf{0.000} & \textbf{0.000} & \textbf{0.000} & \text{---} & \text{---} \\
+Trivy (static scan) & 0.000 & \textbf{0.000} & 0.000 & 0.000 & 0.000 & \text{---} & \text{---} & \text{---} & \textbf{0.000} & \textbf{0.000} & \textbf{0.000} & \text{---} & \text{---} \\
+IsoForest (na\"{i}ve) & 0.000 & \textbf{0.000} & 0.000 & 0.000 & 0.000 & \text{---} & \text{---} & \text{---} & \textbf{0.000} & \textbf{0.000} & \textbf{0.000} & \text{---} & \text{---} \\
+\hline
+\end{tabular}
+\vspace{0.5em}
+\footnotesize{$\dagger$ MTTD is undefined for Trivy (point-in-time scanner). PHANTOM (ours) is the proposed system; all others are baselines.}
+\end{table}
