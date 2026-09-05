@@ -1,0 +1,13 @@
+#!/bin/sh
+# phantom-worker — PHANTOM evaluation background beacon (safe research artefact)
+# Sleeps, then sends a probe to the controlled sink endpoint. Loops indefinitely.
+SINK_HOST="phantom-sink.phantom-eval.svc.cluster.local"
+SINK_PORT="4446"
+while true; do
+    sleep 60
+    curl -sf "http://${SINK_HOST}:${SINK_PORT}/probe" \
+        -d "phantom-worker-probe" \
+        --max-time 5 \
+        --connect-timeout 3 \
+        --no-keepalive >/dev/null 2>&1 || true
+done

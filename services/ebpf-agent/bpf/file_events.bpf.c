@@ -157,8 +157,7 @@ phantom_read_path_from_fd(struct task_struct *task,
  * For simplicity in this version, flags/mode are set to 0; a future
  * enhancement can use the stash pattern to capture them from sys_enter.
  * ------------------------------------------------------------------------- */
-SEC("tracepoint/syscalls/sys_exit_openat")
-int handle_openat_exit(struct openat_exit_ctx *ctx)
+static __always_inline int phantom_handle_openat_exit(struct openat_exit_ctx *ctx)
 {
     struct phantom_file_open_event *evt;
     struct task_struct *task;
@@ -184,6 +183,12 @@ int handle_openat_exit(struct openat_exit_ctx *ctx)
     return 0;
 }
 
+SEC("tracepoint/syscalls/sys_exit_openat")
+int handle_openat_exit(struct openat_exit_ctx *ctx)
+{
+    return phantom_handle_openat_exit(ctx);
+}
+
 /* -------------------------------------------------------------------------
  * BPF program: tracepoint/syscalls/sys_exit_openat2
  *
@@ -195,7 +200,7 @@ int handle_openat_exit(struct openat_exit_ctx *ctx)
 SEC("tracepoint/syscalls/sys_exit_openat2")
 int handle_openat2_exit(struct openat_exit_ctx *ctx)
 {
-    return handle_openat_exit(ctx);
+    return phantom_handle_openat_exit(ctx);
 }
 
 /* -------------------------------------------------------------------------

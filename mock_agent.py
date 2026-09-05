@@ -1,7 +1,4 @@
-import json
-import subprocess
-import time
-import uuid
+import json, subprocess, time, uuid
 from datetime import datetime, timezone
 
 def get_gateway_pod():

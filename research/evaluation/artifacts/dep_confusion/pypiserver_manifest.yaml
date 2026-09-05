@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pypiserver-mirror
+  namespace: phantom-eval
+  labels:
+    app: pypiserver-mirror
+    phantom-eval: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pypiserver-mirror
+  template:
+    metadata:
+      labels:
+        app: pypiserver-mirror
+    spec:
+      containers:
+      - name: pypiserver
+        image: pypiserver/pypiserver:latest
+        securityContext:
+          runAsUser: 0
+        args: ["run", "-p", "8080", "/data/packages", "--overwrite"]
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: packages
+          mountPath: /data/packages
+      volumes:
+      - name: packages
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pypiserver-mirror
+  namespace: phantom-eval
+  labels:
+    phantom-eval: "true"
+spec:
+  selector:
+    app: pypiserver-mirror
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: ClusterIP

@@ -21,11 +21,11 @@ RUN apt-get update -qq && apt-get install -y curl && \
 # Build eBPF objects and user-space loader
 RUN make all
 
-FROM ubuntu:22.04 AS runtime
+FROM python:3.11-slim AS runtime
 LABEL org.opencontainers.image.title="PHANTOM ebpf-agent"
 LABEL org.opencontainers.image.source="https://github.com/phantom-research/phantom"
 RUN apt-get update -qq && apt-get install -y --no-install-recommends \
-    libelf1 libbpf0 ca-certificates python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
+    libelf1 libbpf1 ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /agent
 COPY --from=builder /build/phantom-agent ./phantom-agent
 COPY --from=builder /build/bpf/*.o       ./bpf/
@@ -37,7 +37,10 @@ COPY infrastructure/ ./infrastructure/
 COPY domain/ ./domain/
 COPY include/ ./include/
 
-RUN pip3 install --no-cache-dir . aiohttp
+RUN pip3 install --no-cache-dir \
+    'structlog>=23.1.0' 'pydantic>=2.5.0' 'kubernetes>=28.1.0' \
+    'redis[hiredis]>=5.0.1' 'aiobotocore>=2.7.0' 'prometheus-client>=0.19.0' \
+    'aiohttp>=3.9.0'
 
 # NOTE: Requires privileged + hostPID + hostNetwork in DaemonSet spec.
 ENTRYPOINT ["python3", "-m", "application.main"]
