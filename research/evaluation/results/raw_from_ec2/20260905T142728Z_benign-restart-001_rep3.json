@@ -1,0 +1,88 @@
+{
+  "run_id": "20260905T142728Z_benign-restart-001_rep3",
+  "attack_id": "benign-restart-001",
+  "attack_family": "pod_restart",
+  "repetition": 3,
+  "namespace": "phantom-eval",
+  "pod_name": "cartservice-85597b6fb8-cs9mn",
+  "ground_truth_label": 0,
+  "injection_timestamp": "2026-09-05T14:32:28.214450+00:00",
+  "first_phantom_detection_timestamp": null,
+  "mttd_s": null,
+  "is_true_positive": false,
+  "phases": [
+    {
+      "name": "baseline",
+      "start_time": "2026-09-05T14:27:28.159104+00:00",
+      "end_time": "2026-09-05T14:32:28.214232+00:00",
+      "duration_s": 300.055128,
+      "notes": ""
+    },
+    {
+      "name": "inject",
+      "start_time": "2026-09-05T14:32:28.214397+00:00",
+      "end_time": "2026-09-05T14:32:28.214455+00:00",
+      "duration_s": 5.8e-05,
+      "notes": "inject_ok=True"
+    },
+    {
+      "name": "attack",
+      "start_time": "2026-09-05T14:32:28.214496+00:00",
+      "end_time": "2026-09-05T14:37:29.332777+00:00",
+      "duration_s": 301.118281,
+      "notes": ""
+    },
+    {
+      "name": "recover",
+      "start_time": "2026-09-05T14:37:29.332881+00:00",
+      "end_time": "2026-09-05T14:37:29.332960+00:00",
+      "duration_s": 7.9e-05,
+      "notes": "recover_ok=True"
+    },
+    {
+      "name": "post_recovery",
+      "start_time": "2026-09-05T14:37:29.332981+00:00",
+      "end_time": "2026-09-05T14:39:29.402842+00:00",
+      "duration_s": 120.069861,
+      "notes": ""
+    }
+  ],
+  "phantom_detections": [],
+  "falco_detections": [],
+  "metrics_snapshots": [
+    {
+      "timestamp": "2026-09-05T14:27:28.159129+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "baseline"
+    },
+    {
+      "timestamp": "2026-09-05T14:37:29.283416+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "attack"
+    },
+    {
+      "timestamp": "2026-09-05T14:39:29.349822+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "post_recovery"
+    }
+  ],
+  "scenario_label": {
+    "attack_id": "benign-restart-001",
+    "attack_family": "pod_restart",
+    "target_service": "cartservice",
+    "target_purl": "",
+    "clean_purl": "",
+    "label": 0,
+    "injection_time_offset_s": 0.0,
+    "expected_changes": [],
+    "detection_window_s": 120.0,
+    "control_endpoint": ""
+  },
+  "error": ""
+}

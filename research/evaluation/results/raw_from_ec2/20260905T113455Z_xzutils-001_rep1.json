@@ -1,0 +1,92 @@
+{
+  "run_id": "20260905T113455Z_xzutils-001_rep1",
+  "attack_id": "xzutils-001",
+  "attack_family": "supply_chain_backdoor",
+  "repetition": 1,
+  "namespace": "phantom-eval",
+  "pod_name": "recommendationservice-58f47bb76-l2g97",
+  "ground_truth_label": 1,
+  "injection_timestamp": "2026-09-05T11:40:03.889548+00:00",
+  "first_phantom_detection_timestamp": null,
+  "mttd_s": null,
+  "is_true_positive": false,
+  "phases": [
+    {
+      "name": "baseline",
+      "start_time": "2026-09-05T11:34:55.112759+00:00",
+      "end_time": "2026-09-05T11:39:55.186500+00:00",
+      "duration_s": 300.073741,
+      "notes": ""
+    },
+    {
+      "name": "inject",
+      "start_time": "2026-09-05T11:39:55.186656+00:00",
+      "end_time": "2026-09-05T11:40:03.889561+00:00",
+      "duration_s": 8.702905,
+      "notes": "inject_ok=True"
+    },
+    {
+      "name": "attack",
+      "start_time": "2026-09-05T11:40:05.948796+00:00",
+      "end_time": "2026-09-05T11:45:07.095306+00:00",
+      "duration_s": 301.14651,
+      "notes": ""
+    },
+    {
+      "name": "recover",
+      "start_time": "2026-09-05T11:45:07.095571+00:00",
+      "end_time": "2026-09-05T11:45:14.851005+00:00",
+      "duration_s": 7.755434,
+      "notes": "recover_ok=False"
+    },
+    {
+      "name": "post_recovery",
+      "start_time": "2026-09-05T11:45:14.851048+00:00",
+      "end_time": "2026-09-05T11:47:14.918232+00:00",
+      "duration_s": 120.067184,
+      "notes": ""
+    }
+  ],
+  "phantom_detections": [],
+  "falco_detections": [],
+  "metrics_snapshots": [
+    {
+      "timestamp": "2026-09-05T11:34:55.112788+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "baseline"
+    },
+    {
+      "timestamp": "2026-09-05T11:45:07.040810+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "attack"
+    },
+    {
+      "timestamp": "2026-09-05T11:47:14.868265+00:00",
+      "cpu_usage_cores": 0.0,
+      "memory_rss_mb": 0.0,
+      "event_lag_p95_ms": 0.0,
+      "phase": "post_recovery"
+    }
+  ],
+  "scenario_label": {
+    "attack_id": "xzutils-001",
+    "attack_family": "supply_chain_backdoor",
+    "target_service": "recommendationservice",
+    "target_purl": "pkg:pypi/lzmaffi@1.0.1+phantom",
+    "clean_purl": "pkg:pypi/lzmaffi@1.0.0",
+    "label": 1,
+    "injection_time_offset_s": 0.0,
+    "expected_changes": [
+      "unexpected_process_spawn",
+      "unexpected_network_connect",
+      "unexpected_file_access"
+    ],
+    "detection_window_s": 120.0,
+    "control_endpoint": "phantom-sink.phantom-eval.svc.cluster.local:8443"
+  },
+  "error": ""
+}
