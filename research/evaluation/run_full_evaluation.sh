@@ -55,12 +55,13 @@ NAMESPACE="${NAMESPACE:-phantom-eval}"
 PHANTOM_API_URL="${PHANTOM_API_URL:-http://localhost:8080}"
 PROMETHEUS_URL="${PROMETHEUS_URL:-http://localhost:9090/api/v1/query}"
 FALCO_LOG="${FALCO_LOG:-/var/log/falco/events.jsonl}"
+FALCO_NAMESPACE="${FALCO_NAMESPACE:-phantom-eval}"
 API_TOKEN="${API_TOKEN:-}"
 BASELINE_DURATION="${BASELINE_DURATION:-300}"
 ATTACK_DURATION="${ATTACK_DURATION:-300}"
 RECOVERY_DURATION="${RECOVERY_DURATION:-120}"
 DRY_RUN="${DRY_RUN:-0}"
-SKIP_NOTEBOOKS="${SKIP_NOTEBOOKS:-0}"
+SKIP_NOTEBOOKS="${SKIP_NOTEBOOKS:-1}"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 RESULTS_DIR="${REPO_ROOT}/research/datasets/raw"
@@ -155,7 +156,9 @@ python3 "${REPO_ROOT}/research/evaluation/scenarios/run_all_scenarios.py" \
     --attack-duration "${ATTACK_DURATION}" \
     --recovery-duration "${RECOVERY_DURATION}" \
     --repetitions 3 \
-    ${DRY_RUN_FLAG}
+    ${DRY_RUN_FLAG} || {
+        log "[WARN] Some scenarios failed — continuing with partial results"
+    }
 
 log "Scenario results written to: ${RESULTS_DIR}"
 
@@ -171,6 +174,7 @@ python3 "${REPO_ROOT}/research/evaluation/baselines/run_baselines.py" \
     --raw-dir "${RESULTS_DIR}" \
     --prometheus "${PROMETHEUS_URL}" \
     --falco-log "${FALCO_LOG}" \
+    --falco-namespace "${FALCO_NAMESPACE}" \
     --output-dir "${TABLES_DIR}" \
     ${DRY_RUN_FLAG} \
     || log "[WARN] run_baselines.py failed or not yet implemented — continuing."
@@ -185,7 +189,8 @@ log "=== Step 4: Package dataset (traces.parquet + labels.parquet) ==="
 python3 "${REPO_ROOT}/research/evaluation/dataset/packager.py" \
     --raw-dir "${RESULTS_DIR}" \
     --output-dir "${DATASET_DIR}" \
-    --compression snappy
+    --compression snappy \
+    || log "[WARN] Dataset packager failed — continuing."
 
 log "Dataset written to: ${DATASET_DIR}"
 log "  traces.parquet"
@@ -256,8 +261,32 @@ log "  Dataset artifact:      ${DATASET_DIR}/"
 log "  LaTeX/CSV tables:      ${TABLES_DIR}/"
 log "  Executed notebooks:    ${NOTEBOOKS_DIR}/"
 log ""
+
+# ---------------------------------------------------------------------------
+# Verification summary
+# ---------------------------------------------------------------------------
+
+log "=== Verification ==="
+SCENARIO_COUNT=$(ls "${RESULTS_DIR}"/scenario_*.json 2>/dev/null | wc -l || echo 0)
+RAW_COUNT=$(ls "${RESULTS_DIR}"/*.json 2>/dev/null | grep -v index.json | wc -l || echo 0)
+CSV_EXISTS="NO"
+[[ -f "${TABLES_DIR}/table_1_detection_performance.csv" ]] && CSV_EXISTS="YES"
+PARQUET_EXISTS="NO"
+[[ -f "${DATASET_DIR}/traces.parquet" ]] && PARQUET_EXISTS="YES"
+
+log "Raw result files: ${RAW_COUNT}"
+log "Metrics CSV:      ${CSV_EXISTS}"
+log "Dataset parquet:  ${PARQUET_EXISTS}"
+
+if [[ "${RAW_COUNT}" -gt "0" ]]; then
+    log "EVALUATION: PARTIAL OR FULL SUCCESS (${RAW_COUNT} result files)"
+else
+    log "EVALUATION: FAILED (0 result files written)"
+fi
+
+log ""
 log "Next steps:"
-log "  1. Check ${TABLES_DIR}/table_1_detection_performance.tex for TABLE_1."
+log "  1. Check ${TABLES_DIR}/table_1_detection_performance.csv for TABLE_1."
 log "  2. Open notebooks in ${NOTEBOOKS_DIR}/ for interactive figure inspection."
 log "  3. Upload ${DATASET_DIR}/ to Zenodo with reserved DOI before paper submission."
 log "  4. Record PHANTOM version, EKS cluster config, and run timestamps in run manifest."

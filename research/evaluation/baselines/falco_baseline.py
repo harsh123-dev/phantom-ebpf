@@ -123,15 +123,17 @@ class FalcoBaseline(BaseBaseline):
         kubectl_context: str | None = None,
         min_priority: str = DEFAULT_MIN_PRIORITY,
         dry_run: bool = False,
+        falco_namespace: str = "phantom-eval",
     ) -> None:
         """Initialise the Falco baseline.
 
         Args:
             namespace: Kubernetes namespace.
-            alert_log_path: Path to Falco JSON alert log.
+            alert_log_path: Path to Falco JSON alert log (fallback).
             kubectl_context: kubectl context name.
             min_priority: Minimum Falco priority level to include.
             dry_run: If True, log commands without executing.
+            falco_namespace: Namespace where the Falco DaemonSet runs.
         """
         self._namespace = namespace
         self._alert_log = Path(alert_log_path)
@@ -141,6 +143,7 @@ class FalcoBaseline(BaseBaseline):
         ) if min_priority.upper() in _MIN_PRIORITY_ORDER else 3
         self._dry_run = dry_run
         self._installed = False
+        self._falco_namespace = falco_namespace
 
     # ------------------------------------------------------------------ #
     # BaseBaseline interface                                               #
@@ -229,59 +232,64 @@ class FalcoBaseline(BaseBaseline):
         until: datetime,
         namespace: str = "",
     ) -> list[Detection]:
-        """Parse Falco alert JSON-lines log for alerts in [since, until].
+        """Collect Falco alerts from Kubernetes pod logs (primary) or host file (fallback).
 
-        Reads the alert log file and returns Detection objects for all
-        alerts with priority >= min_priority and timestamp in [since, until].
-
-        The JSON alert format per Falco 0.44.1:
-            {
-              "time": "2026-07-26T10:00:00.000000000Z",
-              "rule": "Unexpected outbound connection",
-              "priority": "WARNING",
-              "output": "...",
-              "output_fields": {
-                "container.name": "...",
-                "k8s.ns.name": "...",
-                "k8s.pod.name": "...",
-                ...
-              }
-            }
+        Falco runs as a DaemonSet inside Kubernetes and emits JSON to stdout.
+        We read alerts via ``kubectl logs`` using the falco_namespace, then
+        fall back to the host file path if kubectl returns nothing.
 
         Args:
             since: Window start (inclusive).
             until: Window end (inclusive).
+            namespace: Unused (kept for interface compat).
 
         Returns:
             List of Detection objects within the time window and above
             the minimum priority threshold.
         """
-        if not self._alert_log.exists():
-            log.warning(
-                "falco.alert_log_missing",
-                extra={"path": str(self._alert_log)},
-            )
+        if self._dry_run:
             return []
 
         detections: list[Detection] = []
 
+        # --- Primary: read from Falco DaemonSet pod logs via kubectl ---
         try:
-            with self._alert_log.open() as fh:
-                for line_no, line in enumerate(fh, 1):
+            since_time = since.strftime("%Y-%m-%dT%H:%M:%SZ")
+            cmd = ["kubectl", "logs",
+                   "-l", "app.kubernetes.io/name=falco",
+                   "-n", self._falco_namespace,
+                   "--since-time", since_time,
+                   "--timestamps=false"]
+            if self._context:
+                cmd = ["kubectl", "--context", self._context] + cmd[1:]
+
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                log.warning(
+                    "falco.kubectl_logs_failed",
+                    extra={"stderr": result.stderr[-200:]},
+                )
+            else:
+                log.info(
+                    "falco.kubectl_logs_collected",
+                    extra={"lines": len(result.stdout.splitlines())},
+                )
+                for line in result.stdout.splitlines():
                     line = line.strip()
                     if not line:
                         continue
-
                     try:
                         alert = json.loads(line)
                     except json.JSONDecodeError:
-                        log.debug(
-                            "falco.parse_error",
-                            extra={"line_no": line_no},
-                        )
                         continue
 
-                    # Parse timestamp.
                     ts_raw = alert.get("time", "")
                     if not ts_raw:
                         continue
@@ -295,7 +303,6 @@ class FalcoBaseline(BaseBaseline):
                     if not self._in_window(ts, since, until):
                         continue
 
-                    # Check priority threshold.
                     priority = (alert.get("priority") or "INFO").upper()
                     priority_idx = _MIN_PRIORITY_ORDER.index(priority) if priority in _MIN_PRIORITY_ORDER else 0
                     if priority_idx < self._min_priority_idx:
@@ -306,7 +313,7 @@ class FalcoBaseline(BaseBaseline):
 
                     detections.append(Detection(
                         detected_at=ts,
-                        scenario_id="",       # filled by ScenarioEvaluator
+                        scenario_id="",
                         detector_name=self.name,
                         confidence=confidence,
                         raw_alert=alert,
@@ -316,8 +323,73 @@ class FalcoBaseline(BaseBaseline):
                         service_name=fields.get("container.name", ""),
                     ))
 
-        except OSError as exc:
-            log.error("falco.read_error", extra={"error": str(exc)})
+        except subprocess.TimeoutExpired:
+            log.warning("falco.kubectl_logs_timeout")
+        except Exception as exc:
+            log.warning("falco.get_detections_error", extra={"error": str(exc)})
+
+        # --- Fallback: read from host file if kubectl returned nothing ---
+        if not detections and self._alert_log.exists():
+            log.info(
+                "falco.falling_back_to_file",
+                extra={"path": str(self._alert_log)},
+            )
+            try:
+                with self._alert_log.open() as fh:
+                    for line_no, line in enumerate(fh, 1):
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            alert = json.loads(line)
+                        except json.JSONDecodeError:
+                            log.debug("falco.parse_error", extra={"line_no": line_no})
+                            continue
+
+                        ts_raw = alert.get("time", "")
+                        if not ts_raw:
+                            continue
+                        try:
+                            ts = datetime.fromisoformat(
+                                ts_raw.rstrip("Z")
+                            ).replace(tzinfo=timezone.utc)
+                        except ValueError:
+                            continue
+
+                        if not self._in_window(ts, since, until):
+                            continue
+
+                        priority = (alert.get("priority") or "INFO").upper()
+                        priority_idx = _MIN_PRIORITY_ORDER.index(priority) if priority in _MIN_PRIORITY_ORDER else 0
+                        if priority_idx < self._min_priority_idx:
+                            continue
+
+                        confidence = _PRIORITY_CONFIDENCE.get(priority, 0.3)
+                        fields = alert.get("output_fields", {})
+
+                        detections.append(Detection(
+                            detected_at=ts,
+                            scenario_id="",
+                            detector_name=self.name,
+                            confidence=confidence,
+                            raw_alert=alert,
+                            rule_name=alert.get("rule", ""),
+                            namespace=fields.get("k8s.ns.name", ""),
+                            pod_name=fields.get("k8s.pod.name", ""),
+                            service_name=fields.get("container.name", ""),
+                        ))
+            except OSError as exc:
+                log.error("falco.read_error", extra={"error": str(exc)})
+
+        if not detections:
+            log.warning(
+                "falco.no_alerts_found",
+                extra={
+                    "since": since.isoformat(),
+                    "until": until.isoformat(),
+                    "hint": f"Check: kubectl logs -l app.kubernetes.io/name=falco -n {self._falco_namespace}",
+                },
+            )
 
         log.debug(
             "falco.get_detections.done",

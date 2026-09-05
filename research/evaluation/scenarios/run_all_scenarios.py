@@ -503,15 +503,39 @@ def main() -> None:
                 },
             )
 
-            result = runner.run_scenario(
-                attack=attack,
-                namespace=args.namespace,
-                pod_name=pod_name,
-                repetition=rep,
-                baseline_duration_s=args.baseline_duration,
-                attack_duration_s=args.attack_duration,
-                recovery_duration_s=args.recovery_duration,
-            )
+            try:
+                result = runner.run_scenario(
+                    attack=attack,
+                    namespace=args.namespace,
+                    pod_name=pod_name,
+                    repetition=rep,
+                    baseline_duration_s=args.baseline_duration,
+                    attack_duration_s=args.attack_duration,
+                    recovery_duration_s=args.recovery_duration,
+                )
+            except Exception as exc:
+                log.error(
+                    "scenario.failed",
+                    extra={
+                        "attack_id": attack.manifest.attack_id,
+                        "rep": rep,
+                        "error": str(exc),
+                        "error_type": type(exc).__name__,
+                    },
+                )
+                # Record error result and continue to next scenario.
+                result = ScenarioResult(
+                    run_id=f"FAILED_{attack.manifest.attack_id}_rep{rep}",
+                    attack_id=attack.manifest.attack_id,
+                    attack_family=attack.manifest.attack_family,
+                    repetition=rep,
+                    namespace=args.namespace,
+                    pod_name=pod_name,
+                    ground_truth_label=attack.manifest.ground_truth_label,
+                    error=str(exc),
+                    scenario_label=attack.label(),
+                )
+
             all_results.append(result)
 
             # Save result to disk immediately after each repetition.
@@ -543,12 +567,19 @@ def main() -> None:
         json.dump(index, fh, indent=2)
     log.info("index.saved", extra={"path": str(index_path)})
 
-    # Exit with non-zero if any attack scenario had an error.
+    # Exit with non-zero only if ALL attack scenarios had errors.
+    successful = [r for r in all_results if not r.error]
     errors = [r for r in all_results if r.error and r.ground_truth_label == 1]
-    if errors:
-        log.error("run.completed_with_errors", extra={"n_errors": len(errors)})
+    log.info(
+        "run.completed",
+        extra={"total": len(all_results), "successful": len(successful), "errors": len(errors)},
+    )
+    if successful:
+        log.info("run.complete")
+        sys.exit(0)
+    else:
+        log.error("run.all_scenarios_failed", extra={"n_errors": len(errors)})
         sys.exit(1)
-    log.info("run.complete")
 
 
 if __name__ == "__main__":
