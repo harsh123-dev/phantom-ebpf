@@ -104,6 +104,10 @@ log "Prometheus: ${PROMETHEUS_URL}"
 check_cmd kubectl
 check_cmd python3
 
+# Auto-install python requirements
+log "Installing Python dependencies..."
+python3 -m pip install -r "${REPO_ROOT}/research/evaluation/requirements.txt" --quiet || log "[WARN] pip install failed."
+
 mkdir -p "${RESULTS_DIR}" "${DATASET_DIR}" "${TABLES_DIR}" "${NOTEBOOKS_DIR}"
 
 # ---------------------------------------------------------------------------
@@ -118,7 +122,7 @@ if [[ "${DRY_RUN}" != "1" ]]; then
     log "Cluster nodes: OK"
 
     # Verify PHANTOM services are running
-    for svc in phantom-agent phantom-api-gateway; do
+    for svc in phantom-ebpf-agent phantom-api-gateway; do
         if kubectl get pods -n "${NAMESPACE}" -l "app=${svc}" --field-selector=status.phase=Running \
             --no-headers 2>/dev/null | grep -q .; then
             log "Service ${svc}: Running"
