@@ -50,7 +50,7 @@ def main():
 
         # 2. Inject Attack
         log.info(f"Injecting {args.attack} into {pod_name}...")
-        attack.inject(pod_name)
+        attack.inject(args.namespace, pod_name)
         log.info("Injection complete! The attack should now be running.")
         log.info("Check your PHANTOM Dashboard for live detection.")
 

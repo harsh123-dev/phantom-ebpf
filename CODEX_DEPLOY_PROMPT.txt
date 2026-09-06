@@ -1,0 +1,322 @@
+# PHANTOM — Full Infrastructure Deployment & Attack Verification Prompt
+# For: Codex CLI
+# Usage: Paste this entire block into Codex CLI as a single prompt.
+
+You are a DevOps automation agent. Your task is to fully deploy the PHANTOM runtime security
+platform on AWS EKS from scratch and verify it by running a small, safe, controlled attack.
+The repository root is: d:\project-1
+The AWS region is: ap-south-1
+The ECR registry is: 596717729313.dkr.ecr.ap-south-1.amazonaws.com
+
+Execute every step below in order. Never skip a step. Never proceed past a step that fails.
+If anything fails, diagnose the error, fix it, and retry before moving on.
+
+═══════════════════════════════════════════════════════════════════
+STEP 1 — TERRAFORM: Deploy AWS Infrastructure
+═══════════════════════════════════════════════════════════════════
+
+Navigate to: d:\project-1\infra\terraform\environments\dev
+
+Run the following commands in order:
+
+    terraform init
+    terraform validate
+    terraform apply -auto-approve
+
+This will create:
+  - An EKS cluster named "phantom-dev" with 2x m7i-flex.large managed nodes
+  - An RDS PostgreSQL database (db.t3.micro, identifier: phantom-dev)
+  - An ElastiCache Redis cluster (cache.t3.micro, cluster-id: phantom-dev)
+  - ECR repositories for all PHANTOM service images
+
+Wait for terraform apply to fully complete (this takes ~15 minutes).
+
+After it succeeds, capture the following outputs (you will need them later):
+  - cluster_endpoint      --> from: terraform output -raw cluster_endpoint
+  - rds_endpoint          --> from: terraform output -raw rds_endpoint
+  - redis_endpoint        --> from: terraform output -raw redis_endpoint
+  - rds_password          --> from: terraform output -raw rds_password
+
+CRITICAL: Do not proceed to Step 2 unless `terraform apply` exits with code 0.
+
+═══════════════════════════════════════════════════════════════════
+STEP 2 — ECR: Build and Push All Docker Images
+═══════════════════════════════════════════════════════════════════
+
+Navigate back to: d:\project-1
+
+Run the image build and push script:
+
+    bash push_images.sh
+
+This will build and push 5 images to ECR:
+  - phantom/api-gateway:latest
+  - phantom/causal-engine:latest
+  - phantom/report-generator:latest
+  - phantom/sbom-service:latest
+  - phantom/ebpf-agent:latest
+
+The script uses --no-cache, so this will take ~5-10 minutes.
+
+CRITICAL: All 5 images must push successfully. If any image fails to build
+or push, fix the error (e.g. Docker not running, AWS credentials expired)
+and re-run push_images.sh before proceeding.
+
+═══════════════════════════════════════════════════════════════════
+STEP 3 — KUBECONFIG: Connect kubectl to the New Cluster
+═══════════════════════════════════════════════════════════════════
+
+Run:
+
+    aws eks update-kubeconfig --region ap-south-1 --name phantom-dev
+
+Verify connectivity:
+
+    kubectl get nodes
+
+You must see 2 nodes, both in "Ready" status, before proceeding.
+If nodes are "NotReady", wait 60 seconds and retry. Retry up to 10 times.
+If still not ready after 10 retries, stop and report the error.
+
+═══════════════════════════════════════════════════════════════════
+STEP 4 — BOOTSTRAP: Configure Kubernetes Namespaces, Secrets & Deploy Services
+═══════════════════════════════════════════════════════════════════
+
+Navigate to: d:\project-1
+
+Run the bootstrap script:
+
+    bash bootstrap.sh
+
+This script will automatically:
+  a) Extract RDS/Redis endpoints from Terraform outputs
+  b) Create namespaces: "phantom" and "phantom-eval"
+  c) Apply RBAC configuration from infra/k8s/rbac/phantom-rbac.yaml
+  d) Apply ConfigMap with RDS and Redis connection details
+  e) Create 5 Kubernetes secrets with database credentials, JWT secrets, and API keys:
+       - phantom-api-gateway-secret
+       - phantom-causal-engine-secret
+       - phantom-sbom-service-secret
+       - phantom-report-generator-secret
+       - phantom-agent-secret
+  f) Deploy the PHANTOM API Gateway (Deployment, 2 replicas) from infra/k8s/api-gateway-deployment.yaml
+  g) Deploy the eBPF Agent (DaemonSet, 1 pod per node) from infra/k8s/ebpf-agent-daemonset.yaml
+  h) Deploy evaluation target workloads (emailservice, recommendationservice) from
+     research/evaluation/k8s/target-workloads.yaml in namespace "phantom-eval"
+
+CRITICAL: If bootstrap.sh fails at any step, do NOT continue. Read the error carefully,
+fix the root cause, and re-run bootstrap.sh (it is idempotent and safe to re-run).
+
+═══════════════════════════════════════════════════════════════════
+STEP 5 — HEALTH CHECK: Verify Every Pod is Running and Ready
+═══════════════════════════════════════════════════════════════════
+
+Wait for ALL pods in BOTH namespaces to reach Running + Ready state.
+Poll every 20 seconds. Maximum wait time: 10 minutes.
+
+Use this polling strategy:
+
+    # Check phantom namespace
+    kubectl get pods -n phantom -o wide
+
+    # Check phantom-eval namespace (attack target workloads)
+    kubectl get pods -n phantom-eval -o wide
+
+Expected pods in namespace "phantom":
+  - phantom-api-gateway-*      --> 2 pods, both Running, both 1/1 Ready
+  - phantom-ebpf-agent-*       --> 1 pod per node (2 total for 2-node cluster), Running, 1/1 Ready
+  - phantom-causal-engine-*    --> 1 pod, Running, 1/1 Ready
+  - phantom-sbom-service-*     --> 2 pods, both Running, both 1/1 Ready
+  - phantom-report-generator-* --> 1 pod, Running, 1/1 Ready
+
+Expected pods in namespace "phantom-eval":
+  - emailservice-*            --> 1 pod, Running, 1/1 Ready
+  - recommendationservice-*   --> 1 pod, Running, 1/1 Ready
+  - cartservice-*             --> 1 pod, Running, 1/1 Ready
+  - phantom-sink-*            --> 1 pod, Running, 1/1 Ready  (accepts beacon connections from attack payloads)
+
+If any pod is in CrashLoopBackOff, Error, OOMKilled, or Pending state:
+  1. Run: kubectl describe pod <pod-name> -n <namespace>
+  2. Run: kubectl logs <pod-name> -n <namespace> --previous (if crashed)
+  3. Diagnose and fix the issue (common causes: wrong image, bad secret, resource limits)
+  4. Re-apply the relevant manifest and wait again
+
+DO NOT PROCEED until every single pod listed above is Running and Ready.
+This is a HARD requirement -- no partial cluster states are acceptable.
+
+═══════════════════════════════════════════════════════════════════
+STEP 6 — DATABASE: Verify Migrations Ran Successfully
+═══════════════════════════════════════════════════════════════════
+
+The PHANTOM API Gateway runs database migrations on startup via Alembic.
+Verify the migrations ran successfully by checking the API Gateway pod logs:
+
+    kubectl logs -n phantom -l app=phantom-api-gateway --tail=50
+
+Look for a log line containing "gateway.migrations_complete" or "gateway.ready".
+If you see "gateway.db_connect_failed_continuing" in the logs, the API gateway
+cannot reach RDS. Check that the RDS security group allows inbound port 5432
+from the EKS node security group.
+
+═══════════════════════════════════════════════════════════════════
+STEP 7 — PORT FORWARD: Persistent, Self-Reconnecting API Gateway Tunnel
+═══════════════════════════════════════════════════════════════════
+
+IMPORTANT: All commands in Steps 7–9 run on your LOCAL Windows machine
+(via Git Bash / the same terminal where you ran bootstrap.sh).
+Do NOT SSH into EC2 — kubectl port-forward runs locally and tunnels to the cluster.
+
+A plain `kubectl port-forward &` dies if the pod restarts or the connection drops.
+Instead, write a self-healing reconnect loop and run it with nohup so it keeps
+going even if the terminal loses focus.
+
+7a) Write the reconnect loop script:
+
+    cat > /tmp/pf_loop.sh << 'HEREDOC'
+    #!/bin/bash
+    # Self-reconnecting kubectl port-forward loop.
+    # Runs forever; restarts within 5 seconds whenever the tunnel drops.
+    echo "[pf_loop] Starting persistent port-forward for phantom-api-gateway:8080"
+    while true; do
+        echo "[pf_loop] $(date -u '+%Y-%m-%dT%H:%M:%SZ') -- Connecting..."
+        kubectl port-forward svc/phantom-api-gateway 8080:8080 -n phantom 2>&1
+        echo "[pf_loop] $(date -u '+%Y-%m-%dT%H:%M:%SZ') -- Tunnel exited (code $?). Reconnecting in 5s..."
+        sleep 5
+    done
+    HEREDOC
+    chmod +x /tmp/pf_loop.sh
+
+    NOTE: This heredoc uses single-quoted 'HEREDOC' deliberately so that the
+    $(date) and $? expressions are written literally into the script and only
+    evaluate when the SCRIPT ITSELF runs — not when the cat command runs.
+
+7b) Launch the loop with nohup so it keeps running after the terminal closes:
+
+    nohup bash /tmp/pf_loop.sh >> /tmp/pf_loop.log 2>&1 &
+    echo $! > /tmp/pf_loop.pid
+    echo "Port-forward loop running as PID $(cat /tmp/pf_loop.pid)"
+
+7c) Wait 8 seconds for the first connection to establish:
+
+    sleep 8
+
+7d) Verify the tunnel is alive and the API is responding:
+
+    curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/healthz
+
+    NOTE: The PHANTOM liveness probe is at /healthz (NOT /health or /api/v1/health).
+          It returns HTTP 200 with body {"status": "ok"} when the gateway is up.
+
+    Acceptable responses:
+      - 200 --> API is fully up
+      - 401 or 403 --> API is alive but requires a bearer token (this is fine)
+
+    NOT acceptable:
+      - 000 or "Connection refused" --> the loop has not connected yet
+
+    If you get 000 or connection refused:
+      1. Check the process is alive:  kill -0 $(cat /tmp/pf_loop.pid) && echo ALIVE || echo DEAD
+      2. Read the log:                tail -30 /tmp/pf_loop.log
+      3. Check the pod is ready:      kubectl get pods -n phantom -l app=phantom-api-gateway
+      4. If the PID is dead, re-run step 7b.
+
+7e) To stop the port-forward loop at any time:
+
+    kill $(cat /tmp/pf_loop.pid)
+
+═══════════════════════════════════════════════════════════════════
+STEP 8 — CHECKUP ATTACK: Inject a Small Safe Verification Attack
+═══════════════════════════════════════════════════════════════════
+
+IMPORTANT: This runs on your LOCAL Windows machine (same Git Bash terminal).
+The repo is at d:\project-1. Do NOT run this on EC2.
+
+8a) Pre-install Python build tools needed to build the malicious wheel:
+
+    cd /d/project-1
+    pip install --quiet wheel setuptools
+
+8b) Run the check-up attack in the background with nohup so it keeps running
+    even if the terminal loses focus:
+
+    nohup python run_demo.py --attack dep-confusion --namespace phantom-eval \
+        > /tmp/attack_output.log 2>&1 &
+    echo $! > /tmp/attack.pid
+    echo "Attack running as PID $(cat /tmp/attack.pid)"
+
+8c) Monitor the attack output in real time:
+
+    tail -f /tmp/attack_output.log
+    # Press Ctrl+C to stop following the log (the attack keeps running)
+
+8d) A successful injection will show these lines in the log:
+  - "Discovered target pod: emailservice-..."
+  - "Injecting dep-confusion into emailservice-..."
+  - "Injection complete! The attack should now be running."
+  - "Check your PHANTOM Dashboard for live detection."
+
+If the script fails with "No module named 'research'", make sure you are running
+from d:\project-1 (the repo root), not a subdirectory.
+If the script fails because kubectl exec is denied, check RBAC permissions in Step 4.
+
+═══════════════════════════════════════════════════════════════════
+STEP 9 — VERIFY DETECTION: Confirm PHANTOM Caught the Attack
+═══════════════════════════════════════════════════════════════════
+
+After injecting the attack, wait 30 seconds and then query the PHANTOM API
+to check if an incident (supply chain violation) was created:
+
+    curl -s "http://localhost:8080/api/v1/incidents?limit=5" | python3 -m json.tool
+
+You should see at least one incident in the response with status "open" or "confirmed".
+
+Alternatively, check drift events (the eBPF agent posts events here as they happen):
+
+    curl -s "http://localhost:8080/api/v1/drift-events?since=$(date -u -d '5 minutes ago' '+%Y-%m-%dT%H:%M:%SZ')&limit=20" \
+        | python3 -m json.tool
+
+    NOTE: The drift-events endpoint requires a mandatory ?since= datetime parameter
+    in ISO 8601 format (e.g. 2026-01-01T00:00:00Z). It will return HTTP 422 without it.
+
+If both return empty lists, check the eBPF agent is running and sending events:
+
+    kubectl logs -n phantom -l app=phantom-ebpf-agent --tail=30
+
+═══════════════════════════════════════════════════════════════════
+STEP 10 — FINAL REPORT
+═══════════════════════════════════════════════════════════════════
+
+When all steps are complete, print a clear final status summary with PASS or FAIL
+for each component:
+
+  Component                                    | Status
+  ---------------------------------------------|--------
+  Terraform (EKS + RDS + Redis + ECR)          | PASS/FAIL
+  Docker images pushed to ECR (all 5)          | PASS/FAIL
+  kubectl connected to cluster                 | PASS/FAIL
+  Bootstrap secrets and configmaps applied     | PASS/FAIL
+  phantom-api-gateway pods (2/2 Ready)         | PASS/FAIL
+  phantom-ebpf-agent pods (2/2 Ready)          | PASS/FAIL
+  phantom-causal-engine pod (1/1 Ready)        | PASS/FAIL
+  phantom-sbom-service pods (2/2 Ready)        | PASS/FAIL
+  phantom-report-generator pod (1/1 Ready)     | PASS/FAIL
+  emailservice pod (1/1 Ready)                 | PASS/FAIL
+  recommendationservice pod (1/1 Ready)        | PASS/FAIL
+  cartservice pod (1/1 Ready)                  | PASS/FAIL
+  phantom-sink pod (1/1 Ready)                 | PASS/FAIL
+  Database migrations completed                | PASS/FAIL
+  API Gateway reachable on localhost:8080      | PASS/FAIL
+  Dep-Confusion attack injected successfully   | PASS/FAIL
+  PHANTOM detected the attack                  | PASS/FAIL
+
+Also print:
+  - EC2 worker node IP (for SSH tunnel to port-forward if running remotely):
+      aws ec2 describe-instances \
+        --filters "Name=tag:kubernetes.io/cluster/phantom-dev,Values=owned" "Name=instance-state-name,Values=running" \
+        --query "Reservations[0].Instances[0].PublicIpAddress" \
+        --output text \
+        --region ap-south-1
+  - Cluster name: phantom-dev
+  - Region: ap-south-1
+
+The system is now fully deployed and ready for the live review demonstration.
