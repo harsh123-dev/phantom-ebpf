@@ -151,7 +151,20 @@ resource "aws_security_group_rule" "cluster_to_node" {
   from_port                = 0
   to_port                  = 0
   protocol                 = "-1"
-  description              = "Cluster control plane to worker nodes (kubelet, extension APIs)"
+  description              = "Custom cluster SG to worker nodes (kubelet, extension APIs)"
+}
+
+# CRITICAL: EKS auto-creates a second "managed" cluster SG that the control plane
+# actually uses to reach the kubelet on port 10250. Without this rule, kubectl
+# port-forward and kubectl exec both fail with "dial tcp ...:10250: i/o timeout".
+resource "aws_security_group_rule" "managed_cluster_sg_to_node" {
+  type                     = "ingress"
+  security_group_id        = aws_security_group.node.id
+  source_security_group_id = aws_eks_cluster.phantom.vpc_config[0].cluster_security_group_id
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
+  description              = "AWS-managed EKS cluster SG to worker nodes (required for kubelet/port-forward/exec)"
 }
 
 resource "aws_eks_cluster" "phantom" {
