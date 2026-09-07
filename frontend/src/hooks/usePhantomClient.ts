@@ -57,22 +57,18 @@ async function resolveClient(): Promise<PhantomClient> {
   }
   try {
     const baseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8080'
-    const token = getStoredAuthToken()
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
     const controller = new AbortController()
     const id = setTimeout(() => controller.abort(), 4_000)
-    const res = await fetch(`${baseUrl}/api/v1/incidents?limit=1`, { headers, signal: controller.signal })
+    // Probe /healthz — no auth needed, always returns 200 when the pod is live.
+    // Any HTTP response (including 4xx/5xx) means the server is reachable;
+    // only a network error / timeout means we should fall back to demo mode.
+    await fetch(`${baseUrl}/healthz`, { signal: controller.signal })
     clearTimeout(id)
-    if (res.ok || res.status === 401 || res.status === 403) {
-      // 401/403 means the API is alive — auth might need fixing, but it's reachable
-      _resolvedClient = _real
-      console.info('[PHANTOM] Connected to live API at', baseUrl)
-    } else {
-      throw new Error(`HTTP ${res.status}`)
-    }
+    _resolvedClient = _real
+    console.info('[PHANTOM] Connected to live API at', baseUrl)
   } catch {
     _resolvedClient = _demo
-    console.warn('[PHANTOM] Live API unreachable — using demo data (real EC2 evaluation results)')
+    console.warn('[PHANTOM] Live API unreachable — using demo data')
   }
   return _resolvedClient
 }
