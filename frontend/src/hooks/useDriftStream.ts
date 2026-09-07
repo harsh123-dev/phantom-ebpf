@@ -34,20 +34,20 @@ const getDriftStreamUrl = (): string => {
   return `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/api/v1/streams/drift`;
 };
 
-/** Fetch recent drift events from REST and convert to LiveDriftEvent shape. */
+/** Fetch recent drift events from REST and convert to LiveDriftEvent shape. Returns the count fetched. */
 async function bootstrapDriftEvents(
   baseUrl: string,
   token: string,
   addEvent: (e: LiveDriftEvent) => void,
-): Promise<void> {
+): Promise<number> {
   try {
-    // last 2 hours so we always get something meaningful from the evaluation run
-    const since = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    // last 6 hours so we always get something meaningful from the evaluation run
+    const since = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
     const res = await fetch(
       `${baseUrl}/api/v1/drift-events?since=${encodeURIComponent(since)}&limit=20`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
-    if (!res.ok) return;
+    if (!res.ok) return 0;
     const data = (await res.json()) as { items?: Record<string, unknown>[] };
     const items = data.items ?? [];
     // Add in reverse so newest appears at top
@@ -59,7 +59,7 @@ async function bootstrapDriftEvents(
         drift_event_id: (item.drift_event_id as string) ?? crypto.randomUUID(),
         published_at: (item.observed_at as string) ?? new Date().toISOString(),
         event_type: (item.event_type as LiveDriftEvent["event_type"]) ?? "exec",
-        severity: (item.max_severity as LiveDriftEvent["severity"]) ?? "high",
+        severity: ((item.max_severity ?? item.severity) as LiveDriftEvent["severity"]) ?? "high",
         namespace: (item.namespace as string) ?? null,
         pod_name: (item.pod_name as string) ?? null,
         image_digest: (item.image_digest as string) ?? null,
@@ -71,8 +71,10 @@ async function bootstrapDriftEvents(
       addEvent(ev);
     }
     console.info(`[PHANTOM] Bootstrapped ${items.length} drift events from REST API`);
+    return items.length;
   } catch (e) {
     console.warn("[PHANTOM] REST drift bootstrap failed:", e);
+    return 0;
   }
 }
 
@@ -106,6 +108,7 @@ export const useDriftStream = (): DriftStreamResult => {
 
   // Bootstrap timer ref — cleared if WS delivers an event before it fires
   const bootstrapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bootstrapRetryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bootstrappedRef = useRef(false);
 
   // --- Demo mode effect ---
@@ -161,15 +164,29 @@ export const useDriftStream = (): DriftStreamResult => {
     };
     setConnectionStatus("connecting");
 
-    // Schedule a REST bootstrap if the WebSocket delivers nothing in 5 seconds
-    if (!bootstrappedRef.current) {
+    // Reset bootstrap guard on each live-mode effect run so reconnects can re-seed
+    bootstrappedRef.current = false;
+    if (bootstrapRetryRef.current) { clearTimeout(bootstrapRetryRef.current); bootstrapRetryRef.current = null; }
+
+    // Schedule a REST bootstrap if the WebSocket delivers no drift events within 8 seconds
+    const scheduleBootstrap = (delayMs: number): void => {
       bootstrapTimerRef.current = setTimeout(() => {
         bootstrappedRef.current = true;
         const baseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8080";
         const token = getStoredAuthToken();
-        if (token) void bootstrapDriftEvents(baseUrl, token, addEvent);
-      }, 5_000);
-    }
+        if (!token) return;
+        void bootstrapDriftEvents(baseUrl, token, addEvent).then((count) => {
+          // If bootstrap returned nothing, retry once after 15s (attack may not have run yet)
+          if (typeof count === "number" && count === 0) {
+            bootstrapRetryRef.current = setTimeout(() => {
+              bootstrappedRef.current = false;
+              scheduleBootstrap(0);
+            }, 15_000);
+          }
+        });
+      }, delayMs);
+    };
+    scheduleBootstrap(8_000);
 
     const removeEvent = liveClient.onEvent((event) => {
       // Cancel the REST bootstrap — WS is delivering events
@@ -190,6 +207,7 @@ export const useDriftStream = (): DriftStreamResult => {
     liveClient.connect(subscription);
     return () => {
       if (bootstrapTimerRef.current) clearTimeout(bootstrapTimerRef.current);
+      if (bootstrapRetryRef.current) clearTimeout(bootstrapRetryRef.current);
       removeEvent();
       removeError();
       removeConnected();
