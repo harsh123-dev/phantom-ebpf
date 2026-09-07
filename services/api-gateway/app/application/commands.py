@@ -221,27 +221,43 @@ class IngestDriftEventCommand:
                 # Step 7: COMMIT happens on __aexit__ of conn.transaction().
 
         # Step 8: Publish to Redis (after durable commit, at-least-once).
-        received_at = datetime.now(tz=UTC)
+        received_at = datetime.now(tz=UTC)  # used in fan-out payload below
         try:
             redis_message_id = await publish_graph_mutation_job(
                 self._redis, drift_event_id, bdg_update_id, mutation_payload
             )
             await self._repo.mark_outbox_published(bdg_update_id, redis_message_id)
             # Fan-out to WebSocket subscribers.
+            # Compute derived fields once so they can be reused below.
+            _max_sev = max(
+                (v.get("severity", "low") if isinstance(v, dict) else v.severity
+                 for v in (request.get("violations") or [])),
+                key=lambda s: {"low": 0, "medium": 1, "high": 2, "critical": 3}.get(s, 0),
+                default="low",
+            )
+            _violation_types = [
+                (v.get("violation_type", "") if isinstance(v, dict) else v.violation_type)
+                for v in (request.get("violations") or [])
+            ]
             await fan_out_drift_event(
                 self._redis,
                 tenant_id,
                 {
+                    # --- Fields required by the frontend isLiveDriftEvent guard ---
+                    "type": "drift_event",
+                    "stream_event_id": str(uuid.uuid4()),
+                    "published_at": received_at.isoformat(),
                     "drift_event_id": str(drift_event_id),
                     "event_type": request["event_type"],
+                    "severity": _max_sev,          # alias expected by frontend
+                    "identity_status": request.get("identity_status", "resolved"),
+                    "violation_types": _violation_types,
+                    # --- Extra context shown in the Live Drift Feed rows ---
                     "namespace": wl_d["namespace"],
-                    "image_digest": wl_d["image_digest"],
-                    "max_severity": max(
-                        (v.get("severity", "low") if isinstance(v, dict) else v.severity
-                         for v in (request.get("violations") or [])),
-                        key=lambda s: {"low": 0, "medium": 1, "high": 2, "critical": 3}.get(s, 0),
-                        default="low",
-                    ),
+                    "pod_name": wl_d.get("pod_name", ""),
+                    "container_name": wl_d.get("container_name", ""),
+                    "image_digest": wl_d.get("image_digest", ""),
+                    "max_severity": _max_sev,
                     "observed_at": str(request["observed_at"]),
                 },
             )
