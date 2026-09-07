@@ -1,0 +1,143 @@
+PHANTOM — Step 7 Fix + Attack Verification
+For: Codex CLI
+Context: Steps 1–6 are complete. All pods are Running/Ready.
+The ONLY reason Step 7 (port-forward) kept failing is a missing AWS Security Group rule.
+
+═══════════════════════════════════════════════════════════════════
+ROOT CAUSE OF THE FAILURE
+═══════════════════════════════════════════════════════════════════
+
+Error seen: "error upgrading connection: dial tcp 172.31.35.253:10250: i/o timeout"
+
+Explanation:
+- kubectl port-forward and kubectl exec both require the EKS control plane to reach
+  the kubelet API on port 10250 on each worker node.
+- EKS auto-creates TWO security groups:
+    1. A custom SG we created (phantom-dev-cluster) — already has a rule.
+    2. A second AWS-MANAGED SG (auto-created by EKS itself) — NOT in our rules yet.
+- The control plane actually sends kubelet traffic through the MANAGED SG.
+- Because the managed SG has no ingress rule on the worker node SG, port 10250 is
+  silently dropped, causing the i/o timeout.
+
+Fix: Add a security group rule to allow all traffic from the AWS-managed EKS cluster
+SG to the worker node SG. This must be done via AWS CLI directly.
+
+═══════════════════════════════════════════════════════════════════
+STEP 7A — FIX THE SECURITY GROUP (AWS CLI)
+═══════════════════════════════════════════════════════════════════
+
+Run the following commands in order:
+
+1. Get the worker node security group ID (the SG named "phantom-dev-node"):
+   NODE_SG=$(aws ec2 describe-security-groups \
+     --region ap-south-1 \
+     --filters "Name=group-name,Values=phantom-dev-node" \
+     --query "SecurityGroups[0].GroupId" \
+     --output text)
+   echo "Node SG: $NODE_SG"
+
+2. Get the AWS-managed EKS cluster security group ID (auto-created by EKS):
+   MANAGED_CLUSTER_SG=$(aws eks describe-cluster \
+     --name phantom-dev \
+     --region ap-south-1 \
+     --query "cluster.resourcesVpcConfig.clusterSecurityGroupId" \
+     --output text)
+   echo "Managed Cluster SG: $MANAGED_CLUSTER_SG"
+
+3. Add the missing ingress rule:
+   aws ec2 authorize-security-group-ingress \
+     --region ap-south-1 \
+     --group-id "$NODE_SG" \
+     --protocol -1 \
+     --source-group "$MANAGED_CLUSTER_SG"
+   echo "Security group rule added."
+
+   NOTE: If you get "InvalidPermission.Duplicate", the rule already exists — continue.
+
+4. Verify the fix:
+   aws ec2 describe-security-groups \
+     --region ap-south-1 \
+     --group-ids "$NODE_SG" \
+     --query "SecurityGroups[0].IpPermissions[?UserIdGroupPairs[?GroupId=='$MANAGED_CLUSTER_SG']]" \
+     --output json
+
+   You should see a non-empty JSON array. If empty, retry step 3.
+
+═══════════════════════════════════════════════════════════════════
+STEP 7B — START PORT-FORWARD (SELF-RECONNECTING LOOP)
+═══════════════════════════════════════════════════════════════════
+
+Now that the Security Group is fixed, start the persistent port-forward:
+
+   cat > /tmp/pf_loop.sh << 'HEREDOC'
+   #!/bin/bash
+   echo "[pf_loop] Starting persistent port-forward for phantom-api-gateway:8080"
+   while true; do
+       echo "[pf_loop] $(date -u '+%Y-%m-%dT%H:%M:%SZ') -- Connecting..."
+       kubectl port-forward svc/phantom-api-gateway 8080:8080 -n phantom 2>&1
+       echo "[pf_loop] $(date -u '+%Y-%m-%dT%H:%M:%SZ') -- Disconnected. Reconnecting in 5s..."
+       sleep 5
+   done
+   HEREDOC
+   chmod +x /tmp/pf_loop.sh
+   nohup bash /tmp/pf_loop.sh >> /tmp/pf_loop.log 2>&1 &
+   echo $! > /tmp/pf_loop.pid
+   sleep 8
+   tail -5 /tmp/pf_loop.log
+
+Verify the tunnel works:
+   curl -s -o /dev/null -w "%{http_code}\n" --max-time 10 http://localhost:8080/healthz
+
+   Expected: 200
+
+If still getting 000/timeout, check:
+   tail -20 /tmp/pf_loop.log
+   kubectl get pods -n phantom -l app=phantom-api-gateway
+
+═══════════════════════════════════════════════════════════════════
+STEP 8 — INJECT THE DEPENDENCY CONFUSION ATTACK
+═══════════════════════════════════════════════════════════════════
+
+   cd /root/phantom-ebpf
+   pip install --quiet wheel setuptools
+   python3 run_demo.py --attack dep-confusion --namespace phantom-eval
+
+A successful injection will print:
+  "Injection complete! The attack should now be running."
+
+═══════════════════════════════════════════════════════════════════
+STEP 9 — VERIFY DETECTION
+═══════════════════════════════════════════════════════════════════
+
+Wait 30 seconds after injection, then:
+
+   sleep 30
+
+   echo "--- incidents ---"
+   curl -s "http://localhost:8080/api/v1/incidents?limit=5" | python3 -m json.tool
+
+   echo "--- drift events ---"
+   since=$(date -u -d '10 minutes ago' '+%Y-%m-%dT%H:%M:%SZ')
+   curl -s "http://localhost:8080/api/v1/drift-events?since=${since}&limit=20" | python3 -m json.tool
+
+   NOTE: The drift-events endpoint REQUIRES a ?since= ISO 8601 timestamp.
+   It returns HTTP 422 without it.
+
+═══════════════════════════════════════════════════════════════════
+STEP 10 — FINAL REPORT
+═══════════════════════════════════════════════════════════════════
+
+Print the final status table:
+
+  Component                                    | Status
+  ---------------------------------------------|--------
+  Terraform (EKS + RDS + Redis + ECR)          | PASS
+  Docker images pushed to ECR (all 5)          | PASS
+  kubectl connected to cluster                 | PASS
+  Bootstrap secrets and configmaps applied     | PASS
+  All PHANTOM and Eval pods Running/Ready      | PASS
+  Database migrations completed                | PASS
+  Security Group fix (managed cluster SG)      | PASS/FAIL
+  Port-forward tunnel on localhost:8080        | PASS/FAIL
+  Dep-Confusion attack injected successfully   | PASS/FAIL
+  PHANTOM detected the attack (incidents API)  | PASS/FAIL

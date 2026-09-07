@@ -266,11 +266,19 @@ async def event_processor(
                 "tenant_id": tenant_id,
             }
 
-            # Namespace filter: skip events from unmonitored namespaces.
-            # This prevents system-wide kernel event floods from saturating
-            # the queue and crowding out real phantom-eval workload events.
+            # Namespace filter: skip events from KNOWN non-monitored namespaces.
+            # IMPORTANT: When cgroup→pod attribution fails (MISSING/AMBIGUOUS), the
+            # namespace is None → "unknown". We must NOT filter those events out,
+            # because we cannot confirm they are outside the watched set — they may
+            # simply be events from watched pods whose cgroup mapping is still warming up.
+            # We only filter when attribution is RESOLVED and the namespace is explicitly
+            # outside the watch list.
             event_ns: str = identity.namespace or "unknown"
-            if _WATCH_NAMESPACES and event_ns not in _WATCH_NAMESPACES:
+            if (
+                _WATCH_NAMESPACES
+                and event_ns != "unknown"
+                and event_ns not in _WATCH_NAMESPACES
+            ):
                 log.debug(
                     "event_processor.namespace_filtered",
                     namespace=event_ns,
@@ -278,6 +286,7 @@ async def event_processor(
                 )
                 event_queue.task_done()
                 continue
+
 
             await dispatcher.dispatch_event(payload)
             event_queue.task_done()
