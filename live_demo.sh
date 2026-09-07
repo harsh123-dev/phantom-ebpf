@@ -131,7 +131,7 @@ _post_event() {
           \"agent_sequence\": 1,
           \"tenant_id\": \"00000000-0000-0000-0000-000000000001\"
         }")
-    if [ "$http" = "200" ] || [ "$http" = "201" ]; then
+    if [ "$http" = "200" ] || [ "$http" = "201" ] || [ "$http" = "202" ]; then
         local did
         did=$(python3 -c "import sys,json; print(json.load(open('/tmp/drift_resp.json')).get('drift_event_id','?'))" 2>/dev/null || echo "?")
         echo "      Ingested [$evt_type] drift_event_id=$did"
@@ -218,11 +218,17 @@ INC_HTTP=$(curl -s -o /tmp/inc_resp.json -w "%{http_code}" \
       \"tenant_id\": \"00000000-0000-0000-0000-000000000001\"
     }")
 
-INCIDENT_ID=$(echo "$INCIDENT_RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('incident_id', d.get('id','')))" 2>/dev/null || true)
+if [ "$INC_HTTP" != "200" ] && [ "$INC_HTTP" != "201" ]; then
+    echo "ERROR creating incident. Response (HTTP $INC_HTTP) was:"
+    cat /tmp/inc_resp.json | python3 -m json.tool
+    exit 1
+fi
+
+INCIDENT_ID=$(cat /tmp/inc_resp.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('incident_id', d.get('id','')))" 2>/dev/null || true)
 
 if [ -z "$INCIDENT_ID" ]; then
-    echo "ERROR creating incident. Response was:"
-    echo "$INCIDENT_RESPONSE" | python3 -m json.tool
+    echo "ERROR: Failed to parse incident_id from response:"
+    cat /tmp/inc_resp.json | python3 -m json.tool
     exit 1
 fi
 
