@@ -40,23 +40,52 @@ echo "      OK Attack injection complete"
 # ── 3. Run mock_agent to generate eBPF-style drift events ───────────────────
 echo ""
 echo "[3/5] Generating drift events (simulated eBPF telemetry, 10 seconds)..."
-timeout 10 python3 mock_agent.py 2>&1 | grep -E "Ingested|Error|Waiting" || true
+timeout 10 python3 mock_agent.py 2>&1 | tail -20
 echo "      OK Drift events injected"
 
 # ── 4. Create and confirm the incident ─────────────────────────────────────
 echo ""
 echo "[4/5] Creating confirmed incident..."
+
+# Fetch a real drift event ID (required — drift_event_ids must have at least 1 UUID)
+SINCE=$(date -u -d '30 minutes ago' '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date -u -v-30M '+%Y-%m-%dT%H:%M:%SZ')
+DRIFT_ID=$(curl -s "$GW/api/v1/drift-events?since=$SINCE&limit=1" \
+    -H "Authorization: Bearer $TOKEN" | \
+    python3 -c "import sys,json; items=json.load(sys.stdin).get('items',[]); print(items[0]['drift_event_id'] if items else '')" 2>/dev/null || true)
+
+if [ -z "$DRIFT_ID" ]; then
+    echo "      WARNING: No drift events found. Checking further back (2 hours)..."
+    SINCE2=$(date -u -d '2 hours ago' '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date -u -v-2H '+%Y-%m-%dT%H:%M:%SZ')
+    DRIFT_ID=$(curl -s "$GW/api/v1/drift-events?since=$SINCE2&limit=1" \
+        -H "Authorization: Bearer $TOKEN" | \
+        python3 -c "import sys,json; items=json.load(sys.stdin).get('items',[]); print(items[0]['drift_event_id'] if items else '')" 2>/dev/null || true)
+fi
+
+if [ -z "$DRIFT_ID" ]; then
+    echo "      ERROR: No drift events in database. mock_agent.py must have failed."
+    echo "      Run: python3 mock_agent.py"
+    echo "      Then re-run this script."
+    exit 1
+fi
+
+echo "      Using drift event: $DRIFT_ID"
+
+# Create the incident with correct schema fields
 INCIDENT_RESPONSE=$(curl -s -X POST "$GW/api/v1/incidents" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $TOKEN" \
-    -d '{
-      "title": "Supply Chain Attack: Dependency Confusion on emailservice",
-      "severity": "critical",
-      "status": "open",
-      "summary": "PHANTOM eBPF agent detected an unexpected executable and outbound network beacon from emailservice. Consistent with a dependency confusion supply chain attack injecting a malicious pip package at runtime.",
-      "drift_event_ids": [],
-      "tags": ["supply-chain", "dep-confusion", "emailservice", "critical"]
-    }')
+    -d "{
+      \"schema_version\": \"v1\",
+      \"title\": \"Supply Chain Attack: Dependency Confusion on emailservice\",
+      \"summary\": \"PHANTOM eBPF agent detected an unexpected executable and outbound network beacon from emailservice. Consistent with a dependency confusion supply chain attack injecting a malicious pip package at runtime.\",
+      \"drift_event_ids\": [\"$DRIFT_ID\"],
+      \"attribution_ids\": [],
+      \"score_ids\": [],
+      \"snapshot_id\": \"00000000-0000-0000-0000-000000000000\",
+      \"classification\": \"confirmed\",
+      \"tags\": [\"supply-chain\", \"dep-confusion\", \"emailservice\"],
+      \"tenant_id\": \"00000000-0000-0000-0000-000000000001\"
+    }")
 
 INCIDENT_ID=$(echo "$INCIDENT_RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('incident_id', d.get('id','')))" 2>/dev/null || true)
 
@@ -66,13 +95,7 @@ if [ -z "$INCIDENT_ID" ]; then
     exit 1
 fi
 
-# Confirm the incident
-curl -s -X PATCH "$GW/api/v1/incidents/$INCIDENT_ID" \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer $TOKEN" \
-    -d '{"status": "confirmed"}' > /dev/null
-
-echo "      OK Incident created and confirmed"
+echo "      OK Incident created (classification: confirmed)"
 echo "      Incident ID: $INCIDENT_ID"
 
 # ── 5. Print the final summary ──────────────────────────────────────────────
