@@ -69,10 +69,83 @@ echo "[2/5] Injecting dependency-confusion supply chain attack..."
 python3 run_demo.py --attack dep-confusion --namespace phantom-eval 2>&1 | tail -5
 echo "      OK Attack injection complete"
 
-# ── 3. Run mock_agent to generate eBPF-style drift events ───────────────────
+# ── 3. Generate drift events via direct API POST (same as the real eBPF agent) ──
 echo ""
-echo "[3/5] Generating drift events (simulated eBPF telemetry, 10 seconds)..."
-timeout 10 python3 mock_agent.py 2>&1 | tail -20
+echo "[3/5] Generating drift events via API (simulating eBPF telemetry)..."
+
+# Get real pod info from the cluster
+EMAIL_POD=$(kubectl get pods -n phantom-eval -l app=emailservice \
+    -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "emailservice-demo")
+EMAIL_UID=$(kubectl get pods -n phantom-eval -l app=emailservice \
+    -o jsonpath='{.items[0].metadata.uid}' 2>/dev/null || echo "00000000-0000-0000-0000-000000000002")
+NODE=$(kubectl get pods -n phantom-eval -l app=emailservice \
+    -o jsonpath='{.items[0].spec.nodeName}' 2>/dev/null || echo "node-1")
+NOW=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+
+_post_event() {
+    local evt_type="$1" comm="$2" path="$3" vtype="$4"
+    local eid
+    eid=$(python3 -c "import uuid; print(uuid.uuid4())")
+    local http
+    http=$(curl -s -o /tmp/drift_resp.json -w "%{http_code}" \
+        -X POST "$GW/api/v1/drift-events" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $TOKEN" \
+        -d "{
+          \"schema_version\": \"v1\",
+          \"event_id\": \"$eid\",
+          \"observed_at\": \"$NOW\",
+          \"node_name\": \"$NODE\",
+          \"event_type\": \"$evt_type\",
+          \"process\": {
+            \"pid\": 12345, \"tgid\": 12345, \"ppid\": 1,
+            \"start_time_ns\": 1000000000,
+            \"comm\": \"$comm\",
+            \"executable_path\": \"$path\",
+            \"uid\": 0, \"gid\": 0
+          },
+          \"workload\": {
+            \"cluster_name\": \"phantom-dev\",
+            \"namespace\": \"phantom-eval\",
+            \"pod_name\": \"$EMAIL_POD\",
+            \"pod_uid\": \"$EMAIL_UID\",
+            \"container_name\": \"emailservice\",
+            \"container_id\": \"containerd://phantom-demo\",
+            \"image_digest\": \"sha256:0000000000000000000000000000000000000000000000000000000000000000\",
+            \"service_account\": \"default\"
+          },
+          \"identity_status\": \"resolved\",
+          \"violations\": [{
+            \"violation_type\": \"$vtype\",
+            \"severity\": \"high\",
+            \"observed\": \"$path\",
+            \"confidence\": 0.97
+          }],
+          \"evidence\": {
+            \"kernel_timestamp_ns\": 1000000000,
+            \"cpu\": 0, \"architecture\": \"x86_64\",
+            \"event_loss_observed\": false,
+            \"raw_event_digest\": \"sha256:0000000000000000000000000000000000000000000000000000000000000000\"
+          },
+          \"agent_sequence\": 1,
+          \"tenant_id\": \"00000000-0000-0000-0000-000000000001\"
+        }")
+    if [ "$http" = "200" ] || [ "$http" = "201" ]; then
+        local did
+        did=$(python3 -c "import sys,json; print(json.load(open('/tmp/drift_resp.json')).get('drift_event_id','?'))" 2>/dev/null || echo "?")
+        echo "      Ingested [$evt_type] drift_event_id=$did"
+    else
+        echo "      WARNING: drift event POST returned HTTP $http"
+        cat /tmp/drift_resp.json 2>/dev/null || true
+    fi
+}
+
+_post_event "exec"            "pip"     "/usr/local/bin/pip"               "unexpected_process_relation"
+_post_event "network_connect" "python3" "/usr/local/bin/python3"           "unexpected_network"
+_post_event "exec"            "curl"    "/usr/bin/curl"                    "unexpected_process_relation"
+
+echo "      OK Drift events posted to API"
+
 echo "      OK Drift events injected"
 
 # ── 4. Create and confirm the incident ─────────────────────────────────────
