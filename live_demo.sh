@@ -112,6 +112,7 @@ _post_event() {
             \"container_name\": \"emailservice\",
             \"container_id\": \"containerd://phantom-demo\",
             \"image_digest\": \"sha256:0000000000000000000000000000000000000000000000000000000000000000\",
+            \"cgroup_id\": 1,
             \"service_account\": \"default\"
           },
           \"identity_status\": \"resolved\",
@@ -167,16 +168,41 @@ if [ -z "$DRIFT_ID" ]; then
 fi
 
 if [ -z "$DRIFT_ID" ]; then
-    echo "      ERROR: No drift events in database. mock_agent.py must have failed."
-    echo "      Run: python3 mock_agent.py"
-    echo "      Then re-run this script."
+    echo "      ERROR: No drift events in database. Drift event injection must have failed."
     exit 1
 fi
 
 echo "      Using drift event: $DRIFT_ID"
 
-# Create the incident with correct schema fields
-INCIDENT_RESPONSE=$(curl -s -X POST "$GW/api/v1/incidents" \
+# Get a valid snapshot_id to satisfy the foreign key constraint
+GW_POD=$(kubectl get pods -n phantom -l app=phantom-api-gateway -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+SNAPSHOT_ID="00000000-0000-0000-0000-000000000000"
+if [ -n "$GW_POD" ]; then
+    echo "      Fetching a valid snapshot_id from database..."
+    SCRIPT="
+import asyncio, asyncpg, os
+async def run():
+    pool = await asyncpg.create_pool(os.environ['DATABASE_URL'])
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow('SELECT snapshot_id FROM bdg_snapshots LIMIT 1')
+        if row:
+            print(row['snapshot_id'])
+        else:
+            dummy = '00000000-0000-0000-0000-000000000000'
+            await conn.execute(\"INSERT INTO bdg_snapshots (snapshot_id, tenant_id) VALUES (\$1, '00000000-0000-0000-0000-000000000001') ON CONFLICT DO NOTHING\", dummy)
+            print(dummy)
+asyncio.run(run())
+"
+    # Execute python script inside gateway pod to connect to DB
+    DB_SNAP=$(kubectl exec -n phantom "$GW_POD" -- python3 -c "$SCRIPT" 2>/dev/null | tr -d '\r\n')
+    if [ -n "$DB_SNAP" ]; then
+        SNAPSHOT_ID="$DB_SNAP"
+    fi
+fi
+echo "      Using snapshot_id: $SNAPSHOT_ID"
+
+INC_HTTP=$(curl -s -o /tmp/inc_resp.json -w "%{http_code}" \
+    -X POST "$GW/api/v1/incidents" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $TOKEN" \
     -d "{
@@ -186,7 +212,7 @@ INCIDENT_RESPONSE=$(curl -s -X POST "$GW/api/v1/incidents" \
       \"drift_event_ids\": [\"$DRIFT_ID\"],
       \"attribution_ids\": [],
       \"score_ids\": [],
-      \"snapshot_id\": \"00000000-0000-0000-0000-000000000000\",
+      \"snapshot_id\": \"$SNAPSHOT_ID\",
       \"classification\": \"confirmed\",
       \"tags\": [\"supply-chain\", \"dep-confusion\", \"emailservice\"],
       \"tenant_id\": \"00000000-0000-0000-0000-000000000001\"
