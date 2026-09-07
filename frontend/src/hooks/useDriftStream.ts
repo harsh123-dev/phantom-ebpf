@@ -239,6 +239,7 @@ export const useDriftStream = (): DriftStreamResult => {
           if (ev.published_at > lastSeenAtRef.current) lastSeenAtRef.current = ev.published_at;
           addEvent(ev);
         }).then((count) => {
+          setConnectionStatus("connected");
           if (typeof count === "number" && count === 0) {
             bootstrapRetryRef.current = setTimeout(() => {
               bootstrappedRef.current = false;
