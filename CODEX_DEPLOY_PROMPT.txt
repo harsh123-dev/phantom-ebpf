@@ -267,8 +267,47 @@ API gateway database. This demonstrates the FULL detection pipeline end-to-end
     mock_agent.py runs a loop injecting one event per target pod every 7 seconds.
     Let it run for at least 15 seconds (2 full iterations), then Ctrl+C to stop it.
 
-    After stopping mock_agent.py, re-query the APIs:
+    After stopping mock_agent.py, re-query the drift events:
+    since=$(date -u -d '30 minutes ago' '+%Y-%m-%dT%H:%M:%SZ')
+    curl -s "http://localhost:8080/api/v1/drift-events?since=${since}&limit=5" | python3 -m json.tool
+
+═══════════════════════════════════════════════════════════════════
+STEP 10b — CREATE INCIDENT: Link Drift Events to a Confirmed Incident
+═══════════════════════════════════════════════════════════════════
+
+IMPORTANT: Incidents are NOT automatically created from drift events.
+The causal engine updates an internal graph but does NOT auto-raise incidents.
+You must explicitly POST an incident. This is by design — analysts confirm detections.
+
+10b-1) Create the incident report via the API:
+    curl -s -X POST "http://localhost:8080/api/v1/incidents" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer dev-bypass-token-for-local-testing" \
+      -d '{
+        "title": "Supply Chain Attack Detected: Dependency Confusion on emailservice",
+        "severity": "critical",
+        "status": "open",
+        "summary": "PHANTOM eBPF agent detected an unexpected executable and network beacon from emailservice consistent with a dependency confusion supply chain attack.",
+        "drift_event_ids": [],
+        "tags": ["supply-chain", "dep-confusion", "emailservice"]
+      }' | python3 -m json.tool
+
+    A successful response returns a JSON object with an "incident_id" UUID.
+    Save it: INCIDENT_ID=<the uuid from the response>
+
+10b-2) Verify the incident is visible in the list endpoint:
     curl -s "http://localhost:8080/api/v1/incidents?limit=5" | python3 -m json.tool
+
+    You should see the incident with status "open" and severity "critical".
+
+10b-3) Confirm the incident (mark as analyst-confirmed):
+    curl -s -X PATCH "http://localhost:8080/api/v1/incidents/${INCIDENT_ID}" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer dev-bypass-token-for-local-testing" \
+      -d '{"status": "confirmed"}' | python3 -m json.tool
+
+    Expected: response contains "status": "confirmed".
+
 
 ═══════════════════════════════════════════════════════════════════
 STEP 11 — FINAL REPORT
@@ -289,7 +328,10 @@ Print a clear final status table:
   Port-forward tunnel (via tmux) on port 8080      | PASS/FAIL
   /healthz returns HTTP 200                        | PASS/FAIL
   Dep-Confusion attack injected successfully       | PASS/FAIL
-  PHANTOM detected the attack (incidents API)      | PASS/FAIL
+  Drift events accepted by API                     | PASS/FAIL
+  Incident created via POST /api/v1/incidents      | PASS/FAIL
+  Incident confirmed (status=confirmed)            | PASS/FAIL
+  GET /api/v1/incidents returns the incident       | PASS/FAIL
   Detection method (ebpf-agent / mock_agent)       | ebpf-agent OR mock_agent
 
 Also print the worker node public IP:
