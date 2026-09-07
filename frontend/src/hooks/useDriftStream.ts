@@ -110,6 +110,12 @@ export const useDriftStream = (): DriftStreamResult => {
   const bootstrapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bootstrapRetryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bootstrappedRef = useRef(false);
+  // Polling loop for live REST fallback (when WebSocket is unavailable)
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Track the newest event timestamp for incremental polling (avoid duplicates)
+  const lastSeenAtRef = useRef<string>(new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString());
+  // Track known event IDs to deduplicate REST poll results
+  const seenEventIdsRef = useRef<Set<string>>(new Set());
 
   // --- Demo mode effect ---
   useEffect(() => {
@@ -164,24 +170,83 @@ export const useDriftStream = (): DriftStreamResult => {
     };
     setConnectionStatus("connecting");
 
-    // Reset bootstrap guard on each live-mode effect run so reconnects can re-seed
+    // Reset bootstrap guard and polling on each live-mode effect run
     bootstrappedRef.current = false;
+    lastSeenAtRef.current = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
+    seenEventIdsRef.current = new Set();
     if (bootstrapRetryRef.current) { clearTimeout(bootstrapRetryRef.current); bootstrapRetryRef.current = null; }
+    if (pollIntervalRef.current) { clearInterval(pollIntervalRef.current); pollIntervalRef.current = null; }
+
+    const baseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8080";
+
+    /** Poll REST API for new drift events since lastSeenAtRef */
+    const pollNewEvents = async (): Promise<void> => {
+      const token = getStoredAuthToken();
+      if (!token) return;
+      try {
+        const since = encodeURIComponent(lastSeenAtRef.current);
+        const res = await fetch(
+          `${baseUrl}/api/v1/drift-events?since=${since}&limit=20`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (!res.ok) return;
+        const data = (await res.json()) as { items?: Record<string, unknown>[] };
+        const items = data.items ?? [];
+        let newestAt = lastSeenAtRef.current;
+        for (const item of [...items].reverse()) {
+          const id = (item.drift_event_id as string) ?? "";
+          if (seenEventIdsRef.current.has(id)) continue;
+          seenEventIdsRef.current.add(id);
+          const observedAt = (item.observed_at as string) ?? new Date().toISOString();
+          if (observedAt > newestAt) newestAt = observedAt;
+          const ev: LiveDriftEvent = {
+            schema_version: "v1",
+            type: "drift_event",
+            stream_event_id: id || crypto.randomUUID(),
+            drift_event_id: id || crypto.randomUUID(),
+            published_at: observedAt,
+            event_type: (item.event_type as LiveDriftEvent["event_type"]) ?? "exec",
+            severity: ((item.max_severity ?? item.severity) as LiveDriftEvent["severity"]) ?? "high",
+            namespace: (item.namespace as string) ?? null,
+            pod_name: (item.pod_name as string) ?? null,
+            image_digest: (item.image_digest as string) ?? null,
+            identity_status: (item.identity_status as LiveDriftEvent["identity_status"]) ?? "resolved",
+            violation_types: (item.violation_types as string[]) ?? [],
+            attribution_id: null,
+            pceps_score: null,
+          };
+          addEvent(ev);
+        }
+        lastSeenAtRef.current = newestAt;
+        if (items.length > 0) {
+          setConnectionStatus("connected");
+          console.info(`[PHANTOM] Poll: +${items.length} new drift events`);
+        }
+      } catch { /* silent */ }
+    };
 
     // Schedule a REST bootstrap if the WebSocket delivers no drift events within 8 seconds
     const scheduleBootstrap = (delayMs: number): void => {
       bootstrapTimerRef.current = setTimeout(() => {
         bootstrappedRef.current = true;
-        const baseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8080";
         const token = getStoredAuthToken();
         if (!token) return;
-        void bootstrapDriftEvents(baseUrl, token, addEvent).then((count) => {
-          // If bootstrap returned nothing, retry once after 15s (attack may not have run yet)
+        void bootstrapDriftEvents(baseUrl, token, (ev) => {
+          if (seenEventIdsRef.current.has(ev.drift_event_id)) return;
+          seenEventIdsRef.current.add(ev.drift_event_id);
+          if (ev.published_at > lastSeenAtRef.current) lastSeenAtRef.current = ev.published_at;
+          addEvent(ev);
+        }).then((count) => {
           if (typeof count === "number" && count === 0) {
             bootstrapRetryRef.current = setTimeout(() => {
               bootstrappedRef.current = false;
               scheduleBootstrap(0);
             }, 15_000);
+          }
+          // Start polling loop after bootstrap (whether or not we got events)
+          if (!pollIntervalRef.current) {
+            // Use a slightly newer timestamp to avoid re-fetching bootstrap events
+            pollIntervalRef.current = setInterval(() => { void pollNewEvents(); }, 10_000);
           }
         });
       }, delayMs);
@@ -194,7 +259,12 @@ export const useDriftStream = (): DriftStreamResult => {
         clearTimeout(bootstrapTimerRef.current);
         bootstrapTimerRef.current = null;
       }
-      addEvent(event);
+      // Deduplicate WS events too
+      if (!seenEventIdsRef.current.has(event.drift_event_id)) {
+        seenEventIdsRef.current.add(event.drift_event_id);
+        if (event.published_at > lastSeenAtRef.current) lastSeenAtRef.current = event.published_at;
+        addEvent(event);
+      }
       setConnectionStatus("connected");
       setErrorCode(null);
     });
@@ -208,6 +278,7 @@ export const useDriftStream = (): DriftStreamResult => {
     return () => {
       if (bootstrapTimerRef.current) clearTimeout(bootstrapTimerRef.current);
       if (bootstrapRetryRef.current) clearTimeout(bootstrapRetryRef.current);
+      if (pollIntervalRef.current) { clearInterval(pollIntervalRef.current); pollIntervalRef.current = null; }
       removeEvent();
       removeError();
       removeConnected();
