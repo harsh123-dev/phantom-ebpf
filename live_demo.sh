@@ -1,8 +1,33 @@
 #!/usr/bin/env bash
 # PHANTOM Live Demo Script
-# Run this on EC2 during your review to show the full attack detection pipeline.
-# Usage: bash live_demo.sh
+# ─────────────────────────────────────────────────────────────────────────────
+# IMPORTANT: Run this from your DIRECT EC2 SSH terminal.
+#            Do NOT run this inside Codex CLI — Codex runs in a restricted
+#            sandbox where kubectl DNS and tmux are blocked.
+#
+# How to run:
+#   ssh -i your-key.pem ubuntu@<EC2-IP>
+#   cd /root/phantom-ebpf
+#   bash live_demo.sh
+# ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
+
+# Guard: detect if we are inside the Codex sandbox (kubectl DNS blocked)
+if ! kubectl cluster-info --request-timeout=5s > /dev/null 2>&1; then
+    echo ""
+    echo "ERROR: kubectl cannot reach the EKS cluster."
+    echo ""
+    echo "This script must be run from a DIRECT EC2 SSH terminal, not inside Codex CLI."
+    echo "Codex CLI runs in a sandboxed container where EKS network access is blocked."
+    echo ""
+    echo "Steps:"
+    echo "  1. Open a new terminal on your local machine"
+    echo "  2. SSH into the EC2 instance directly:"
+    echo "       ssh -i <key.pem> ubuntu@<EC2-IP>"
+    echo "  3. cd /root/phantom-ebpf"
+    echo "  4. bash live_demo.sh"
+    exit 1
+fi
 
 cd /root/phantom-ebpf
 
@@ -15,17 +40,24 @@ echo "║          PHANTOM — Live Attack Detection Demo                ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 
-# ── 1. Ensure port-forward is alive ─────────────────────────────────────────
+# ── 1. Ensure port-forward is alive (no tmux required) ──────────────────────
 echo "[1/5] Checking API Gateway tunnel..."
 HTTP=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$GW/healthz" || true)
 if [ "$HTTP" != "200" ]; then
-    echo "      Port-forward not running. Starting it in a tmux window..."
-    tmux new-window -n pf 2>/dev/null || true
-    tmux send-keys -t pf "kubectl port-forward svc/phantom-api-gateway 8080:8080 -n phantom" Enter
+    echo "      Port-forward not running. Starting in background..."
+    # Kill any stale port-forward processes on 8080
+    pkill -f "kubectl port-forward.*8080" 2>/dev/null || true
+    sleep 1
+    # Start fresh in background (no tmux needed)
+    nohup kubectl port-forward svc/phantom-api-gateway 8080:8080 -n phantom \
+        >> /tmp/pf.log 2>&1 &
+    echo $! > /tmp/pf.pid
+    echo "      Waiting for tunnel to establish..."
     sleep 6
     HTTP=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$GW/healthz" || true)
     if [ "$HTTP" != "200" ]; then
-        echo "ERROR: API Gateway not reachable (HTTP $HTTP). Check the port-forward."
+        echo "ERROR: Port-forward failed. Last log:"
+        tail -10 /tmp/pf.log
         exit 1
     fi
 fi
