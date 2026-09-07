@@ -41,8 +41,8 @@ async function bootstrapDriftEvents(
   addEvent: (e: LiveDriftEvent) => void,
 ): Promise<number> {
   try {
-    // last 6 hours so we always get something meaningful from the evaluation run
-    const since = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+    // last 8 hours so we always get something meaningful from the evaluation run
+    const since = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
     const res = await fetch(
       `${baseUrl}/api/v1/drift-events?since=${encodeURIComponent(since)}&limit=20`,
       { headers: { Authorization: `Bearer ${token}` } },
