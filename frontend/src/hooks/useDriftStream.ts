@@ -121,6 +121,7 @@ export const useDriftStream = (): DriftStreamResult => {
   useEffect(() => {
     if (!isDemo) return; // only run in demo mode
 
+    useDriftStreamState.getState().clearEvents();
     setConnectionStatus("connecting");
     const connectTimeout = setTimeout(() => setConnectionStatus("connected"), 800);
 
@@ -160,6 +161,7 @@ export const useDriftStream = (): DriftStreamResult => {
   useEffect(() => {
     if (isDemo) return; // only run in live mode
 
+    useDriftStreamState.getState().clearEvents();
     const currentFilters = JSON.parse(filtersKey) as typeof filters;
     const subscription: DriftStreamSubscribe = {
       schema_version: "v1",
