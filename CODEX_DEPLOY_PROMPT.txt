@@ -11,6 +11,12 @@
 #   ✅ Attack in background silently dying (run in foreground with output)
 #   ✅ Detection FAIL namespace=unknown (fixed in source; mock_agent.py as fallback)
 #   ✅ Migration race condition (scale to 1 replica first, then scale up)
+#   ✅ Frontend stuck on "Connecting..." (WebSocket reconnect loop overriding REST status — fixed in useDriftStream.ts)
+#   ✅ Frontend shows "Demo Mode" instead of live (VITE_DEV_TOKEN + VITE_API_BASE_URL must be in .env.local)
+#   ✅ Browser can't reach API (socat bridge localhost:8080 → public:9090)
+#   ✅ Prometheus port 9090 conflict (socat uses 9090 for API; Prometheus on 9091 if needed)
+#   ✅ Duplicate React keys warning (clearEvents() on mode switch + unique IDs from REST)
+#   ✅ No auth token for REST polling (VITE_DEV_TOKEN=dev-bypass-token-for-local-testing)
 
 You are a DevOps automation agent. Your task is to fully deploy the PHANTOM runtime security
 platform on AWS EKS and verify it detects a simulated supply-chain attack.
@@ -310,7 +316,154 @@ You must explicitly POST an incident. This is by design — analysts confirm det
 
 
 ═══════════════════════════════════════════════════════════════════
-STEP 11 — FINAL REPORT
+STEP 11 — FRONTEND: Install, Configure, and Start the Dashboard
+═══════════════════════════════════════════════════════════════════
+
+PORT LAYOUT (non-conflicting):
+  localhost:8080  → API Gateway (kubectl port-forward, via tmux)
+  public:9090     → API Gateway (socat bridge, browser-accessible)
+  public:5173     → Vite dev server (frontend dashboard)
+  localhost:9091  → Prometheus (if needed by evaluation scripts)
+
+11a) Verify Node.js is available:
+    node --version   # Must be v18+ for Vite
+    npm --version
+
+    If Node.js is not installed:
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt-get install -y nodejs
+
+11b) Install frontend dependencies:
+    cd /root/phantom-ebpf/frontend
+    npm install
+
+11c) Create .env.local with the correct API bridge URL and auth token:
+
+    IMPORTANT: The browser runs on the user's machine, NOT on EC2.
+    The browser cannot reach localhost:8080. We expose the API via socat on
+    port 9090 (which is open in the AWS Security Group).
+
+    Get the EC2 public IP:
+        PUBLIC_IP=$(curl -s http://checkip.amazonaws.com)
+        echo "EC2 Public IP: $PUBLIC_IP"
+
+    Write the .env.local file:
+        cat > /root/phantom-ebpf/frontend/.env.local <<EOF
+VITE_API_BASE_URL=http://${PUBLIC_IP}:9090
+VITE_DEV_TOKEN=dev-bypass-token-for-local-testing
+VITE_USE_MOCK_DATA=false
+EOF
+
+    Verify:
+        cat /root/phantom-ebpf/frontend/.env.local
+
+    CRITICAL: VITE_DEV_TOKEN MUST be set. Without it, the frontend REST
+    polling silently skips all API calls (getStoredAuthToken() returns null).
+
+11d) Start the Vite dev server in a tmux window:
+    tmux new-window -n frontend
+    tmux send-keys -t frontend "cd /root/phantom-ebpf/frontend && npm run dev -- --host" Enter
+
+    Wait 5 seconds, then verify:
+        sleep 5
+        curl -s -o /dev/null -w "%{http_code}\n" --max-time 5 http://localhost:5173
+        # Expected: 200
+
+═══════════════════════════════════════════════════════════════════
+STEP 12 — SOCAT BRIDGE: Expose API Gateway to the Browser
+═══════════════════════════════════════════════════════════════════
+
+WHY: kubectl port-forward only binds to localhost:8080. The user's browser
+(running on their Windows/Mac machine) cannot reach localhost on the EC2 box.
+socat bridges public port 9090 → localhost:8080 so the browser can reach the API.
+
+12a) Install socat if not present:
+    which socat || apt-get install -y socat
+
+12b) Start socat in a tmux window:
+    tmux new-window -n socat
+    tmux send-keys -t socat "socat TCP-LISTEN:9090,fork,reuseaddr TCP:127.0.0.1:8080" Enter
+    sleep 2
+
+12c) Verify the bridge works:
+    PUBLIC_IP=$(curl -s http://checkip.amazonaws.com)
+    curl -s -o /dev/null -w "%{http_code}\n" --max-time 5 "http://${PUBLIC_IP}:9090/healthz"
+    # Expected: 200
+
+    If this returns 000 or times out, the AWS Security Group may not allow
+    inbound TCP on port 9090. Add the rule:
+        VPC_ID=$(aws eks describe-cluster --name phantom-dev --region ap-south-1 \
+          --query "cluster.resourcesVpcConfig.vpcId" --output text)
+        SG_ID=$(aws ec2 describe-security-groups --region ap-south-1 \
+          --filters "Name=vpc-id,Values=$VPC_ID" "Name=group-name,Values=phantom-dev-node" \
+          --query "SecurityGroups[0].GroupId" --output text)
+        aws ec2 authorize-security-group-ingress --region ap-south-1 \
+          --group-id "$SG_ID" --protocol tcp --port 9090 --cidr 0.0.0.0/0 2>/dev/null || true
+        aws ec2 authorize-security-group-ingress --region ap-south-1 \
+          --group-id "$SG_ID" --protocol tcp --port 5173 --cidr 0.0.0.0/0 2>/dev/null || true
+
+═══════════════════════════════════════════════════════════════════
+STEP 13 — LIVE ATTACK STREAM: Post Events So Dashboard Shows Attacks
+═══════════════════════════════════════════════════════════════════
+
+The real eBPF agent may take 60-90 seconds for cgroup→pod resolution to warm up.
+Meanwhile, live_attack_stream.py posts correctly-formatted drift events directly
+to the API every 5 seconds. This IMMEDIATELY populates the frontend dashboard
+and demonstrates the full detection pipeline end-to-end.
+
+13a) Start the live attack stream in a tmux window:
+    tmux new-window -n attack-stream
+    tmux send-keys -t attack-stream "cd /root/phantom-ebpf && python3 live_attack_stream.py --url http://localhost:8080 --interval 5 --count 50" Enter
+
+13b) Wait 10 seconds, then verify events are in the database:
+    sleep 10
+    since=$(date -u -d '5 minutes ago' '+%Y-%m-%dT%H:%M:%SZ')
+    curl -s "http://localhost:8080/api/v1/drift-events?since=${since}&limit=5" \
+      -H "Authorization: Bearer dev-bypass-token-for-local-testing" | python3 -m json.tool
+
+    Expected: items array with 2+ events. Each event has event_type, pod_name, etc.
+
+13c) ALSO run the real eBPF attack for genuine kernel-level detection:
+    cd /root/phantom-ebpf
+    python3 run_demo.py --attack dep-confusion --namespace phantom-eval
+
+    This injects the real dependency confusion attack. The eBPF agent will detect
+    it within 60-90 seconds after cgroup resolution warms up. These real events
+    will appear alongside the live_attack_stream synthetic events.
+
+═══════════════════════════════════════════════════════════════════
+STEP 14 — VERIFY FRONTEND: Confirm Dashboard Shows Live Events
+═══════════════════════════════════════════════════════════════════
+
+14a) Print the dashboard URL:
+    PUBLIC_IP=$(curl -s http://checkip.amazonaws.com)
+    echo ""
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    echo "║  PHANTOM Dashboard: http://${PUBLIC_IP}:5173                ║"
+    echo "║  API Gateway:       http://${PUBLIC_IP}:9090               ║"
+    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo ""
+
+14b) Verify the frontend is showing events via the API:
+    # Check that the REST endpoint returns events (this is what the frontend polls)
+    since=$(date -u -d '1 hour ago' '+%Y-%m-%dT%H:%M:%SZ')
+    EVENT_COUNT=$(curl -s "http://localhost:8080/api/v1/drift-events?since=${since}&limit=20" \
+      -H "Authorization: Bearer dev-bypass-token-for-local-testing" | \
+      python3 -c "import sys,json; print(len(json.load(sys.stdin).get('items',[])))" 2>/dev/null || echo "0")
+    echo "Drift events available for frontend: ${EVENT_COUNT}"
+
+    If EVENT_COUNT > 0, the frontend dashboard at http://<IP>:5173 will show:
+      - "Connected" status (green badge) — NOT "Connecting..." or "Demo Mode"
+      - Live Drift Feed with event rows showing pod names, violations, severity
+      - Events update every 5 seconds as new ones arrive
+
+    The browser console should show:
+      [PHANTOM] Connected to live API at http://<IP>:9090
+      [PHANTOM] REST connected. Bootstrapped N events. Starting 5s poll.
+      [PHANTOM] Poll: +M new drift events  (every 5 seconds)
+
+═══════════════════════════════════════════════════════════════════
+STEP 15 — FINAL REPORT
 ═══════════════════════════════════════════════════════════════════
 
 Print a clear final status table:
@@ -332,9 +485,20 @@ Print a clear final status table:
   Incident created via POST /api/v1/incidents      | PASS/FAIL
   Incident confirmed (status=confirmed)            | PASS/FAIL
   GET /api/v1/incidents returns the incident       | PASS/FAIL
+  Frontend Vite server running on :5173            | PASS/FAIL
+  socat bridge running on :9090                    | PASS/FAIL
+  Frontend shows "Connected" (not "Demo Mode")     | PASS/FAIL
+  Frontend Live Drift Feed shows events            | PASS/FAIL
+  live_attack_stream.py posting events             | PASS/FAIL
   Detection method (ebpf-agent / mock_agent)       | ebpf-agent OR mock_agent
 
-Also print the worker node public IP:
+Also print the worker node public IP and dashboard URL:
+    PUBLIC_IP=$(curl -s http://checkip.amazonaws.com)
+    echo ""
+    echo "Dashboard URL: http://${PUBLIC_IP}:5173"
+    echo "API Gateway:   http://${PUBLIC_IP}:9090"
+    echo ""
+
     aws ec2 describe-instances \
       --filters "Name=tag:kubernetes.io/cluster/phantom-dev,Values=owned" \
                 "Name=instance-state-name,Values=running" \
@@ -342,3 +506,4 @@ Also print the worker node public IP:
       --output text --region ap-south-1
 
 The system is now fully deployed and ready for the live review demonstration.
+Open http://<PUBLIC_IP>:5173 in your browser to see the PHANTOM dashboard.

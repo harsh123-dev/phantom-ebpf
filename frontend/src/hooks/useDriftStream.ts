@@ -1,16 +1,21 @@
 /**
- * useDriftStream — manages the live WebSocket drift event stream.
+ * useDriftStream — manages the live drift event stream for the dashboard.
  *
  * In demo mode (API unreachable / VITE_USE_MOCK_DATA=true):
  *   - Simulates a live stream by replaying DEMO_DRIFT_EVENTS with realistic
  *     timing intervals, cycling indefinitely.
  *   - Marks connection as "connected" so the UI shows a live state.
  *
- * In live mode: uses DriftStreamClient over WebSocket to the real API.
- *   - Bootstrap: if the WebSocket receives no events within 5 s of connecting,
- *     polls GET /api/v1/drift-events once to seed the feed with recent real
- *     events already in the database (handles the case where no NEW attacks
- *     are actively running at load time).
+ * In live mode: REST polling is the PRIMARY data delivery mechanism.
+ *   - Bootstrap: immediately fetches recent events from GET /api/v1/drift-events
+ *     on connect (no delay). Sets connectionStatus to "connected" once the
+ *     REST API responds — regardless of WebSocket state.
+ *   - Polling: fetches new events every 5 seconds via REST, deduplicating by
+ *     event ID and tracking the newest timestamp for incremental queries.
+ *   - WebSocket: attempted as a BONUS channel for lower-latency push events.
+ *     Its connection/error/reconnect status is INTENTIONALLY SUPPRESSED so it
+ *     never overrides the REST-driven UI state. This is critical because the
+ *     WebSocket requires Redis pub/sub (ElastiCache) which may be unavailable.
  *
  * NOTE: Both inner hooks are always called (Rules of Hooks).
  * The outer hook selects which result to return based on demo mode flag.
@@ -158,6 +163,15 @@ export const useDriftStream = (): DriftStreamResult => {
   }, [isDemo]);
 
   // --- Live mode effect ---
+  // Architecture: REST polling is the PRIMARY data delivery mechanism.
+  // WebSocket is attempted as a BONUS for lower-latency event push, but its
+  // connection/error/reconnect status NEVER overrides the UI state.
+  // This makes the frontend robust when Redis (required by WebSocket pub/sub)
+  // is unavailable or timing out — which is the case in this deployment.
+  //
+  // Previous bug: WebSocket reconnect loop would continuously reset the UI
+  // to "Connecting..." even after REST bootstrap had succeeded, because
+  // onReconnect/onError handlers directly called setConnectionStatus().
   useEffect(() => {
     if (isDemo) return; // only run in live mode
 
@@ -172,10 +186,11 @@ export const useDriftStream = (): DriftStreamResult => {
     };
     setConnectionStatus("connecting");
 
-    // Reset bootstrap guard and polling on each live-mode effect run
+    // Reset state on each live-mode effect run
     bootstrappedRef.current = false;
     lastSeenAtRef.current = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
     seenEventIdsRef.current = new Set();
+    if (bootstrapTimerRef.current) { clearTimeout(bootstrapTimerRef.current); bootstrapTimerRef.current = null; }
     if (bootstrapRetryRef.current) { clearTimeout(bootstrapRetryRef.current); bootstrapRetryRef.current = null; }
     if (pollIntervalRef.current) { clearInterval(pollIntervalRef.current); pollIntervalRef.current = null; }
 
@@ -221,63 +236,78 @@ export const useDriftStream = (): DriftStreamResult => {
         }
         lastSeenAtRef.current = newestAt;
         if (items.length > 0) {
-          setConnectionStatus("connected");
           console.info(`[PHANTOM] Poll: +${items.length} new drift events`);
         }
       } catch { /* silent */ }
     };
 
-    // Schedule a REST bootstrap if the WebSocket delivers no drift events within 8 seconds
-    const scheduleBootstrap = (delayMs: number): void => {
-      bootstrapTimerRef.current = setTimeout(() => {
-        bootstrappedRef.current = true;
-        const token = getStoredAuthToken();
-        if (!token) return;
-        void bootstrapDriftEvents(baseUrl, token, (ev) => {
-          if (seenEventIdsRef.current.has(ev.drift_event_id)) return;
-          seenEventIdsRef.current.add(ev.drift_event_id);
-          if (ev.published_at > lastSeenAtRef.current) lastSeenAtRef.current = ev.published_at;
-          addEvent(ev);
-        }).then((count) => {
-          setConnectionStatus("connected");
-          if (typeof count === "number" && count === 0) {
-            bootstrapRetryRef.current = setTimeout(() => {
-              bootstrappedRef.current = false;
-              scheduleBootstrap(0);
-            }, 15_000);
-          }
-          // Start polling loop after bootstrap (whether or not we got events)
-          if (!pollIntervalRef.current) {
-            // Use a slightly newer timestamp to avoid re-fetching bootstrap events
-            pollIntervalRef.current = setInterval(() => { void pollNewEvents(); }, 10_000);
-          }
-        });
-      }, delayMs);
-    };
-    scheduleBootstrap(8_000);
+    // ── REST Bootstrap: Start IMMEDIATELY (no WebSocket grace period) ──
+    // Previous code waited 8s for WebSocket to deliver events before trying REST.
+    // Since Redis/WebSocket is unreliable, we bootstrap via REST right away.
+    const token = getStoredAuthToken();
+    if (token) {
+      bootstrappedRef.current = true;
+      void bootstrapDriftEvents(baseUrl, token, (ev) => {
+        if (seenEventIdsRef.current.has(ev.drift_event_id)) return;
+        seenEventIdsRef.current.add(ev.drift_event_id);
+        if (ev.published_at > lastSeenAtRef.current) lastSeenAtRef.current = ev.published_at;
+        addEvent(ev);
+      }).then((count) => {
+        // REST API responded — mark as connected regardless of WebSocket state
+        setConnectionStatus("connected");
+        console.info(`[PHANTOM] REST connected. Bootstrapped ${count} events. Starting 5s poll.`);
 
+        // If we got 0 events, retry bootstrap once after 15s (events may not exist yet)
+        if (count === 0) {
+          bootstrapRetryRef.current = setTimeout(() => {
+            const retryToken = getStoredAuthToken();
+            if (!retryToken) return;
+            void bootstrapDriftEvents(baseUrl, retryToken, (ev) => {
+              if (seenEventIdsRef.current.has(ev.drift_event_id)) return;
+              seenEventIdsRef.current.add(ev.drift_event_id);
+              if (ev.published_at > lastSeenAtRef.current) lastSeenAtRef.current = ev.published_at;
+              addEvent(ev);
+            }).then((retryCount) => {
+              if (retryCount > 0) {
+                console.info(`[PHANTOM] Bootstrap retry: +${retryCount} events`);
+              }
+            });
+          }, 15_000);
+        }
+
+        // Start polling every 5 seconds for new events (responsive to attacks)
+        if (!pollIntervalRef.current) {
+          pollIntervalRef.current = setInterval(() => { void pollNewEvents(); }, 5_000);
+        }
+      });
+    } else {
+      // No auth token — mark as connected anyway (the API probe succeeded).
+      // The feed will be empty. Set VITE_DEV_TOKEN in .env.local for live data.
+      setConnectionStatus("connected");
+      console.warn("[PHANTOM] No auth token. Set VITE_DEV_TOKEN in .env.local for live data.");
+    }
+
+    // ── WebSocket: Connect as a BONUS channel for lower-latency events ──
+    // CRITICAL: WebSocket status changes are INTENTIONALLY SUPPRESSED.
+    // The WS stream requires Redis pub/sub (ElastiCache) which may be unavailable.
+    // If WS works, events arrive faster via server push. If WS fails (Redis timeout),
+    // it reconnects silently without affecting the UI. REST polling (above) is the
+    // authoritative data source — the UI status is driven exclusively by REST.
     const removeEvent = liveClient.onEvent((event) => {
-      // Cancel the REST bootstrap — WS is delivering events
-      if (bootstrapTimerRef.current) {
-        clearTimeout(bootstrapTimerRef.current);
-        bootstrapTimerRef.current = null;
-      }
-      // Deduplicate WS events too
+      // WebSocket delivered an event — add it (deduplicated with REST)
       if (!seenEventIdsRef.current.has(event.drift_event_id)) {
         seenEventIdsRef.current.add(event.drift_event_id);
         if (event.published_at > lastSeenAtRef.current) lastSeenAtRef.current = event.published_at;
         addEvent(event);
       }
-      setConnectionStatus("connected");
-      setErrorCode(null);
     });
-    const removeError = liveClient.onError((code) => {
-      setConnectionStatus("error");
-      setErrorCode(code);
-    });
-    const removeConnected = liveClient.onConnected(() => setConnectionStatus("connected"));
-    const removeReconnect = liveClient.onReconnect(() => setConnectionStatus("connecting"));
+    // Intentionally suppress all WebSocket status changes to prevent "Connecting..." flicker.
+    // The WebSocket reconnect loop would otherwise continuously override REST's "connected" status.
+    const removeError = liveClient.onError(() => { /* suppressed — REST is primary */ });
+    const removeConnected = liveClient.onConnected(() => { /* suppressed — REST is primary */ });
+    const removeReconnect = liveClient.onReconnect(() => { /* suppressed — REST is primary */ });
     liveClient.connect(subscription);
+
     return () => {
       if (bootstrapTimerRef.current) clearTimeout(bootstrapTimerRef.current);
       if (bootstrapRetryRef.current) clearTimeout(bootstrapRetryRef.current);
