@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { getErrorMessage } from "../../../api/apiError";
 import { StatusIndicator } from "../../../components/ui/StatusIndicator";
-import type { PhantomGatewayClient } from "../../../api/gatewayClient";
+import type { PhantomClient } from "../../../hooks/usePhantomClient";
 import type { SbomDetailResponse, SbomVerificationResponse } from "../../../types/phantom";
 import { FailedBanner } from "./FailedBanner";
 import { VerifiedBanner } from "./VerifiedBanner";
 
 interface SBOMVerifyPanelProps {
-  client: PhantomGatewayClient;
+  client: PhantomClient;
   detail: SbomDetailResponse;
   initialVerification: SbomVerificationResponse | null;
 }

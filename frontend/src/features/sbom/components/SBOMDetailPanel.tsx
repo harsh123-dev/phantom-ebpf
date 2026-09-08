@@ -1,4 +1,4 @@
-import type { PhantomGatewayClient } from "../../../api/gatewayClient";
+import type { PhantomClient } from "../../../hooks/usePhantomClient";
 import { StatusIndicator } from "../../../components/ui/StatusIndicator";
 import type { SbomDetailResponse, SbomVerificationResponse } from "../../../types/phantom";
 import { copyText } from "../sbomUtils";
@@ -9,7 +9,7 @@ import { Stat } from "./Stat";
 interface SBOMDetailPanelProps {
   detail: SbomDetailResponse;
   verification: SbomVerificationResponse | null;
-  client: PhantomGatewayClient;
+  client: PhantomClient;
   selectedPurl: string | null;
   onSelectPurl: (purl: string) => void;
 }
