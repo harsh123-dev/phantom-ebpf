@@ -1,143 +1,289 @@
-PHANTOM — Step 7 Fix + Attack Verification
-For: Codex CLI
-Context: Steps 1–6 are complete. All pods are Running/Ready.
-The ONLY reason Step 7 (port-forward) kept failing is a missing AWS Security Group rule.
+PHANTOM — Full System Recovery Prompt
+For: Codex CLI (run on EC2, inside tmux)
+Context: Infrastructure (EKS, RDS, Redis) already exists. No Terraform or ECR push needed.
+Goal: Get everything running again and show live drift events on the frontend dashboard.
+
+SANDBOX NETWORK LIMITATION:
+If any `aws eks`, `aws ec2`, `terraform`, or `aws ecr` command fails with:
+  "Could not connect to the endpoint URL: https://eks.ap-south-1.amazonaws.com/..."
+This is a CONNECTIVITY LIMITATION of the Codex sandbox — not an AWS credential error.
+DO NOT retry endlessly. Instead: output the exact command and ask the user to run it
+in their host SSH terminal, then wait for the user to confirm before continuing.
 
 ═══════════════════════════════════════════════════════════════════
-ROOT CAUSE OF THE FAILURE
+STEP 0 — GIT PULL (always first)
 ═══════════════════════════════════════════════════════════════════
 
-Error seen: "error upgrading connection: dial tcp 172.31.35.253:10250: i/o timeout"
+    cd /root/phantom-ebpf
+    git fetch origin
+    git checkout main
+    git pull --ff-only origin main
+    git log --oneline -3
 
-Explanation:
-- kubectl port-forward and kubectl exec both require the EKS control plane to reach
-  the kubelet API on port 10250 on each worker node.
-- EKS auto-creates TWO security groups:
-    1. A custom SG we created (phantom-dev-cluster) — already has a rule.
-    2. A second AWS-MANAGED SG (auto-created by EKS itself) — NOT in our rules yet.
-- The control plane actually sends kubelet traffic through the MANAGED SG.
-- Because the managed SG has no ingress rule on the worker node SG, port 10250 is
-  silently dropped, causing the i/o timeout.
-
-Fix: Add a security group rule to allow all traffic from the AWS-managed EKS cluster
-SG to the worker node SG. This must be done via AWS CLI directly.
+Do not proceed until pull succeeds.
 
 ═══════════════════════════════════════════════════════════════════
-STEP 7A — FIX THE SECURITY GROUP (AWS CLI)
+STEP 1 — FULL SYSTEM STATUS CHECK
 ═══════════════════════════════════════════════════════════════════
 
-Run the following commands in order:
+Run every check below. Print ALL output. Do not skip any.
 
-1. Get the worker node security group ID (the SG named "phantom-dev-node"):
-   NODE_SG=$(aws ec2 describe-security-groups \
-     --region ap-south-1 \
-     --filters "Name=group-name,Values=phantom-dev-node" \
-     --query "SecurityGroups[0].GroupId" \
-     --output text)
-   echo "Node SG: $NODE_SG"
+1a) tmux sessions:
+    tmux list-windows -a 2>/dev/null || echo "No tmux sessions"
 
-2. Get the AWS-managed EKS cluster security group ID (auto-created by EKS):
-   MANAGED_CLUSTER_SG=$(aws eks describe-cluster \
-     --name phantom-dev \
-     --region ap-south-1 \
-     --query "cluster.resourcesVpcConfig.clusterSecurityGroupId" \
-     --output text)
-   echo "Managed Cluster SG: $MANAGED_CLUSTER_SG"
+1b) kubectl pods:
+    kubectl get pods -n phantom -o wide 2>/dev/null || echo "kubectl not connected"
+    kubectl get pods -n phantom-eval -o wide 2>/dev/null || echo "phantom-eval: no pods"
 
-3. Add the missing ingress rule:
-   aws ec2 authorize-security-group-ingress \
-     --region ap-south-1 \
-     --group-id "$NODE_SG" \
-     --protocol -1 \
-     --source-group "$MANAGED_CLUSTER_SG"
-   echo "Security group rule added."
+1c) Port-forward alive?
+    curl -s -o /dev/null -w "port-forward healthz: %{http_code}\n" --max-time 5 http://localhost:8080/healthz
 
-   NOTE: If you get "InvalidPermission.Duplicate", the rule already exists — continue.
+1d) socat bridge alive?
+    PUBLIC_IP=$(curl -s http://checkip.amazonaws.com)
+    curl -s -o /dev/null -w "socat bridge healthz: %{http_code}\n" --max-time 5 "http://${PUBLIC_IP}:9090/healthz"
 
-4. Verify the fix:
-   aws ec2 describe-security-groups \
-     --region ap-south-1 \
-     --group-ids "$NODE_SG" \
-     --query "SecurityGroups[0].IpPermissions[?UserIdGroupPairs[?GroupId=='$MANAGED_CLUSTER_SG']]" \
-     --output json
+1e) Frontend alive?
+    curl -s -o /dev/null -w "frontend: %{http_code}\n" --max-time 5 http://localhost:5173
 
-   You should see a non-empty JSON array. If empty, retry step 3.
+1f) Database has drift events?
+    since=$(date -u -d '24 hours ago' '+%Y-%m-%dT%H:%M:%SZ')
+    curl -s "http://localhost:8080/api/v1/drift-events?since=${since}&limit=5" \
+      -H "Authorization: Bearer dev-bypass-token-for-local-testing" | python3 -m json.tool
+
+Based on the output above, decide what needs to be (re)started in the steps below.
+If a component is already running and healthy, SKIP its step.
 
 ═══════════════════════════════════════════════════════════════════
-STEP 7B — START PORT-FORWARD (SELF-RECONNECTING LOOP)
+STEP 2 — KUBECONFIG (if kubectl returned "not connected")
 ═══════════════════════════════════════════════════════════════════
 
-Now that the Security Group is fixed, start the persistent port-forward:
+SANDBOX NETWORK LIMITATION: If the command below fails with an AWS endpoint error,
+ask the user to run it in their SSH terminal and confirm before continuing.
 
-   cat > /tmp/pf_loop.sh << 'HEREDOC'
-   #!/bin/bash
-   echo "[pf_loop] Starting persistent port-forward for phantom-api-gateway:8080"
-   while true; do
-       echo "[pf_loop] $(date -u '+%Y-%m-%dT%H:%M:%SZ') -- Connecting..."
-       kubectl port-forward svc/phantom-api-gateway 8080:8080 -n phantom 2>&1
-       echo "[pf_loop] $(date -u '+%Y-%m-%dT%H:%M:%SZ') -- Disconnected. Reconnecting in 5s..."
-       sleep 5
-   done
-   HEREDOC
-   chmod +x /tmp/pf_loop.sh
-   nohup bash /tmp/pf_loop.sh >> /tmp/pf_loop.log 2>&1 &
-   echo $! > /tmp/pf_loop.pid
-   sleep 8
-   tail -5 /tmp/pf_loop.log
-
-Verify the tunnel works:
-   curl -s -o /dev/null -w "%{http_code}\n" --max-time 10 http://localhost:8080/healthz
-
-   Expected: 200
-
-If still getting 000/timeout, check:
-   tail -20 /tmp/pf_loop.log
-   kubectl get pods -n phantom -l app=phantom-api-gateway
+    aws eks update-kubeconfig --region ap-south-1 --name phantom-dev
+    kubectl get nodes
+    # Require: nodes in "Ready" state
 
 ═══════════════════════════════════════════════════════════════════
-STEP 8 — INJECT THE DEPENDENCY CONFUSION ATTACK
+STEP 3 — WAIT FOR PODS (if pods not Running/Ready)
 ═══════════════════════════════════════════════════════════════════
 
-   cd /root/phantom-ebpf
-   pip install --quiet wheel setuptools
-   python3 run_demo.py --attack dep-confusion --namespace phantom-eval
+If pods are in Pending/ContainerCreating/CrashLoopBackOff:
 
-A successful injection will print:
-  "Injection complete! The attack should now be running."
+3a) Check what's wrong:
+    kubectl describe pods -n phantom | grep -A5 "Warning\|Error\|Reason"
+    kubectl logs -n phantom -l app=phantom-api-gateway --tail=30
 
-═══════════════════════════════════════════════════════════════════
-STEP 9 — VERIFY DETECTION
-═══════════════════════════════════════════════════════════════════
+3b) If pods are healthy but just starting, poll every 30s (max 10 minutes):
+    kubectl rollout status deployment/phantom-api-gateway -n phantom --timeout=600s
+    kubectl rollout status deployment/phantom-causal-engine -n phantom --timeout=600s
 
-Wait 30 seconds after injection, then:
+3c) Required pod list before proceeding:
+    kubectl get pods -n phantom
+    # phantom-api-gateway     1/1 Running  (2 replicas)
+    # phantom-ebpf-agent      1/1 Running  (1 per node)
+    # phantom-causal-engine   1/1 Running
+    # phantom-sbom-service    1/1 Running
+    # phantom-report-generator 1/1 Running
 
-   sleep 30
-
-   echo "--- incidents ---"
-   curl -s "http://localhost:8080/api/v1/incidents?limit=5" | python3 -m json.tool
-
-   echo "--- drift events ---"
-   since=$(date -u -d '10 minutes ago' '+%Y-%m-%dT%H:%M:%SZ')
-   curl -s "http://localhost:8080/api/v1/drift-events?since=${since}&limit=20" | python3 -m json.tool
-
-   NOTE: The drift-events endpoint REQUIRES a ?since= ISO 8601 timestamp.
-   It returns HTTP 422 without it.
+DO NOT proceed to Step 4 until all pods above are Running.
 
 ═══════════════════════════════════════════════════════════════════
-STEP 10 — FINAL REPORT
+STEP 4 — PORT-FORWARD (if localhost:8080 returned 000 or refused)
 ═══════════════════════════════════════════════════════════════════
 
-Print the final status table:
+Kill any stale port-forward first:
+    pkill -f "kubectl port-forward" 2>/dev/null || true
+    sleep 2
 
-  Component                                    | Status
-  ---------------------------------------------|--------
-  Terraform (EKS + RDS + Redis + ECR)          | PASS
-  Docker images pushed to ECR (all 5)          | PASS
-  kubectl connected to cluster                 | PASS
-  Bootstrap secrets and configmaps applied     | PASS
-  All PHANTOM and Eval pods Running/Ready      | PASS
-  Database migrations completed                | PASS
-  Security Group fix (managed cluster SG)      | PASS/FAIL
-  Port-forward tunnel on localhost:8080        | PASS/FAIL
-  Dep-Confusion attack injected successfully   | PASS/FAIL
-  PHANTOM detected the attack (incidents API)  | PASS/FAIL
+Start in a dedicated tmux window:
+    tmux new-window -n pf 2>/dev/null || true
+    tmux send-keys -t pf "kubectl port-forward svc/phantom-api-gateway 8080:8080 -n phantom" Enter
+    sleep 6
+
+Verify:
+    curl -s -o /dev/null -w "%{http_code}\n" --max-time 10 http://localhost:8080/healthz
+    # Expected: 200
+
+If still 000, check pf window:
+    tmux capture-pane -t pf -p | tail -15
+
+═══════════════════════════════════════════════════════════════════
+STEP 5 — SOCAT BRIDGE (if public:9090 returned 000 or refused)
+═══════════════════════════════════════════════════════════════════
+
+Kill any stale socat:
+    pkill -f "socat.*9090" 2>/dev/null || true
+    sleep 2
+
+Install socat if missing:
+    which socat || apt-get install -y socat
+
+Start in a dedicated tmux window:
+    tmux new-window -n socat 2>/dev/null || true
+    tmux send-keys -t socat "socat TCP-LISTEN:9090,fork,reuseaddr TCP:127.0.0.1:8080" Enter
+    sleep 3
+
+Verify:
+    PUBLIC_IP=$(curl -s http://checkip.amazonaws.com)
+    curl -s -o /dev/null -w "%{http_code}\n" --max-time 5 "http://${PUBLIC_IP}:9090/healthz"
+    # Expected: 200
+
+If 000, check Security Group allows TCP 9090 inbound (see main CODEX_DEPLOY_PROMPT.txt Step 12).
+
+═══════════════════════════════════════════════════════════════════
+STEP 6 — FRONTEND (if localhost:5173 returned 000 or refused)
+═══════════════════════════════════════════════════════════════════
+
+6a) Ensure .env.local is correct:
+    PUBLIC_IP=$(curl -s http://checkip.amazonaws.com)
+    cat > /root/phantom-ebpf/frontend/.env.local <<EOF
+VITE_API_BASE_URL=http://${PUBLIC_IP}:9090
+VITE_DEV_TOKEN=dev-bypass-token-for-local-testing
+VITE_USE_MOCK_DATA=false
+EOF
+    cat /root/phantom-ebpf/frontend/.env.local
+
+6b) Kill any stale Vite process:
+    pkill -f "vite" 2>/dev/null || true
+    sleep 2
+
+6c) Start frontend in a dedicated tmux window:
+    tmux new-window -n frontend 2>/dev/null || true
+    tmux send-keys -t frontend "cd /root/phantom-ebpf/frontend && npm run dev -- --host" Enter
+    sleep 8
+
+6d) Verify:
+    curl -s -o /dev/null -w "%{http_code}\n" --max-time 8 http://localhost:5173
+    # Expected: 200
+
+6e) Print dashboard URL:
+    PUBLIC_IP=$(curl -s http://checkip.amazonaws.com)
+    echo "Dashboard: http://${PUBLIC_IP}:5173"
+    echo "API:       http://${PUBLIC_IP}:9090"
+
+═══════════════════════════════════════════════════════════════════
+STEP 7 — SEED DRIFT EVENTS (if DB returned empty items:[])
+═══════════════════════════════════════════════════════════════════
+
+The frontend only shows data if there are drift events in the database.
+If Step 1f returned `"items": []`, seed them now.
+
+7a) Start live_attack_stream.py in a tmux window:
+    tmux new-window -n stream 2>/dev/null || true
+    tmux send-keys -t stream "cd /root/phantom-ebpf && python3 live_attack_stream.py --url http://localhost:8080 --interval 5 --count 100" Enter
+    sleep 12
+
+7b) Verify events appear in the DB:
+    since=$(date -u -d '5 minutes ago' '+%Y-%m-%dT%H:%M:%SZ')
+    EVENT_COUNT=$(curl -s "http://localhost:8080/api/v1/drift-events?since=${since}&limit=20" \
+      -H "Authorization: Bearer dev-bypass-token-for-local-testing" | \
+      python3 -c "import sys,json; print(len(json.load(sys.stdin).get('items',[])))" 2>/dev/null || echo 0)
+    echo "Events in DB: ${EVENT_COUNT}"
+    # Expected: > 0
+
+7c) If live_attack_stream.py is missing or fails, use mock_agent.py as fallback:
+    cd /root/phantom-ebpf
+    python3 mock_agent.py &
+    sleep 20
+    kill %1 2>/dev/null || true
+    # Verify again:
+    since=$(date -u -d '5 minutes ago' '+%Y-%m-%dT%H:%M:%SZ')
+    curl -s "http://localhost:8080/api/v1/drift-events?since=${since}&limit=5" \
+      -H "Authorization: Bearer dev-bypass-token-for-local-testing" | python3 -m json.tool
+
+═══════════════════════════════════════════════════════════════════
+STEP 8 — CREATE AN INCIDENT (so the Incidents page is not empty)
+═══════════════════════════════════════════════════════════════════
+
+8a) Fetch required IDs:
+    since=$(date -u -d '30 minutes ago' '+%Y-%m-%dT%H:%M:%SZ')
+    DRIFT_EVENT_ID=$(curl -s "http://localhost:8080/api/v1/drift-events?since=${since}&limit=1" \
+      -H "Authorization: Bearer dev-bypass-token-for-local-testing" | \
+      python3 -c "import sys,json; d=json.load(sys.stdin); print(d['items'][0]['event_id'] if d.get('items') else '')")
+
+    SNAPSHOT_ID=$(curl -s "http://localhost:8080/api/v1/bdg/snapshots" \
+      -H "Authorization: Bearer dev-bypass-token-for-local-testing" | \
+      python3 -c "import sys,json; d=json.load(sys.stdin); print(d['items'][0]['snapshot_id'] if d.get('items') else '')")
+
+    echo "DRIFT_EVENT_ID=${DRIFT_EVENT_ID}"
+    echo "SNAPSHOT_ID=${SNAPSHOT_ID}"
+
+    NOTE: If SNAPSHOT_ID is empty, the BDG snapshot has not been created yet.
+    In that case, skip to Step 9 — the dashboard drift feed still works without incidents.
+
+8b) Create the incident (only if both IDs are non-empty):
+    INCIDENT_RESPONSE=$(curl -s -X POST "http://localhost:8080/api/v1/incidents" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer dev-bypass-token-for-local-testing" \
+      -d "{
+        \"title\": \"Supply Chain Attack: Dependency Confusion on emailservice\",
+        \"classification\": \"suspicious\",
+        \"tenant_id\": \"00000000-0000-0000-0000-000000000001\",
+        \"snapshot_id\": \"${SNAPSHOT_ID}\",
+        \"summary\": \"PHANTOM eBPF agent detected an unexpected executable and network beacon from emailservice consistent with a dependency confusion supply chain attack.\",
+        \"drift_event_ids\": [\"${DRIFT_EVENT_ID}\"],
+        \"tags\": [\"supply-chain\", \"dep-confusion\", \"emailservice\"]
+      }")
+    echo "$INCIDENT_RESPONSE" | python3 -m json.tool
+
+    INCIDENT_ID=$(echo "$INCIDENT_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('incident_id',''))")
+    REVISION=$(echo "$INCIDENT_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('revision',1))")
+
+8c) Confirm the incident:
+    curl -s -X PATCH "http://localhost:8080/api/v1/incidents/${INCIDENT_ID}" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer dev-bypass-token-for-local-testing" \
+      -d "{\"classification\": \"confirmed\", \"expected_revision\": ${REVISION}}" | python3 -m json.tool
+
+═══════════════════════════════════════════════════════════════════
+STEP 9 — FINAL VERIFICATION
+═══════════════════════════════════════════════════════════════════
+
+9a) All services running?
+    tmux list-windows -a
+    # Expected windows: pf, socat, frontend, stream
+
+    curl -s -o /dev/null -w "port-forward: %{http_code}\n" --max-time 5 http://localhost:8080/healthz
+    PUBLIC_IP=$(curl -s http://checkip.amazonaws.com)
+    curl -s -o /dev/null -w "socat bridge: %{http_code}\n" --max-time 5 "http://${PUBLIC_IP}:9090/healthz"
+    curl -s -o /dev/null -w "frontend: %{http_code}\n" --max-time 5 http://localhost:5173
+
+9b) API returns events?
+    since=$(date -u -d '1 hour ago' '+%Y-%m-%dT%H:%M:%SZ')
+    EVENT_COUNT=$(curl -s "http://localhost:8080/api/v1/drift-events?since=${since}&limit=20" \
+      -H "Authorization: Bearer dev-bypass-token-for-local-testing" | \
+      python3 -c "import sys,json; print(len(json.load(sys.stdin).get('items',[])))" 2>/dev/null || echo 0)
+    echo "Drift events visible to frontend: ${EVENT_COUNT}"
+    # Expected: > 0
+
+9c) Print final URL:
+    PUBLIC_IP=$(curl -s http://checkip.amazonaws.com)
+    echo ""
+    echo "╔══════════════════════════════════════════════════════════╗"
+    echo "║  Dashboard: http://${PUBLIC_IP}:5173                   ║"
+    echo "║  API:       http://${PUBLIC_IP}:9090                   ║"
+    echo "╚══════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "Browser console should show:"
+    echo "  [PHANTOM] Connected to live API at http://${PUBLIC_IP}:9090"
+    echo "  [PHANTOM] REST connected. Bootstrapped N events. Starting 5s poll."
+    echo "  [PHANTOM] Poll: +M new drift events  (every 5 seconds)"
+
+═══════════════════════════════════════════════════════════════════
+FINAL STATUS TABLE
+═══════════════════════════════════════════════════════════════════
+
+Print this table with PASS/FAIL for each row:
+
+  Component                                       | Status
+  ------------------------------------------------|--------
+  kubectl connected to EKS cluster                | PASS/FAIL
+  All phantom-* pods Running/Ready                | PASS/FAIL
+  Port-forward localhost:8080 → API gateway       | PASS/FAIL
+  GET /healthz returns 200                        | PASS/FAIL
+  socat bridge public:9090 → localhost:8080       | PASS/FAIL
+  Vite frontend running on public:5173            | PASS/FAIL
+  Drift events in DB (last 1 hour)                | PASS/FAIL  (count: N)
+  Frontend shows "Connected" not "Demo Mode"      | PASS/FAIL
+  Incident created and confirmed                  | PASS/FAIL
