@@ -327,34 +327,59 @@ IMPORTANT: Incidents are NOT automatically created from drift events.
 The causal engine updates an internal graph but does NOT auto-raise incidents.
 You must explicitly POST an incident. This is by design — analysts confirm detections.
 
-10b-1) Create the incident report via the API:
-    curl -s -X POST "http://localhost:8080/api/v1/incidents" \
+10b-1) Retrieve the latest BDG snapshot and Drift Event IDs:
+    since=$(date -u -d '30 minutes ago' '+%Y-%m-%dT%H:%M:%SZ')
+    DRIFT_EVENT_ID=$(curl -s "http://localhost:8080/api/v1/drift-events?since=${since}&limit=1" \
+      -H "Authorization: Bearer dev-bypass-token-for-local-testing" | \
+      python3 -c "import sys,json; d=json.load(sys.stdin); print(d['items'][0]['event_id'] if d.get('items') else '')")
+
+    SNAPSHOT_ID=$(curl -s "http://localhost:8080/api/v1/bdg/snapshots" \
+      -H "Authorization: Bearer dev-bypass-token-for-local-testing" | \
+      python3 -c "import sys,json; d=json.load(sys.stdin); print(d['items'][0]['snapshot_id'] if d.get('items') else '')")
+
+    echo "DRIFT_EVENT_ID=${DRIFT_EVENT_ID}"
+    echo "SNAPSHOT_ID=${SNAPSHOT_ID}"
+
+    CRITICAL: Do not proceed if either ID is empty. If they are empty, diagnose why no drift events or snapshots exist before creating the incident.
+
+10b-2) Create the incident report via the API:
+    INCIDENT_PAYLOAD=$(cat <<EOF
+{
+  "title": "Supply Chain Attack Detected: Dependency Confusion on emailservice",
+  "classification": "suspicious",
+  "tenant_id": "00000000-0000-0000-0000-000000000001",
+  "snapshot_id": "${SNAPSHOT_ID}",
+  "summary": "PHANTOM eBPF agent detected an unexpected executable and network beacon from emailservice consistent with a dependency confusion supply chain attack.",
+  "drift_event_ids": ["${DRIFT_EVENT_ID}"],
+  "tags": ["supply-chain", "dep-confusion", "emailservice"]
+}
+EOF
+)
+
+    INCIDENT_RESPONSE=$(curl -s -X POST "http://localhost:8080/api/v1/incidents" \
       -H "Content-Type: application/json" \
       -H "Authorization: Bearer dev-bypass-token-for-local-testing" \
-      -d '{
-        "title": "Supply Chain Attack Detected: Dependency Confusion on emailservice",
-        "severity": "critical",
-        "status": "open",
-        "summary": "PHANTOM eBPF agent detected an unexpected executable and network beacon from emailservice consistent with a dependency confusion supply chain attack.",
-        "drift_event_ids": [],
-        "tags": ["supply-chain", "dep-confusion", "emailservice"]
-      }' | python3 -m json.tool
+      -d "$INCIDENT_PAYLOAD")
 
-    A successful response returns a JSON object with an "incident_id" UUID.
-    Save it: INCIDENT_ID=<the uuid from the response>
+    echo "$INCIDENT_RESPONSE" | python3 -m json.tool
 
-10b-2) Verify the incident is visible in the list endpoint:
-    curl -s "http://localhost:8080/api/v1/incidents?limit=5" | python3 -m json.tool
+    INCIDENT_ID=$(echo "$INCIDENT_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('incident_id', ''))")
+    EXPECTED_REVISION=$(echo "$INCIDENT_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('revision', 1))")
 
-    You should see the incident with status "open" and severity "critical".
+10b-3) Verify the incident is visible in the list endpoint:
+    curl -s "http://localhost:8080/api/v1/incidents?limit=5" \
+      -H "Authorization: Bearer dev-bypass-token-for-local-testing" | \
+      python3 -m json.tool
 
-10b-3) Confirm the incident (mark as analyst-confirmed):
+    You should see the incident with classification "suspicious".
+
+10b-4) Confirm the incident (mark as analyst-confirmed):
     curl -s -X PATCH "http://localhost:8080/api/v1/incidents/${INCIDENT_ID}" \
       -H "Content-Type: application/json" \
       -H "Authorization: Bearer dev-bypass-token-for-local-testing" \
-      -d '{"status": "confirmed"}' | python3 -m json.tool
+      -d "{\"classification\": \"confirmed\", \"expected_revision\": ${EXPECTED_REVISION}}" | python3 -m json.tool
 
-    Expected: response contains "status": "confirmed".
+    Expected: response contains "classification": "confirmed".
 
 
 ═══════════════════════════════════════════════════════════════════
