@@ -17,6 +17,7 @@
 #   ✅ Prometheus port 9090 conflict (socat uses 9090 for API; Prometheus on 9091 if needed)
 #   ✅ Duplicate React keys warning (clearEvents() on mode switch + unique IDs from REST)
 #   ✅ No auth token for REST polling (VITE_DEV_TOKEN=dev-bypass-token-for-local-testing)
+#   ✅ Sandbox Network Limitation: If Codex hits "Could not connect to the endpoint URL: https://eks.ap-south-1.amazonaws.com/...", it will STOP, explain that sandbox network access is restricted, and ask the user to run those AWS commands in their host SSH terminal.
 
 You are a DevOps automation agent. Your task is to fully deploy the PHANTOM runtime security
 platform on AWS EKS and verify it detects a simulated supply-chain attack.
@@ -25,6 +26,31 @@ The AWS region is: ap-south-1
 The ECR registry: 596717729313.dkr.ecr.ap-south-1.amazonaws.com
 
 Execute every step in order. Never skip a step. If anything fails, diagnose, fix, retry.
+
+═══════════════════════════════════════════════════════════════════
+SPECIAL RULE — SANDBOX NETWORK ACCESS & AWS ENDPOINTS LIMITATION
+═══════════════════════════════════════════════════════════════════
+
+CRITICAL RESTRICTION FOR CODEX EXECUTION ENVIRONMENT:
+The Codex CLI environment has restricted network access. It CANNOT reach AWS service
+endpoints (e.g. `https://eks.ap-south-1.amazonaws.com/...`, RDS endpoints, or ElastiCache endpoints)
+directly from inside the sandbox environment.
+
+IF ANY COMMAND FAILS WITH AN ERROR LIKE:
+  "Could not connect to the endpoint URL: https://eks.ap-south-1.amazonaws.com/..."
+  OR any connection timeout / endpoint unreachable error when calling AWS APIs (EKS, RDS, ElastiCache, ECR, EC2):
+
+DO NOT:
+  ❌ Treat this as invalid AWS credentials or a missing/corrupted resource.
+  ❌ Attempt endless retries or generate fake fallback commands inside the restricted sandbox.
+
+DO INSTEAD:
+  1. Recognize that this is a CONNECTIVITY LIMITATION of the Codex sandbox environment.
+  2. Clearly report to the user:
+     "The environment’s network access is restricted, so it cannot reach AWS service endpoints for EKS, RDS, or ElastiCache. This is a connectivity limitation—not an AWS credential or 'resource still exists' result."
+  3. Output the EXACT shell command(s) that failed (e.g. `terraform apply -auto-approve`, `aws eks update-kubeconfig`, `bash push_images.sh`, `aws ec2 ...`) and ASK THE USER to execute those commands in their host shell / SSH session outside the sandbox.
+  4. Wait for the user to run the commands and provide the output / confirm completion, then resume execution from the next step.
+
 
 ═══════════════════════════════════════════════════════════════════
 STEP 0 — GIT: Always Pull the Latest Code First
@@ -60,6 +86,13 @@ KNOWN ISSUE: If terraform init fails with a Unix socket error in this sandbox,
 re-run the exact same command. The sandbox sometimes needs elevated host permissions
 on the first attempt. Simply retry — it succeeds on the second run.
 
+SANDBOX NETWORK LIMITATION NOTE:
+If terraform init or terraform apply fails with:
+  "Could not connect to the endpoint URL: https://eks.ap-south-1.amazonaws.com/..."
+(or RDS/ElastiCache endpoint timeouts), DO NOT FAIL. Explain to the user:
+  "The environment’s network access is restricted, so it cannot reach AWS service endpoints for EKS, RDS, or ElastiCache. This is a connectivity limitation—not an AWS credential or 'resource still exists' result."
+Then ask the user to run `cd /root/phantom-ebpf/infra/terraform/environments/dev && terraform apply -auto-approve` in their host SSH shell and paste back the Terraform outputs (`cluster_endpoint`, `rds_endpoint`, `redis_endpoint`, `rds_password`).
+
 Wait ~15 minutes for apply to complete. Then capture outputs:
     terraform output -raw cluster_endpoint
     terraform output -raw rds_endpoint
@@ -78,6 +111,9 @@ STEP 2 — ECR: Build and Push All Docker Images
 Builds and pushes 5 images: api-gateway, causal-engine, report-generator,
 sbom-service, ebpf-agent. Takes ~5-10 minutes.
 
+SANDBOX NETWORK LIMITATION NOTE:
+If `push_images.sh` fails because Docker/AWS CLI cannot connect to ECR endpoints, ask the user to run `bash push_images.sh` in their host SSH terminal.
+
 CRITICAL: All 5 must push successfully before proceeding.
 
 ═══════════════════════════════════════════════════════════════════
@@ -86,6 +122,9 @@ STEP 3 — KUBECONFIG: Connect kubectl to the Cluster
 
     aws eks update-kubeconfig --region ap-south-1 --name phantom-dev
     kubectl get nodes
+
+SANDBOX NETWORK LIMITATION NOTE:
+If `aws eks update-kubeconfig` fails with `Could not connect to the endpoint URL: https://eks.ap-south-1.amazonaws.com/...`, ask the user to run `aws eks update-kubeconfig --region ap-south-1 --name phantom-dev` in their host SSH terminal.
 
 Require: 2 nodes in "Ready" status. Retry up to 10 times if "NotReady".
 
@@ -188,6 +227,9 @@ managed SG to our worker node SG, all kubelet traffic is silently dropped.
       --group-ids "$NODE_SG" \
       --query "SecurityGroups[0].IpPermissions[?UserIdGroupPairs[?GroupId=='$MANAGED_CLUSTER_SG']]" \
       --output json
+
+SANDBOX NETWORK LIMITATION NOTE:
+If any `aws ec2` or `aws eks describe-*` command fails in Step 7 due to AWS endpoint network restrictions, ask the user to run Step 7 commands in their host SSH terminal.
 
 ═══════════════════════════════════════════════════════════════════
 STEP 8 — PORT FORWARD: Run in a Dedicated tmux Window
