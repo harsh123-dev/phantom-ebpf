@@ -1,0 +1,117 @@
+# research/evaluation/experiment_config.yaml
+#
+# Sample reproducible experiment configuration for PHANTOM evaluation.
+#
+# Usage:
+#   python research/evaluation/scenarios/run_all_scenarios.py \
+#       --config research/evaluation/experiment_config.yaml
+#
+# All field values here use the existing oracle scenario IDs from
+# research/evaluation/oracles/ and match the parameters in
+# research/evaluation/run_full_evaluation.sh.
+#
+# To reproduce an exact run, commit this file and record the git SHA,
+# the PHANTOM image digest, and the Kubernetes version at run time.
+
+# -----------------------------------------------------------------------
+# Cluster
+# -----------------------------------------------------------------------
+namespace: "phantom-eval"
+kubectl_context: null                 # null = use current context
+
+# -----------------------------------------------------------------------
+# PHANTOM API
+# -----------------------------------------------------------------------
+phantom_api_url: "http://localhost:8080"
+api_token: ""                         # set via $API_TOKEN env var at runtime
+
+# -----------------------------------------------------------------------
+# Observability
+# -----------------------------------------------------------------------
+prometheus_url: "http://localhost:9090/api/v1/query"
+falco_log: "/var/log/falco/events.jsonl"
+
+# -----------------------------------------------------------------------
+# Timing (seconds)
+# -----------------------------------------------------------------------
+baseline_duration_s: 300             # Phase 1: benign baseline
+attack_duration_s: 300               # Phase 3: attack observation window
+recovery_duration_s: 120             # Phase 5: post-recovery observation
+
+# -----------------------------------------------------------------------
+# Repetitions
+# -----------------------------------------------------------------------
+repetitions: 3
+
+# -----------------------------------------------------------------------
+# Attack scenarios
+# (must match attack_id values in research/evaluation/oracles/*.yaml)
+# -----------------------------------------------------------------------
+attack_scenarios:
+  - id: "xzutils-001"
+    target_service: "recommendationservice"
+    family: "supply_chain_backdoor"
+  - id: "dep-confusion-001"
+    target_service: "emailservice"
+    family: "dependency_confusion"
+
+# -----------------------------------------------------------------------
+# Benign control scenarios
+# -----------------------------------------------------------------------
+benign_scenarios:
+  - id: "benign-update-001"
+    target_service: "recommendationservice"
+    family: "benign_update"
+  - id: "benign-load-001"
+    target_service: "recommendationservice"
+    family: "high_load"
+  - id: "benign-restart-001"
+    target_service: "cartservice"
+    family: "pod_restart"
+
+# -----------------------------------------------------------------------
+# Output
+# -----------------------------------------------------------------------
+raw_output_dir: "research/datasets/raw"
+tables_output_dir: "research/evaluation/results"
+skip_notebooks: true                 # set to false for full paper artifact build
+
+# -----------------------------------------------------------------------
+# Dry-run
+# -----------------------------------------------------------------------
+dry_run: false          # set to true to skip all kubectl/subprocess calls
+
+# -----------------------------------------------------------------------
+# Evaluation unit
+# -----------------------------------------------------------------------
+evaluation_unit: "run"
+# "run" = one scenario repetition is the unit of analysis.
+# Confusion matrix counts are at the run level.
+# A run that produces multiple alerts for one incident counts as one TP.
+# First qualifying alert within detection_window_s defines MTTD.
+
+# -----------------------------------------------------------------------
+# Alert matching policy (for multi-alert runs)
+# -----------------------------------------------------------------------
+alert_matching_policy: "first_within_window"
+# "first_within_window" = the earliest alert within detection_window_s
+# after oracle injection_timestamp counts as the single TP detection.
+# All subsequent alerts from the same run are not re-counted.
+
+# -----------------------------------------------------------------------
+# Invalid run handling
+# -----------------------------------------------------------------------
+invalid_run_policy: "mark_incomplete"
+# "mark_incomplete" = runs where error != "" are recorded in a separate
+# incomplete_runs count and are NOT silently treated as FN or TN.
+# They are excluded from precision/recall/F1 denominator counts but
+# are reported separately in the final table.
+
+# -----------------------------------------------------------------------
+# Software version pins (informational; record actual versions at run time)
+# -----------------------------------------------------------------------
+version_pins:
+  falco_chart: "falcosecurity/falco@4.3.1"    # Falco 0.44.1
+  trivy: "0.70.0"
+  kubernetes: "1.36.2"                         # eks.6 platform
+  python_min: "3.11"

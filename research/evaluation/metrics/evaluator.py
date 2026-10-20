@@ -388,8 +388,10 @@ class ScenarioEvaluator:
                 delta = (det.detected_at - r.injection_timestamp).total_seconds()
                 if 0 <= delta <= window_s:
                     tp_runs.add(r.run_id)
-                    if r.run_id not in {rid for rid in tp_runs}:
-                        mttd_values.append(delta)
+                    # MTTD is computed below via mttd_values_final
+                    # (earliest detection per TP run). The previous
+                    # guard here was always False after set.add(),
+                    # so this branch never populated mttd_values.
                     classified = True
                     break
 
