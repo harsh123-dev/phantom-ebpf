@@ -30,6 +30,7 @@ spec:
           # Because the synthetic attacks inject via kubectl cp and pip install,
           # they require a standard container base image.
           image: tiangolo/uwsgi-nginx-flask:python3.11
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
           env:
@@ -87,6 +88,7 @@ spec:
         - name: server
           # python:3.11-slim is REQUIRED for the evaluation scripts.
           image: tiangolo/uwsgi-nginx-flask:python3.11
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
           env:
@@ -144,6 +146,7 @@ spec:
         - name: server
           # python:3.11-slim is REQUIRED for the evaluation scripts.
           image: tiangolo/uwsgi-nginx-flask:python3.11
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
           env:

@@ -27,6 +27,16 @@ spec:
     - ports:
         - protocol: TCP
           port: 8080
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+          podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 9101
   egress:
     - to:
         - namespaceSelector:
@@ -121,6 +131,16 @@ spec:
           podSelector:
             matchLabels:
               app: phantom-api-gateway
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+          podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 9090
   egress:
     # Render RDS_CIDR from the deployment environment before applying.
     - to:

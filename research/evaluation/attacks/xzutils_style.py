@@ -161,7 +161,7 @@ XZUTILS_MANIFEST = AttackManifest(
     attack_id="xzutils-001",
     attack_family="supply_chain_backdoor",
     target_service="recommendationservice",
-    target_image="gcr.io/google-samples/microservices-demo/recommendationservice:phantom-backdoor",
+    target_image="tiangolo/uwsgi-nginx-flask:python3.11",
     target_component_purl=f"pkg:pypi/lzmaffi@{_MALICIOUS_VERSION}",
     clean_component_purl=f"pkg:pypi/lzmaffi@{_CLEAN_VERSION}",
     injection_time_offset_s=0.0,
@@ -436,47 +436,22 @@ class XZUtilsStyleAttack(BaseAttack):
             log.info("xzutils.recover.dry_run_complete")
             return True
 
-        ok = True
-
-        # 1. Reinstall clean lzmaffi.
-        try:
-            self._kubectl_exec(
-                namespace=target_namespace,
-                pod_name=pod_name,
-                command=[
-                    "pip", "install", "--force-reinstall", "--quiet",
-                    f"lzmaffi=={_CLEAN_VERSION}",
-                ],
-                timeout=120,
-            )
-            log.info("xzutils.recover.pip_reinstalled")
-        except subprocess.CalledProcessError as exc:
-            log.error("xzutils.recover.pip_failed", extra={"error": str(exc)})
-            ok = False
-
-        # 2. Remove beacon script (idempotent).
-        try:
-            self._kubectl_exec(
-                namespace=target_namespace,
-                pod_name=pod_name,
-                command=["rm", "-f", _BEACON_PATH_IN_POD],
-                timeout=10,
-            )
-            log.info("xzutils.recover.beacon_removed")
-        except subprocess.CalledProcessError as exc:
-            log.warning("xzutils.recover.rm_failed", extra={"error": str(exc)})
-
-        # 3. Kill beacon processes (best-effort; non-fatal if not found).
-        try:
-            self._kubectl_exec(
-                namespace=target_namespace,
-                pod_name=pod_name,
-                command=["pkill", "-f", ".phantom_beacon.py"],
-                timeout=10,
-            )
-        except subprocess.CalledProcessError:
-            # pkill returns 1 if no process matched — expected if already dead.
-            pass
-
-        log.info("xzutils.recover.complete", extra={"ok": ok})
-        return ok
+        # The package and beacon alter the pod filesystem/process table. Replace
+        # the pod from its declared clean image rather than downloading a package.
+        deleted = self._kubectl(
+            ["delete", "pod", pod_name, "-n", target_namespace,
+             "--wait=true", "--timeout=60s"],
+            timeout=70,
+        )
+        if deleted.returncode != 0:
+            log.error("xzutils.recover.pod_delete_failed", extra={"stderr": deleted.stderr[-300:]})
+            return False
+        ready = self._kubectl(
+            ["wait", "--for=condition=Ready", "pod",
+             "-l", f"app={self.manifest.target_service}", "-n", target_namespace,
+             "--timeout=120s"],
+            timeout=130,
+        )
+        recovered = ready.returncode == 0
+        log.info("xzutils.recover.complete", extra={"ok": recovered})
+        return recovered

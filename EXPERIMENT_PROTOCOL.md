@@ -167,18 +167,18 @@ Oracle configurations are declaratively specified in `research/evaluation/oracle
    - Component Substitution: Undeclared background worker `pkg:generic/phantom-background-worker@0.1.0` embedded in binary.
    - Sink Control Endpoint: `phantom-sink.phantom-eval.svc.cluster.local:4446`
    - Contract Violation: Undeclared background thread and network connect violate signed contract.
-4. **`benign-update-001.yaml` (Legitimate Version Update)**:
+4. **`benign-update-001.yaml` (Harmless Deployment Metadata Update)**:
    - Target Service: `recommendationservice`
-   - Update: `pkg:pypi/lzmaffi@1.0.0` $\to$ `pkg:pypi/lzmaffi@1.0.1` (signed release)
-   - Contract Violation: None ($Y_{\text{drift}} = 0$). Behavioral profile updated and signed.
+   - Perturbation: Apply a unique pod-template annotation, verify rollout and unchanged image references, then remove the annotation during recovery. No package update is claimed.
+   - Contract state remains unknown until a separate trusted source confirms conformance.
 5. **`benign-load-001.yaml` (High Load Burst)**:
    - Target Service: `emailservice`
-   - Perturbation: 5× request burst via K6 load generator.
-   - Contract Violation: None ($Y_{\text{drift}} = 0$). High throughput does not violate syscall topology.
+   - Perturbation: Bounded 200-request HTTP burst to internal `emailservice`; service access-log receipts are required.
+   - Contract state remains unknown until a separate trusted source confirms conformance.
 6. **`benign-restart-001.yaml` (Pod Restart / Reschedule)**:
    - Target Service: `cartservice`
    - Perturbation: Pod deletion triggering ReplicaSet recreation.
-   - Contract Violation: None ($Y_{\text{drift}} = 0$). Standard lifecycle events permitted by contract.
+   - Contract state remains unknown until a separate trusted source confirms conformance.
 
 ---
 

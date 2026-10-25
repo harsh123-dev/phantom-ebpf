@@ -34,7 +34,16 @@ spec:
         - protocol: TCP
           port: 8080
 
-    # 3. Allow internal service-to-service RPC between victim workloads in phantom-eval
+    # 3. Allow the dependency-confusion simulation to use its internal package mirror.
+    - to:
+        - podSelector:
+            matchLabels:
+              app: pypiserver-mirror
+      ports:
+        - protocol: TCP
+          port: 8080
+
+    # 4. Allow internal service-to-service RPC between victim workloads in phantom-eval
     - to:
         - podSelector:
             matchExpressions:

@@ -18,15 +18,15 @@ data:
 
       - job_name: "phantom-causal-engine"
         static_configs:
-          - targets: ["phantom-causal-engine.phantom.svc.cluster.local:8080"]
+          - targets: ["phantom-causal-engine.phantom.svc.cluster.local:9090"]
             labels:
               service: "causal-engine"
 
-      - job_name: "phantom-sbom-service"
+      - job_name: "phantom-ebpf-agent"
         static_configs:
-          - targets: ["phantom-sbom-service.phantom.svc.cluster.local:8080"]
+          - targets: ["phantom-ebpf-agent.phantom.svc.cluster.local:9101"]
             labels:
-              service: "sbom-service"
+              service: "ebpf-agent"
 
       - job_name: "cadvisor"
         scheme: https
@@ -44,7 +44,7 @@ data:
           - source_labels: [__meta_kubernetes_node_name]
             regex: (.+)
             target_label: __metrics_path__
-            replacement: /api/v1/nodes/$${1}/proxy/metrics/cadvisor
+            replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
 ---
 apiVersion: apps/v1
 kind: Deployment

@@ -10,8 +10,8 @@ Campaign Profiles:
        - dep-confusion-001: Dependency confusion beacon package  (emailservice)
        - solarwinds-001:    SolarWinds-style build tampering     (cartservice)
      Benign control scenarios (3 repetitions each):
-       - benign-update-001:  Benign dependency patch update      (recommendationservice)
-       - benign-load-001:    Benign high-load burst              (recommendationservice)
+       - benign-update-001:  Harmless Deployment metadata rollout (recommendationservice)
+       - benign-load-001:    Benign high-load burst              (emailservice)
        - benign-restart-001: Benign pod restart / reschedule     (cartservice)
      Total: 6 scenarios x 3 repetitions = 18 planned runs.
 
@@ -29,7 +29,7 @@ Safety contract:
     are contacted, and zero experiment records are written to disk.
   - To execute live against a disposable lab cluster, the user MUST pass --execute
     along with an approved disposable kubectl context.
-  - New genuine experimental records are saved to research/datasets/pilot_batch01/<run_id>.json.
+  - New genuine records are saved to a unique timestamped subdirectory under research/datasets/pilot_batch01/.
 """
 
 from __future__ import annotations
@@ -40,6 +40,7 @@ import logging
 import subprocess
 import sys
 import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Final
@@ -53,6 +54,11 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from research.evaluation.attacks.base_attack import AttackManifest, BaseAttack
+from research.evaluation.attacks.benign_controls import (
+    BenignLoadControl,
+    BenignRestartControl,
+    BenignUpdateControl,
+)
 from research.evaluation.attacks.dependency_confusion import DependencyConfusionAttack
 from research.evaluation.attacks.file_tamper_style import FileTamperAttack
 from research.evaluation.attacks.net_egress_style import NetEgressAttack
@@ -60,37 +66,25 @@ from research.evaluation.attacks.proc_spawn_style import ProcSpawnAttack
 from research.evaluation.attacks.safety import SafetyCheckError, SafetyPreflight
 from research.evaluation.attacks.solarwinds_style import SolarWindsStyleAttack
 from research.evaluation.attacks.xzutils_style import XZUtilsStyleAttack
-from research.evaluation.scenarios.scenario_runner import ScenarioResult, ScenarioRunner
+from research.evaluation.scenarios.config import (
+    DEFAULT_CONFIG_PATH,
+    load_experiment_config,
+    resolve_batch_output,
+    scenario_ids,
+)
 
 log = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Campaign scenario sets
+# Campaign scenario sets are read from experiment_config.yaml.
 # ---------------------------------------------------------------------------
 
-PILOT_SCENARIO_IDS: Final[tuple[str, ...]] = (
-    "xzutils-001",
-    "dep-confusion-001",
-    "solarwinds-001",
-    "benign-update-001",
-    "benign-load-001",
-    "benign-restart-001",
-)
-
-EXTENDED_SCENARIO_IDS: Final[tuple[str, ...]] = (
-    "xzutils-001",
-    "dep-confusion-001",
-    "solarwinds-001",
-    "proc-spawn-001",
-    "net-egress-001",
-    "file-tamper-001",
-    "benign-update-001",
-    "benign-load-001",
-    "benign-restart-001",
-)
+_DEFAULT_EXPERIMENT_CONFIG = load_experiment_config()
+PILOT_SCENARIO_IDS: Final[tuple[str, ...]] = scenario_ids(_DEFAULT_EXPERIMENT_CONFIG, "pilot")
+EXTENDED_SCENARIO_IDS: Final[tuple[str, ...]] = scenario_ids(_DEFAULT_EXPERIMENT_CONFIG, "extended")
 
 # Default destination for new experimental runs (preserves historical raw/ and raw3/)
-DEFAULT_PILOT_DIR: Path = _REPO_ROOT / "research" / "datasets" / "pilot_batch01"
+DEFAULT_PILOT_DIR: Path = _REPO_ROOT / _DEFAULT_EXPERIMENT_CONFIG["raw_output_dir"]
 
 # ---------------------------------------------------------------------------
 # Pod name discovery helpers
@@ -133,52 +127,16 @@ def _get_pod_name(namespace: str, app_label: str, kubectl_context: str | None) -
 
 
 # ---------------------------------------------------------------------------
-# Benign scenario stubs
+# Benign control scenario implementations
 # ---------------------------------------------------------------------------
-
-
-class _BenignNoOp(BaseAttack):
-    """Stub attack that does nothing (for benign control scenarios).
-
-    Args:
-        manifest: The AttackManifest for this benign scenario.
-        kubectl_context: kubectl context name.
-        dry_run: If True, skip subprocess calls.
-        allow_live_execution: Confirmation flag.
-    """
-
-    def __init__(
-        self,
-        manifest: AttackManifest,
-        kubectl_context: str | None = None,
-        dry_run: bool = True,
-        allow_live_execution: bool = False,
-    ) -> None:
-        super().__init__(
-            kubectl_context=kubectl_context,
-            dry_run=dry_run,
-            allow_live_execution=allow_live_execution,
-        )
-        self.manifest = manifest
-
-    def inject(self, target_namespace: str, pod_name: str) -> bool:
-        log.info("benign.inject.noop", extra={"scenario": self.manifest.attack_id})
-        return True
-
-    def verify_injection(self, target_namespace: str, pod_name: str) -> bool:
-        return True
-
-    def recover(self, target_namespace: str, pod_name: str) -> bool:
-        log.info("benign.recover.noop", extra={"scenario": self.manifest.attack_id})
-        return True
 
 
 def _make_benign_scenarios(
     kubectl_context: str | None,
     dry_run: bool = True,
     allow_live_execution: bool = False,
-) -> list[_BenignNoOp]:
-    """Build the three benign control scenario stubs.
+) -> list[BaseAttack]:
+    """Build three bounded, harmless controls with observable activity.
 
     Args:
         kubectl_context: kubectl context.
@@ -186,23 +144,23 @@ def _make_benign_scenarios(
         allow_live_execution: Live execution opt-in flag.
 
     Returns:
-        List of three _BenignNoOp instances.
+        List of implemented benign control instances.
     """
     benign_update = AttackManifest(
         attack_id="benign-update-001",
         attack_family="benign_update",
         target_service="recommendationservice",
-        target_image="gcr.io/google-samples/microservices-demo/recommendationservice:latest",
-        target_component_purl="pkg:pypi/lzmaffi@1.0.1",
-        clean_component_purl="pkg:pypi/lzmaffi@1.0.0",
+        target_image="",
+        target_component_purl="",
+        clean_component_purl="",
         injection_time_offset_s=0.0,
         expected_behavioral_changes=[],
         ground_truth_label=0,
         control_endpoint="",
-        recovery_steps=["No recovery needed (benign update)."],
+        recovery_steps=["Remove the run annotation and verify the original image refs remain unchanged."],
         detection_window_s=120.0,
         repetitions=3,
-        notes="Handoff §2 benign control: hash-pinned patch update.",
+        notes="Harmless run-tagged Deployment template annotation and verified rollout; no image or dependency change.",
     )
 
     high_load = AttackManifest(
@@ -216,12 +174,12 @@ def _make_benign_scenarios(
         expected_behavioral_changes=[],
         ground_truth_label=0,
         control_endpoint="",
-        recovery_steps=["Stop k6 load generator."],
+        recovery_steps=["The bounded request process exits after 200 requests."],
         detection_window_s=120.0,
         repetitions=3,
         notes=(
-            "Handoff §2 benign control: k6 high-load burst against emailservice. "
-            "No image/package/network changes; stable transition probabilities expected."
+            "Bounded 200-request HTTP burst to the internal emailservice only. "
+            "No image/package changes; request receipts must be found in service logs."
         ),
     )
 
@@ -239,16 +197,13 @@ def _make_benign_scenarios(
         recovery_steps=["Deployments self-heal; verify Pod ready."],
         detection_window_s=120.0,
         repetitions=3,
-        notes=(
-            "Handoff §2 benign control: pod delete + reschedule for "
-            "cartservice and emailservice. Same images; contracts unchanged."
-        ),
+        notes="Handoff §2 benign control: delete and verify replacement of one cartservice pod; image remains unchanged.",
     )
 
     return [
-        _BenignNoOp(benign_update, kubectl_context=kubectl_context, dry_run=dry_run, allow_live_execution=allow_live_execution),
-        _BenignNoOp(high_load, kubectl_context=kubectl_context, dry_run=dry_run, allow_live_execution=allow_live_execution),
-        _BenignNoOp(pod_restart, kubectl_context=kubectl_context, dry_run=dry_run, allow_live_execution=allow_live_execution),
+        BenignUpdateControl(benign_update, kubectl_context, dry_run, allow_live_execution),
+        BenignLoadControl(high_load, kubectl_context, dry_run, allow_live_execution),
+        BenignRestartControl(pod_restart, kubectl_context, dry_run, allow_live_execution),
     ]
 
 
@@ -403,12 +358,16 @@ def main() -> None:
              "or 'extended'/'all' (27 runs: 6 attacks + 3 benign controls x 3 reps). Default: 'pilot'.",
     )
     parser.add_argument(
+        "--config", default=str(DEFAULT_CONFIG_PATH),
+        help="Experiment YAML source of truth (default: research/evaluation/experiment_config.yaml).",
+    )
+    parser.add_argument(
         "--scenarios", default=None,
         help="Optional comma-separated list of scenario IDs to run (e.g. 'xzutils-001,benign-update-001'). "
              "Overrides --campaign if specified.",
     )
     parser.add_argument(
-        "--namespace", default="phantom-eval",
+        "--namespace", default=None,
         help="Kubernetes namespace for all attack targets.",
     )
     parser.add_argument(
@@ -416,15 +375,15 @@ def main() -> None:
         help="kubectl context name (must be a positively verified disposable lab cluster in live mode).",
     )
     parser.add_argument(
-        "--baseline-duration", type=int, default=300,
+        "--baseline-duration", type=int, default=None,
         help="Baseline phase duration in seconds.",
     )
     parser.add_argument(
-        "--attack-duration", type=int, default=300,
+        "--attack-duration", type=int, default=None,
         help="Attack observation phase duration in seconds.",
     )
     parser.add_argument(
-        "--recovery-duration", type=int, default=120,
+        "--recovery-duration", type=int, default=None,
         help="Post-recovery phase duration in seconds.",
     )
     parser.add_argument(
@@ -454,15 +413,38 @@ def main() -> None:
         help="Explicit confirmation required to allow live execution against the cluster.",
     )
     parser.add_argument(
-        "--repetitions", type=int, default=3,
-        help="Number of repetitions per scenario.",
+        "--repetitions", type=int, default=None,
+        help="Override configured repetitions per scenario.",
     )
     parser.add_argument(
-        "--output-dir", default=str(DEFAULT_PILOT_DIR),
-        help=f"Directory to save raw ScenarioResult JSON files (default: {DEFAULT_PILOT_DIR}).",
+        "--output-dir", default=None,
+        help="Unique run output directory override. It must not already exist.",
     )
 
     args = parser.parse_args()
+
+    try:
+        experiment_config = load_experiment_config(args.config)
+    except (OSError, ValueError) as exc:
+        parser.error(f"invalid experiment configuration: {exc}")
+    args.namespace = args.namespace or experiment_config["namespace"]
+    args.baseline_duration = (
+        args.baseline_duration if args.baseline_duration is not None else experiment_config["baseline_duration_s"]
+    )
+    args.attack_duration = (
+        args.attack_duration if args.attack_duration is not None else experiment_config["attack_duration_s"]
+    )
+    args.recovery_duration = (
+        args.recovery_duration if args.recovery_duration is not None else experiment_config["recovery_duration_s"]
+    )
+    args.repetitions = args.repetitions if args.repetitions is not None else experiment_config["repetitions"]
+    if args.repetitions < 1 or min(args.baseline_duration, args.attack_duration, args.recovery_duration) < 1:
+        parser.error("repetitions and phase durations must be positive")
+
+    try:
+        output_dir = resolve_batch_output(experiment_config, args.output_dir)
+    except (ValueError, FileExistsError) as exc:
+        parser.error(str(exc))
 
     # Determine execution mode safely:
     # If --execute is supplied and --dry-run is not explicitly requested, allow live execution.
@@ -478,8 +460,6 @@ def main() -> None:
         format="%(asctime)s %(levelname)s %(name)s %(message)s",
         datefmt="%Y-%m-%dT%H:%M:%SZ",
     )
-
-    output_dir = Path(args.output_dir)
 
     # ------------------------------------------------------------------ #
     # Build complete scenario catalog                                    #
@@ -538,7 +518,7 @@ def main() -> None:
         ),
     ]
 
-    benign_scenarios: list[tuple[_BenignNoOp, str]] = [
+    benign_scenarios: list[tuple[BaseAttack, str]] = [
         (s, s.manifest.target_service or "recommendationservice")
         for s in _make_benign_scenarios(
             args.kubectl_context,
@@ -553,24 +533,37 @@ def main() -> None:
     # Filter scenarios based on campaign or explicit selection           #
     # ------------------------------------------------------------------ #
     if args.scenarios:
-        selected_ids = set(s.strip() for s in args.scenarios.split(",") if s.strip())
+        selected_ids = tuple(s.strip() for s in args.scenarios.split(",") if s.strip())
         campaign_label = f"custom ({len(selected_ids)} scenarios)"
-    elif args.campaign == "pilot":
-        selected_ids = set(PILOT_SCENARIO_IDS)
-        campaign_label = "pilot"
     else:
-        selected_ids = set(EXTENDED_SCENARIO_IDS)
-        campaign_label = "extended"
+        selected_ids = scenario_ids(experiment_config, args.campaign)
+        campaign_label = "pilot"
+        if args.campaign != "pilot":
+            campaign_label = "extended"
 
-    selected_scenarios = [
-        (attack, app_label)
-        for attack, app_label in all_scenarios
-        if attack.manifest.attack_id in selected_ids
-    ]
+    if len(selected_ids) != len(set(selected_ids)):
+        parser.error("scenario selection contains duplicate IDs")
+    unknown_config_ids = set(selected_ids) - set(experiment_config["_scenario_by_id"])
+    if unknown_config_ids:
+        parser.error(f"scenario IDs are not configured: {sorted(unknown_config_ids)}")
+
+    catalog = {attack.manifest.attack_id: (attack, app_label) for attack, app_label in all_scenarios}
+    selected_scenarios = []
+    for scenario_id in selected_ids:
+        if scenario_id not in catalog:
+            continue
+        scenario_config = experiment_config["_scenario_by_id"][scenario_id]
+        attack, _ = catalog[scenario_id]
+        if scenario_config["target_service"] != attack.manifest.target_service:
+            parser.error(
+                f"configured target for {scenario_id} does not match its manifest: "
+                f"{scenario_config['target_service']} != {attack.manifest.target_service}"
+            )
+        selected_scenarios.append((attack, scenario_config["target_service"]))
 
     # Validate that all requested scenarios were located
     found_ids = {a.manifest.attack_id for a, _ in selected_scenarios}
-    missing_ids = selected_ids - found_ids
+    missing_ids = set(selected_ids) - found_ids
     if missing_ids:
         log.error("run.missing_scenarios", extra={"missing": sorted(missing_ids)})
         sys.exit(1)
@@ -604,15 +597,54 @@ def main() -> None:
         log.info("SAFETY: Dry-run planning complete. Zero live operations executed. Zero dataset files written.")
         sys.exit(0)
 
+    # Scenario execution dependencies are not needed for the safe planning path.
+    # Import them only after the dry-run exit so configuration planning remains
+    # usable when optional HTTP runtime dependencies are not installed.
+    from research.evaluation.scenarios.scenario_runner import ScenarioResult, ScenarioRunner
+
     # ------------------------------------------------------------------ #
     # Live execution mode (--execute provided)                           #
     # ------------------------------------------------------------------ #
     log.warning("SAFETY: Live execution confirmed via --execute. Proceeding with cluster operations.")
-    output_dir.mkdir(parents=True, exist_ok=True)
+    if output_dir.exists():
+        parser.error(f"Refusing to use existing output directory: {output_dir}")
+    output_dir.mkdir(parents=True, exist_ok=False)
+    from research.evaluation.evidence_store import DurableEvidenceSink, record_attempt_unknown
+    evidence_sink = DurableEvidenceSink(output_dir / "evidence.sqlite3")
 
-    # Save oracle manifests before running
+    def persist_oracle_receipt(result: Any, attack: Any, result_path: Path) -> None:
+        """Persist every attempt; missing independent contract evidence stays unknown."""
+        scenario_id = str(attack.manifest.attack_id)
+        target_image = str(getattr(attack.manifest, "target_image", "") or "")
+        workload = {
+            "namespace": result.namespace,
+            "pod_name": result.pod_name or None,
+            "image_ref": target_image or None,
+            "image_digest": None,
+        }
+        receipt = record_attempt_unknown(
+            evidence_sink,
+            run_id=result.run_id,
+            scenario_id=scenario_id,
+            workload=workload,
+            processing_outcome=("execution_failed" if result.error else
+                                "injection_failed" if result.inject_ok is False else "execution_recorded"),
+            provenance={
+                "source": "scenario_runner",
+                "result_artifact": str(result_path),
+                "contract_snapshot_available": False,
+                "independent_observation_collector_available": False,
+            },
+        )
+        log.info("oracle_receipt.persisted", extra={
+            "run_id": result.run_id, "scenario_id": scenario_id,
+            "receipt_id": receipt["receipt_id"], "outcome": receipt["oracle_result"]["outcome"],
+        })
+
+    # Save immutable batch-level oracle manifests inside the unique output batch.
+    oracle_dir = output_dir / "oracles"
     for attack, _ in selected_scenarios:
-        oracle_path = attack.manifest.save_oracle()
+        oracle_path = attack.manifest.save_oracle(oracle_dir)
         log.info("oracle.saved", extra={"path": str(oracle_path)})
 
     runner = ScenarioRunner(
@@ -644,7 +676,7 @@ def main() -> None:
                     extra={"app": app_label, "error": str(exc)},
                 )
                 result = ScenarioResult(
-                    run_id=f"FAILED_{attack.manifest.attack_id}_rep{rep}",
+                    run_id=f"FAILED_{datetime.now(tz=timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')}_{attack.manifest.attack_id}_rep{rep}_{uuid.uuid4().hex[:8]}",
                     attack_id=attack.manifest.attack_id,
                     attack_family=attack.manifest.attack_family,
                     repetition=rep,
@@ -654,7 +686,19 @@ def main() -> None:
                     error=str(exc),
                     scenario_label=attack.label(),
                 )
+                result.inject_ok = False
+                result.scenario_label.update({
+                    "ground_truth_status": "unknown_contract_state",
+                    "behavior_verified": None,
+                    "contract_drift_verified": None,
+                    "run_started_at": datetime.now(tz=timezone.utc).isoformat(),
+                    "run_ended_at": datetime.now(tz=timezone.utc).isoformat(),
+                })
                 all_results.append(result)
+                failed_path = output_dir / f"{result.run_id}.json"
+                with failed_path.open("x", encoding="utf-8") as fh:
+                    json.dump(result.to_dict(), fh, indent=2, default=str)
+                persist_oracle_receipt(result, attack, failed_path)
                 continue
 
             log.info(
@@ -687,7 +731,7 @@ def main() -> None:
                     },
                 )
                 result = ScenarioResult(
-                    run_id=f"FAILED_{attack.manifest.attack_id}_rep{rep}",
+                    run_id=f"FAILED_{datetime.now(tz=timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')}_{attack.manifest.attack_id}_rep{rep}_{uuid.uuid4().hex[:8]}",
                     attack_id=attack.manifest.attack_id,
                     attack_family=attack.manifest.attack_family,
                     repetition=rep,
@@ -697,12 +741,20 @@ def main() -> None:
                     error=str(exc),
                     scenario_label=attack.label(),
                 )
+                result.scenario_label.update({
+                    "ground_truth_status": "unknown_contract_state",
+                    "behavior_verified": None,
+                    "contract_drift_verified": None,
+                    "run_started_at": datetime.now(tz=timezone.utc).isoformat(),
+                    "run_ended_at": datetime.now(tz=timezone.utc).isoformat(),
+                })
 
             all_results.append(result)
 
             out_path = output_dir / f"{result.run_id}.json"
-            with out_path.open("w") as fh:
+            with out_path.open("x") as fh:
                 json.dump(result.to_dict(), fh, indent=2, default=str)
+            persist_oracle_receipt(result, attack, out_path)
             log.info("result.saved", extra={"path": str(out_path)})
 
             if rep < args.repetitions:
@@ -723,7 +775,7 @@ def main() -> None:
         "results": [r.run_id for r in all_results],
     }
     index_path = output_dir / "index.json"
-    with index_path.open("w") as fh:
+    with index_path.open("x") as fh:
         json.dump(index, fh, indent=2)
     log.info("index.saved", extra={"path": str(index_path)})
 

@@ -31,9 +31,9 @@ PHANTOM detections:
 
 Overhead metrics:
     - Queried from Prometheus at each phase boundary.
-    - cpu_usage: rate(container_cpu_usage_seconds_total) for PHANTOM pods.
-    - memory_rss: container_memory_rss for PHANTOM pods.
-    - event_lag_p95: phantom_event_collection_latency_seconds{quantile="0.95"}.
+    - cpu_usage: rate(container_cpu_usage_seconds_total) for the `phantom-agent` container.
+    - memory_rss: container_memory_rss for the `phantom-agent` container.
+    - event_lag_p95: histogram_quantile over phantom_event_delivery_lag_seconds.
 
 Baseline detections (Falco):
     - Collected from Falco JSON alert log file on the node.
@@ -43,7 +43,9 @@ Baseline detections (Falco):
 from __future__ import annotations
 
 import logging
+import math
 import time
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
@@ -112,17 +114,17 @@ class MetricsSnapshot:
 
     Attributes:
         timestamp: UTC datetime of the snapshot.
-        cpu_usage_cores: PHANTOM agent CPU usage in cores.
-        memory_rss_mb: PHANTOM agent memory RSS in MiB.
-        event_lag_p95_ms: 95th-percentile event collection latency in ms.
+        cpu_usage_cores: PHANTOM agent CPU usage in cores, or None if unavailable.
+        memory_rss_mb: PHANTOM agent memory RSS in MiB, or None if unavailable.
+        event_lag_p95_ms: p95 kernel-to-callback delivery lag in ms, or None if unavailable.
         phase: The scenario phase during which this was collected.
         raw: Raw Prometheus query results.
     """
 
     timestamp: datetime
-    cpu_usage_cores: float
-    memory_rss_mb: float
-    event_lag_p95_ms: float
+    cpu_usage_cores: float | None
+    memory_rss_mb: float | None
+    event_lag_p95_ms: float | None
     phase: str
     raw: dict[str, Any] = field(default_factory=dict)
 
@@ -141,9 +143,9 @@ class ScenarioResult:
         repetition: Repetition index (1-based).
         namespace: Kubernetes namespace.
         pod_name: Target pod name.
-        ground_truth_label: 1 = attack, 0 = benign.
-        injection_timestamp: UTC datetime immediately before inject() returned.
-            None for benign scenarios.
+        ground_truth_label: Expected scenario class (1 = attack, 0 = control), not an independently verified outcome.
+        injection_timestamp: UTC datetime immediately before the intervention starts.
+            This includes control interventions so alert windows are observable.
         first_phantom_detection_timestamp: UTC datetime of the first PHANTOM
             detection event after injection. None if no detection in window.
         mttd_s: Mean time to detection in seconds. None if no TP detection.
@@ -152,7 +154,7 @@ class ScenarioResult:
         phantom_detections: All drift-event records collected from PHANTOM API.
         falco_detections: All Falco alert records during the scenario.
         metrics_snapshots: Prometheus overhead snapshots.
-        scenario_label: Ground truth label dict from attack.label().
+        scenario_label: Expected scenario metadata plus actual evidence/status fields.
         error: Error message if scenario did not complete.
         inject_ok: True if injection succeeded.
         behavior_verified: True if independent behavioral checks confirmed activity.
@@ -392,8 +394,8 @@ class ScenarioRunner:
         )
 
         run_id = (
-            datetime.now(tz=timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-            + f"_{attack.manifest.attack_id}_rep{repetition}"
+            datetime.now(tz=timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
+            + f"_{attack.manifest.attack_id}_rep{repetition}_{uuid.uuid4().hex[:8]}"
         )
         log.info(
             "scenario.start",
@@ -410,6 +412,8 @@ class ScenarioRunner:
             ground_truth_label=attack.manifest.ground_truth_label,
             scenario_label=attack.label(),
         )
+        result.scenario_label["ground_truth_status"] = "unknown_contract_state"
+        result.scenario_label["run_started_at"] = datetime.now(tz=timezone.utc).isoformat()
 
         # ------------------------------------------------------------------ #
         # Phase 1: Baseline                                                   #
@@ -428,12 +432,15 @@ class ScenarioRunner:
         log.info("scenario.phase_baseline.complete")
 
         # ------------------------------------------------------------------ #
-        # Phase 2: Inject                                                     #
+        # Phase 2: Inject / control intervention                              #
         # ------------------------------------------------------------------ #
         phase_inject = PhaseRecord(name="inject", start_time=datetime.now(tz=timezone.utc))
         result.phases.append(phase_inject)
         log.info("scenario.phase_inject.start")
 
+        # Independent experiment clock timestamp immediately before the
+        # intervention, for attacks and controls alike.
+        result.injection_timestamp = datetime.now(tz=timezone.utc)
         inject_ok = False
         if not self._dry_run:
             try:
@@ -448,9 +455,6 @@ class ScenarioRunner:
         result.inject_ok = inject_ok
         result.scenario_label["inject_ok"] = inject_ok
 
-        # Record oracle injection timestamp AFTER inject() returns (None if benign)
-        if attack.manifest.ground_truth_label == 1:
-            result.injection_timestamp = datetime.now(tz=timezone.utc)
         phase_inject.close(notes=f"inject_ok={inject_ok}")
         log.info(
             "scenario.phase_inject.complete",
@@ -459,22 +463,28 @@ class ScenarioRunner:
 
         if not inject_ok:
             result.error = result.error or "inject() returned False"
+            result.scenario_label["run_ended_at"] = datetime.now(tz=timezone.utc).isoformat()
             return result
 
-        # Verify injection before measurement
+        # Verify the intervention using its independent source (artifact,
+        # deployment state, request logs, or replacement Pod UID).
         verified = True if self._dry_run else False
-        if not self._dry_run and attack.manifest.ground_truth_label == 1:
+        if not self._dry_run:
             verified = attack.verify_injection(namespace, pod_name)
             if not verified:
-                log.warning("scenario.inject.verify_failed")
+                log.warning("scenario.intervention.verify_failed")
                 result.error = "verify_injection() returned False"
-        elif attack.manifest.ground_truth_label == 0:
-            verified = True
 
         result.behavior_verified = verified
-        result.contract_drift_verified = (attack.manifest.ground_truth_label == 1 and verified)
+        # Expected scenario labels and detector output are not independent
+        # contract evidence. Until an independent contract-state oracle is
+        # available, contract outcome remains unknown for every run.
+        result.contract_drift_verified = None
         result.scenario_label["behavior_verified"] = result.behavior_verified
         result.scenario_label["contract_drift_verified"] = result.contract_drift_verified
+        evidence_method = getattr(attack, "evidence", None)
+        if callable(evidence_method):
+            result.scenario_label["behavior_evidence"] = evidence_method()
 
         # ------------------------------------------------------------------ #
         # Phase 3: Attack observation                                         #
@@ -502,6 +512,7 @@ class ScenarioRunner:
                 if (
                     result.first_phantom_detection_timestamp is None
                     and new_detections
+                    and attack.manifest.ground_truth_label == 1
                 ):
                     for det in new_detections:
                         det_ts_raw = det.get("observed_at") or det.get("created_at", "")
@@ -589,6 +600,7 @@ class ScenarioRunner:
                 "phantom_detections": len(result.phantom_detections),
             },
         )
+        result.scenario_label["run_ended_at"] = datetime.now(tz=timezone.utc).isoformat()
         return result
 
     # ------------------------------------------------------------------ #
@@ -638,9 +650,11 @@ class ScenarioRunner:
             cpu_usage_cores:   rate(container_cpu_usage_seconds_total
                                {container="phantom-agent"}[1m])
             memory_rss_mb:     container_memory_rss{container="phantom-agent"} / 1024^2
-            event_lag_p95_ms:  phantom_event_collection_latency_seconds{quantile="0.95"} * 1000
+            event_lag_p95_ms:  histogram_quantile(0.95, sum by (le) (rate(
+                               phantom_event_delivery_lag_seconds_bucket[5m]))) * 1000
 
-        Falls back to 0.0 for each metric on query failure.
+        Returns None for a metric when Prometheus has no observation or the
+        query fails. Missing telemetry must never be reported as zero overhead.
 
         Args:
             phase: Phase label for the snapshot record.
@@ -653,13 +667,13 @@ class ScenarioRunner:
         if self._dry_run:
             return MetricsSnapshot(
                 timestamp=now,
-                cpu_usage_cores=0.0,
-                memory_rss_mb=0.0,
-                event_lag_p95_ms=0.0,
+                cpu_usage_cores=None,
+                memory_rss_mb=None,
+                event_lag_p95_ms=None,
                 phase=phase,
             )
 
-        def _query(promql: str) -> float:
+        def _query(promql: str) -> float | None:
             try:
                 with httpx.Client(timeout=self._timeout) as client:
                     resp = client.get(
@@ -670,10 +684,14 @@ class ScenarioRunner:
                     data = resp.json()
                     results = data.get("data", {}).get("result", [])
                     if results:
-                        return float(results[0]["value"][1])
+                        value = float(results[0]["value"][1])
+                        # A zero result for these live-agent series is not a
+                        # useful overhead observation (RSS and callback lag
+                        # must be positive when an active agent has samples).
+                        return value if math.isfinite(value) and value > 0 else None
             except Exception as exc:  # noqa: BLE001
                 log.debug("prometheus.query_failed", extra={"promql": promql, "error": str(exc)})
-            return 0.0
+            return None
 
         cpu = _query(
             'rate(container_cpu_usage_seconds_total{container="phantom-agent"}[1m])'
@@ -682,7 +700,8 @@ class ScenarioRunner:
             'container_memory_rss{container="phantom-agent"} / 1048576'
         )
         lag = _query(
-            'phantom_event_collection_latency_seconds{quantile="0.95"} * 1000'
+            'histogram_quantile(0.95, sum by (le) '
+            '(rate(phantom_event_delivery_lag_seconds_bucket[5m]))) * 1000'
         )
 
         return MetricsSnapshot(

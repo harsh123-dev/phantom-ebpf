@@ -85,7 +85,15 @@ struct {
 
 static __always_inline __u64 phantom_cap_to_u64(kernel_cap_t cap)
 {
-    return ((__u64)cap.cap[1] << 32) | cap.cap[0];
+    /* kernel_cap_t's member changed from cap[2] to val across kernel
+     * releases. The CO-RE read of cred.cap_effective already relocates the
+     * containing field; reinterpret its fixed 64-bit representation without
+     * emitting a fragile nested relocation for either member name. */
+    union {
+        kernel_cap_t typed;
+        __u64 raw;
+    } value = {.typed = cap};
+    return value.raw;
 }
 
 /*
@@ -116,9 +124,8 @@ static __always_inline void phantom_stash_current_cred(void)
     stash->prev_uid = BPF_CORE_READ(cred, euid.val);
     stash->prev_gid = BPF_CORE_READ(cred, egid.val);
 
-    /* # VERIFY: kernel_cap_t has cap[2] on 64-bit kernels. We combine both
-     * u32 words of the effective capability set into the ABI's u64 field.
-     * CO-RE will resolve this correctly if the BTF includes kernel_cap_t. */
+    /* kernel_cap_t remains 64 bits on this x86_64 target; the helper avoids
+     * depending on the kernel-version-specific member spelling. */
     kernel_cap_t eff = BPF_CORE_READ(cred, cap_effective);
     stash->cap_before = phantom_cap_to_u64(eff);
 }

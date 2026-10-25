@@ -1,0 +1,15 @@
+NAMESPACE      NAME                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                               AGE     SELECTOR
+default        kubernetes              ClusterIP   10.43.0.1       <none>        443/TCP                               28m     <none>
+kube-system    kube-dns                ClusterIP   10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP                28m     k8s-app=kube-dns
+kube-system    metrics-server          ClusterIP   10.43.112.70    <none>        443/TCP                               28m     k8s-app=metrics-server
+monitoring     prometheus              ClusterIP   10.43.196.196   <none>        9090/TCP                              4m48s   app=prometheus
+phantom-eval   cartservice             ClusterIP   10.43.47.246    <none>        7070/TCP                              9m50s   app=cartservice
+phantom-eval   emailservice            ClusterIP   10.43.60.134    <none>        8080/TCP                              9m50s   app=emailservice
+phantom-eval   phantom-sink            ClusterIP   10.43.138.29    <none>        8443/TCP,4445/TCP,4446/TCP,8080/TCP   9m50s   app=phantom-sink
+phantom-eval   recommendationservice   ClusterIP   10.43.59.27     <none>        8080/TCP                              9m50s   app=recommendationservice
+phantom        phantom-api-gateway     ClusterIP   10.43.151.8     <none>        8080/TCP                              9m39s   app=phantom-api-gateway
+phantom        phantom-causal-engine   ClusterIP   10.43.254.149   <none>        8080/TCP,9090/TCP                     9m39s   app=phantom-causal-engine
+phantom        phantom-ebpf-agent      ClusterIP   10.43.18.210    <none>        9101/TCP                              9m38s   app=phantom-ebpf-agent
+phantom        phantom-postgres        ClusterIP   10.43.176.217   <none>        5432/TCP                              9m57s   app=phantom-postgres
+phantom        phantom-redis           ClusterIP   10.43.15.253    <none>        6379/TCP                              9m57s   app=phantom-redis
+phantom        phantom-sbom-service    ClusterIP   10.43.132.125   <none>        8080/TCP                              9m39s   app=phantom-sbom-service

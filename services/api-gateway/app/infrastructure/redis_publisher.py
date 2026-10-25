@@ -18,6 +18,7 @@ from typing import Any
 
 import redis.asyncio as aioredis
 import structlog
+from phantom_core.models.causal_event import CAUSAL_EVENT_STREAM, CausalEventV1
 
 log: structlog.BoundLogger = structlog.get_logger(__name__)
 
@@ -26,7 +27,7 @@ log: structlog.BoundLogger = structlog.get_logger(__name__)
 # ---------------------------------------------------------------------------
 
 # Redis Stream names
-_STREAM_BDG_MUTATIONS = "phantom:bdg:mutations"
+_STREAM_BDG_MUTATIONS = CAUSAL_EVENT_STREAM
 _STREAM_ATTRIBUTION_JOBS = "phantom:attribution:jobs"
 _STREAM_REPORT_JOBS = "phantom:report:jobs"
 
@@ -65,11 +66,13 @@ async def publish_graph_mutation_job(
     Returns:
         The Redis Stream message ID (e.g. ``"1700000000000-0"``).
     """
-    fields = {
+    event = CausalEventV1.model_validate({
+        **mutation_payload,
         "drift_event_id": str(drift_event_id),
-        "bdg_update_id": str(outbox_id),
-        "payload": json.dumps(mutation_payload, default=str),
-    }
+        "outbox_id": str(outbox_id),
+    })
+    fields = {"schema_version": event.schema_version,
+              "event": event.model_dump_json()}
     message_id: str = str(await redis_client.xadd(
         _STREAM_BDG_MUTATIONS,
         fields,  # type: ignore[arg-type]

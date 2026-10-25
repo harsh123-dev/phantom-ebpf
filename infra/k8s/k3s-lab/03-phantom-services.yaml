@@ -43,6 +43,21 @@ spec:
                 configMapKeyRef:
                   name: phantom-config
                   key: causal_engine_url
+            - name: PHANTOM_JWT_ISSUER
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-api-gateway-secret
+                  key: jwt_issuer
+            - name: PHANTOM_JWT_AUDIENCE
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-api-gateway-secret
+                  key: jwt_audience
+            - name: PHANTOM_JWKS_URI
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-api-gateway-secret
+                  key: jwks_uri
             - name: AUTH_BYPASS_ENABLED
               value: "true"
             - name: AUTH_BYPASS_TOKEN
@@ -104,6 +119,9 @@ spec:
             - name: health
               containerPort: 8080
               protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
           env:
             - name: DATABASE_URL
               valueFrom:
@@ -146,6 +164,9 @@ spec:
     - name: health
       port: 8080
       targetPort: health
+    - name: metrics
+      port: 9090
+      targetPort: metrics
 ---
 apiVersion: apps/v1
 kind: Deployment

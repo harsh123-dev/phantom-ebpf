@@ -89,9 +89,9 @@ def load_raw3_scenarios() -> list[ScenarioResult]:
         snaps = [
             MetricsSnapshot(
                 timestamp=datetime.fromisoformat(ms["timestamp"]),
-                cpu_usage_cores=ms.get("cpu_usage_cores", 0.0),
-                memory_rss_mb=ms.get("memory_rss_mb", 0.0),
-                event_lag_p95_ms=ms.get("event_lag_p95_ms", 0.0),
+                cpu_usage_cores=ms.get("cpu_usage_cores"),
+                memory_rss_mb=ms.get("memory_rss_mb"),
+                event_lag_p95_ms=ms.get("event_lag_p95_ms"),
                 phase=ms.get("phase", ""),
             )
             for ms in data.get("metrics_snapshots", [])

@@ -121,6 +121,18 @@ class TestF01_VerifiedExecToComponent:
         result = _mapper_with_a().map(f.event)
         assert result.image_digest == IMAGE_DIGEST_A
 
+    def test_inferred_path_does_not_become_positive_component_binding(self) -> None:
+        result = _mapper_with_a().map(F01_VerifiedExecutableToComponent().event)
+        payload = result.to_causal_binding_payload()
+        assert payload["binding_status"] == "insufficient_evidence"
+        assert payload["sbom_id"] == str(result.sbom_id)
+        assert payload["purl"] is None
+        assert payload["confidence"] is None
+        assert "inferred path evidence" in payload["reason"]
+        assert payload["image_digest"] == result.image_digest
+        assert payload["resolver_version"] == result.resolver_version
+        assert payload["evidence"]
+
 
 # ===========================================================================
 # F02 — Container known, no package-level evidence
@@ -148,6 +160,14 @@ class TestF02_ContainerKnownNoPackageEvidence:
         f = F02_ContainerKnownNoPackageEvidence()
         result = _mapper_with_a().map(f.event)
         assert len(result.unresolved_reason) > 0
+
+    def test_image_only_identity_is_insufficient_evidence_not_component_binding(self) -> None:
+        f = F02_ContainerKnownNoPackageEvidence()
+        payload = _mapper_with_a().map(f.event).to_causal_binding_payload()
+        assert payload["binding_status"] == "insufficient_evidence"
+        assert payload["purl"] is None
+        assert payload["confidence"] is None
+        assert payload["sbom_id"] is not None
 
 
 # ===========================================================================
@@ -182,6 +202,12 @@ class TestF04_AmbiguousTwoCandidates:
         f = F04_AmbiguousTwoCandidates()
         result = _mapper_with_a().map(f.event)
         assert result.status == MappingStatus.AMBIGUOUS
+
+    def test_ambiguous_mapping_never_serializes_selected_purl(self) -> None:
+        result = _mapper_with_a().map(F04_AmbiguousTwoCandidates().event)
+        payload = result.to_causal_binding_payload()
+        assert payload["binding_status"] == "ambiguous"
+        assert payload["purl"] is None
 
     def test_two_candidate_purls(self) -> None:
         f = F04_AmbiguousTwoCandidates()
@@ -295,6 +321,14 @@ class TestF08_MissingSbom:
         mapper = RuntimeToSbomMapper({IMAGE_DIGEST_A: SBOM_INDEX_A})
         result = mapper.map(f.event)
         assert "sbom" in result.unresolved_reason.lower() or "digest" in result.unresolved_reason.lower()
+
+    def test_missing_sbom_serializes_unbound_without_component_claim(self) -> None:
+        f = F08_MissingSbom()
+        result = RuntimeToSbomMapper({IMAGE_DIGEST_A: SBOM_INDEX_A}).map(f.event)
+        payload = result.to_causal_binding_payload()
+        assert payload["binding_status"] == "unbound"
+        assert payload["sbom_id"] is None
+        assert payload["purl"] is None
 
 
 # ===========================================================================

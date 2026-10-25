@@ -22,10 +22,11 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 from typing import Any, Literal
+import re
 
 import structlog
 from fastapi import APIRouter, HTTPException, Request, status
-from pydantic import AnyUrl, BaseModel, Field
+from pydantic import AnyUrl, BaseModel, Field, field_validator
 
 from app.application.use_cases.get_sbom import GetSbomQuery
 from app.application.use_cases.ingest_sbom import IngestSbomCommand
@@ -43,10 +44,20 @@ from app.domain.exceptions import (
     VerificationJobNotFoundError,
 )
 from app.interface.dependencies import (
+    ComponentRepoDep,
     EnqueueVerifyDep,
     GetSbomDep,
     GetVerifyDep,
     IngestSbomDep,
+    SbomRepoDep,
+)
+from app.domain.entities import VerificationStatus
+from app.domain.mapping import (
+    ContainerIdentity,
+    ProcessIdentity,
+    RuntimeEventRecord,
+    RuntimeToSbomMapper,
+    SbomIndex,
 )
 
 log: structlog.BoundLogger = structlog.get_logger(__name__)
@@ -110,6 +121,52 @@ class SbomVerificationRequestSchema(BaseModel):
     model_config = {"extra": "forbid"}
 
 
+class RuntimeBindingRequestSchema(BaseModel):
+    """Evidence required to resolve a runtime event against a verified SBOM."""
+
+    event_id: uuid.UUID
+    run_id: str = ""
+    tenant_id: uuid.UUID
+    event_type: str = Field(..., min_length=1, max_length=128)
+    observed_at: datetime
+    container_id: str = Field(..., min_length=1, max_length=256)
+    image_digest: str
+    pod_uid: str | None = None
+    namespace: str | None = None
+    workload_name: str | None = None
+    tgid: int = Field(..., ge=0)
+    pid_start_time_ns: int = Field(..., ge=0)
+    executable_path: str | None = None
+    executable_hash: str | None = None
+    comm: str | None = None
+    uid: int | None = None
+    resource_path: str | None = None
+    resource_hash: str | None = None
+
+    model_config = {"extra": "forbid"}
+
+    @field_validator("image_digest")
+    @classmethod
+    def _valid_image_digest(cls, value: str) -> str:
+        if not re.fullmatch(r"sha256:[0-9a-f]{64}", value):
+            raise ValueError("image_digest must be an immutable sha256 digest")
+        return value
+
+    @field_validator("observed_at")
+    @classmethod
+    def _aware_observed_at(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("observed_at must include a timezone")
+        return value
+
+    @field_validator("executable_hash")
+    @classmethod
+    def _valid_executable_hash(cls, value: str | None) -> str | None:
+        if value is not None and not re.fullmatch(r"(?:sha256:)?[0-9a-fA-F]{64}", value):
+            raise ValueError("executable_hash must be a SHA-256 digest")
+        return value
+
+
 class VerificationJobResponseSchema(BaseModel):
     """Response body for enqueue-verification endpoint."""
 
@@ -158,6 +215,99 @@ class ReadinessResponseSchema(BaseModel):
 # ---------------------------------------------------------------------------
 
 router = APIRouter()
+
+
+def _cyclonedx_file_inventory(document: dict[str, Any]) -> dict[str, list[str]]:
+    """Extract only explicit CycloneDX occurrence paths keyed by component ref."""
+    result: dict[str, list[str]] = {}
+    components = document.get("components", [])
+    if not isinstance(components, list):
+        return result
+    for component in components:
+        if not isinstance(component, dict):
+            continue
+        purl = component.get("purl")
+        evidence = component.get("evidence")
+        occurrences = evidence.get("occurrences") if isinstance(evidence, dict) else None
+        if not isinstance(purl, str) or not isinstance(occurrences, list):
+            continue
+        for occurrence in occurrences:
+            location = occurrence.get("location") if isinstance(occurrence, dict) else None
+            path = location.get("path") if isinstance(location, dict) else location
+            if isinstance(path, str) and path.startswith("/") and ".." not in path.split("/"):
+                result.setdefault(purl, []).append(path)
+    return result
+
+
+@router.post("/internal/v1/runtime-bindings", tags=["internal"])
+async def map_runtime_binding(
+    body: RuntimeBindingRequestSchema,
+    sbom_repo: SbomRepoDep,
+    component_repo: ComponentRepoDep,
+) -> dict[str, Any]:
+    """Map runtime evidence using only a verified SBOM for the exact digest.
+
+    Multiple verified SBOM documents for one tenant and image are treated as
+    insufficient evidence: the service does not choose one arbitrarily.
+    """
+    records = await sbom_repo.get_by_image_digest(body.image_digest, body.tenant_id)
+    verified = [item for item in records if item.verification_status == VerificationStatus.VERIFIED]
+    indices: dict[str, SbomIndex] = {}
+    if len(verified) == 1:
+        sbom = verified[0]
+        components = await component_repo.get_by_sbom_id(sbom.sbom_id, body.tenant_id)
+        index = SbomIndex.build(
+            sbom,
+            components,
+            file_inventory=_cyclonedx_file_inventory(sbom.cyclonedx_document),
+        )
+        indices[body.image_digest] = index
+
+    runtime = RuntimeEventRecord(
+        event_id=body.event_id,
+        event_type=body.event_type,
+        event_time=body.observed_at,
+        process=ProcessIdentity(
+            tgid=body.tgid,
+            pid_start_time_ns=body.pid_start_time_ns,
+            container_id=body.container_id,
+            executable_path=body.executable_path,
+            executable_hash=body.executable_hash,
+            comm=body.comm,
+            uid=body.uid,
+        ),
+        container=ContainerIdentity(
+            container_id=body.container_id,
+            image_digest=body.image_digest,
+            pod_uid=body.pod_uid,
+            namespace=body.namespace,
+            workload_name=body.workload_name,
+        ),
+        resource_path=body.resource_path,
+        resource_hash=body.resource_hash,
+        tenant_id=str(body.tenant_id),
+        run_id=body.run_id,
+    )
+    result = RuntimeToSbomMapper(indices).map(runtime)
+    payload = result.to_causal_binding_payload()
+    if len(verified) > 1:
+        payload.update({
+            "binding_status": "insufficient_evidence",
+            "sbom_id": None,
+            "purl": None,
+            "confidence": None,
+            "candidate_purls": [],
+            "reason": "multiple verified SBOM documents match the image digest",
+        })
+    elif records and not verified:
+        payload.update({
+            "binding_status": "insufficient_evidence",
+            "sbom_id": None,
+            "purl": None,
+            "confidence": None,
+            "reason": "matching SBOM exists but has not passed verification",
+        })
+    return payload
 
 # ---------------------------------------------------------------------------
 # Probe endpoints (no auth required; cluster-internal only)

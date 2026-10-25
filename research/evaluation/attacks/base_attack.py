@@ -152,9 +152,9 @@ class AttackManifest:
         """
         out_dir.mkdir(parents=True, exist_ok=True)
         path = out_dir / f"{self.attack_id}.yaml"
-        self.oracle_manifest_path = str(path)
-        with path.open("w") as fh:
+        with path.open("x", encoding="utf-8") as fh:
             yaml.dump(self.to_dict(), fh, default_flow_style=False, sort_keys=True)
+        self.oracle_manifest_path = str(path)
         log.info("oracle_manifest.saved", extra={"path": str(path)})
         return path
 

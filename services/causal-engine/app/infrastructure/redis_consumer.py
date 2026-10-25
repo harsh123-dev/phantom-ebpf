@@ -50,7 +50,9 @@ from typing import Any, cast
 
 import redis.asyncio as aioredis
 import structlog
-from prometheus_client import Counter, Gauge
+from prometheus_client import Counter
+from phantom_core.models.causal_event import CAUSAL_EVENT_STREAM, CausalEventV1
+from phantom_core.metrics import REDIS_STREAM_LAG
 
 from app.application.use_cases import UpdateBdgUseCase
 
@@ -60,23 +62,20 @@ log: structlog.BoundLogger = structlog.get_logger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
-_STREAM_KEY: str = "phantom:drift-events"
+_STREAM_KEY: str = CAUSAL_EVENT_STREAM
 _CONSUMER_GROUP: str = "causal-engine-bdg-updater"
 _BLOCK_TIMEOUT_MS: int = 5000
 _BATCH_SIZE: int = 50
 _ACK_BATCH_SIZE: int = 100
 _MAX_DELIVERY_ATTEMPTS: int = 3
+_RECLAIM_MIN_IDLE_MS: int = 30_000
 _DLQ_STREAM_KEY: str = "phantom:dlq:graph.update"
 
 # ---------------------------------------------------------------------------
 # Prometheus metrics
 # ---------------------------------------------------------------------------
 
-_STREAM_LAG = Gauge(
-    "phantom_redis_stream_lag",
-    "Approximate number of unread messages in the causal-engine drift stream",
-    labelnames=["stream", "consumer_group"],
-)
+_STREAM_LAG = REDIS_STREAM_LAG
 
 _MESSAGES_PROCESSED = Counter(
     "phantom_redis_stream_messages_total",
@@ -173,45 +172,46 @@ class DriftEventRedisConsumer:
             True if processing succeeded, False on non-fatal error.
         """
         def _f(key: str) -> str:
-            return fields.get(key.encode(), b"").decode()
+            value = fields.get(key.encode(), b"")
+            return value.decode() if isinstance(value, bytes) else str(value)
 
         try:
-            event_id = uuid.UUID(_f("event_id"))
-            event_type = _f("event_type")
-            event_time_iso = _f("event_time_iso")
-            event_time = datetime.fromisoformat(event_time_iso).replace(
-                tzinfo=UTC
-            )
-
-            contract_violations_raw = _f("contract_violations")
-            contract_violations: list[dict[str, Any]] | None = None
-            if contract_violations_raw:
-                contract_violations = json.loads(contract_violations_raw)
-
-            event_attrs_raw = _f("event_attrs")
-            event_attrs: dict[str, Any] | None = None
-            if event_attrs_raw:
-                event_attrs = json.loads(event_attrs_raw)
+            if _f("schema_version") != "1.0":
+                raise ValueError("unsupported or missing causal event schema_version")
+            event = CausalEventV1.model_validate_json(_f("event"))
+            workload = event.workload
+            process = event.process
+            binding = event.sbom_binding.model_dump() if event.sbom_binding else {}
+            evidence = event.runtime_evidence
 
             await self._update_bdg.execute(
-                event_id=event_id,
-                event_type=event_type,
-                event_time=event_time,
-                tenant_id=_f("tenant_id"),
-                cluster=_f("cluster"),
-                namespace=_f("namespace"),
-                pod_uid=_f("pod_uid"),
-                container_id=_f("container_id"),
-                image_digest=_f("image_digest"),
-                tgid=int(_f("tgid") or 0),
-                pid_start_time_ns=int(_f("pid_start_time_ns") or 0),
-                identity_confidence=float(_f("identity_confidence") or 1.0),
-                binding_confidence=float(_f("binding_confidence") or 1.0),
-                collector_confidence=float(_f("collector_confidence") or 1.0),
-                binding_status=_f("binding_status") or "unresolved",
-                component_purl=_f("component_purl") or None,
-                contract_violations=contract_violations,
-                event_attrs=event_attrs,
+                event_id=event.event_id,
+                event_type=event.event_type,
+                event_time=event.observed_at,
+                tenant_id=str(event.tenant_id),
+                cluster=event.cluster,
+                namespace=str(workload["namespace"]),
+                pod_uid=str(workload["pod_uid"]),
+                container_id=str(workload["container_id"]),
+                image_digest=str(workload["image_digest"]),
+                tgid=int(process["tgid"]),
+                pid_start_time_ns=int(process["start_time_ns"]),
+                identity_confidence=1.0,
+                binding_confidence=float(binding["confidence"])
+                if binding.get("confidence") is not None else 0.0,
+                collector_confidence=1.0 if evidence.get("raw_event_digest") else 0.0,
+                binding_status=(
+                    {"bound": "resolved", "ambiguous": "ambiguous", "unbound": "missing",
+                     "insufficient_evidence": "missing"}.get(
+                        str(binding.get("binding_status")), "missing"
+                    )
+                ),
+                component_purl=binding.get("purl"),
+                contract_violations=event.contract_violations,
+                event_attrs={"process": process, "runtime_evidence": evidence,
+                             "sbom_binding": binding, "schema_version": event.schema_version,
+                             "drift_event_id": str(event.drift_event_id),
+                             "outbox_id": str(event.outbox_id)},
             )
 
         except Exception as exc:  # noqa: BLE001
@@ -236,7 +236,7 @@ class DriftEventRedisConsumer:
         self,
         message_id: str,
         fields: dict[bytes, bytes],
-    ) -> None:
+    ) -> bool:
         """Move a permanently failing message to the dead-letter stream.
 
         Writes the original fields plus metadata to the DLQ stream,
@@ -263,31 +263,50 @@ class DriftEventRedisConsumer:
                 message_id=message_id,
                 dlq_stream=_DLQ_STREAM_KEY,
             )
+            _MESSAGES_PROCESSED.labels(
+                stream=self._stream_key, result="dead_letter"
+            ).inc()
+            return True
         except Exception as exc:  # noqa: BLE001
             log.error(
                 "redis_consumer.dead_letter_failed",
                 message_id=message_id,
                 error=str(exc),
             )
-        _MESSAGES_PROCESSED.labels(
-            stream=self._stream_key, result="dead_letter"
-        ).inc()
+            _MESSAGES_PROCESSED.labels(
+                stream=self._stream_key, result="dead_letter_error"
+            ).inc()
+            return False
 
     async def _flush_acks(self) -> None:
         """Flush pending XACK acknowledgements to Redis."""
         if not self._pending_acks:
             return
         try:
-            await self._redis.xack(
+            requested = list(self._pending_acks)
+            acknowledged = await self._redis.xack(
                 self._stream_key,
                 self._consumer_group,
                 *self._pending_acks,
             )
+            if acknowledged != len(self._pending_acks):
+                log.warning("redis_consumer.ack_count_mismatch",
+                          requested=len(self._pending_acks), acknowledged=acknowledged)
+                still_pending: list[str] = []
+                for message_id in requested:
+                    pending = await self._redis.xpending_range(
+                        self._stream_key, self._consumer_group,
+                        min=message_id, max=message_id, count=1,
+                    )
+                    if pending:
+                        still_pending.append(message_id)
+                self._pending_acks = still_pending
+            else:
+                self._pending_acks.clear()
             log.debug(
                 "redis_consumer.acked",
                 count=len(self._pending_acks),
             )
-            self._pending_acks.clear()
         except Exception as exc:  # noqa: BLE001
             log.warning("redis_consumer.ack_error", error=str(exc))
 
@@ -304,7 +323,9 @@ class DriftEventRedisConsumer:
                 if isinstance(name, bytes):
                     name = name.decode()
                 if name == self._consumer_group:
-                    lag = group.get("lag", 0) or group.get("pending", 0)
+                    lag = group.get("lag")
+                    if lag is None:
+                        continue
                     _STREAM_LAG.labels(
                         stream=self._stream_key,
                         consumer_group=self._consumer_group,
@@ -368,18 +389,18 @@ class DriftEventRedisConsumer:
 
                         if attempts > _MAX_DELIVERY_ATTEMPTS:
                             # Already over threshold — dead-letter it now.
-                            await self._handle_dead_letter(msg_id_str, fields)
-                            self._pending_acks.append(msg_id_str)
-                            self._delivery_attempts.pop(msg_id_str, None)
+                            if await self._handle_dead_letter(msg_id_str, fields):
+                                self._pending_acks.append(msg_id_str)
+                                self._delivery_attempts.pop(msg_id_str, None)
                         else:
                             ok = await self._process_message(msg_id_str, fields)
                             if ok:
                                 self._pending_acks.append(msg_id_str)
                             elif attempts >= _MAX_DELIVERY_ATTEMPTS:
                                 # Failed on final allowed attempt → dead-letter.
-                                await self._handle_dead_letter(msg_id_str, fields)
-                                self._pending_acks.append(msg_id_str)
-                                self._delivery_attempts.pop(msg_id_str, None)
+                                if await self._handle_dead_letter(msg_id_str, fields):
+                                    self._pending_acks.append(msg_id_str)
+                                    self._delivery_attempts.pop(msg_id_str, None)
 
                         if len(self._pending_acks) >= _ACK_BATCH_SIZE:
                             await self._flush_acks()
@@ -400,39 +421,45 @@ class DriftEventRedisConsumer:
     async def _reclaim_pending(self) -> None:
         """Reclaim and reprocess pending (unacked) messages from the PEL.
 
-        Reads messages with XREADGROUP using "0" as the start ID to
-        fetch all pending messages this consumer previously read but
-        did not ACK. Applies the same dead-letter threshold.
+        XAUTOCLAIM transfers pending messages from prior consumer identities;
+        XREADGROUP with "0" only returns this consumer's own entries and loses
+        recovery when a pod hostname changes.
         """
         try:
-            messages = await self._redis.xreadgroup(
-                groupname=self._consumer_group,
-                consumername=self._consumer_name,
-                streams={self._stream_key: "0"},
+            _cursor, entries, _deleted = await self._redis.xautoclaim(
+                self._stream_key,
+                self._consumer_group,
+                self._consumer_name,
+                min_idle_time=_RECLAIM_MIN_IDLE_MS,
+                start_id="0-0",
                 count=_BATCH_SIZE,
             )
-            if not messages:
+            if not entries:
                 return
 
             count = 0
-            for _stream, message_list in messages:  # type: ignore[str-unpack]
-                for _raw_entry in message_list:  # type: ignore[union-attr]
-                    entry = cast(tuple[str, dict[bytes, bytes]], _raw_entry)
-                    message_id, fields = entry
-                    msg_id_str = (
-                        message_id.decode()
-                        if isinstance(message_id, bytes)
-                        else message_id
+            for raw_entry in entries:
+                message_id, fields = cast(tuple[str, dict[bytes, bytes]], raw_entry)
+                msg_id_str = message_id.decode() if isinstance(message_id, bytes) else message_id
+                ok = await self._process_message(msg_id_str, fields)
+                if ok:
+                    self._pending_acks.append(msg_id_str)
+                else:
+                    pending = await self._redis.xpending_range(
+                        self._stream_key, self._consumer_group,
+                        min=msg_id_str, max=msg_id_str, count=1,
                     )
-                    ok = await self._process_message(msg_id_str, fields)
-                    if ok:
-                        self._pending_acks.append(msg_id_str)
+                    deliveries = int(pending[0].get("times_delivered", 1)) if pending else 1
+                    if deliveries >= _MAX_DELIVERY_ATTEMPTS:
+                        if await self._handle_dead_letter(msg_id_str, fields):
+                            self._pending_acks.append(msg_id_str)
                     else:
-                        # During reclaim, dead-letter immediately on failure
-                        # to avoid infinite reprocessing loops on crash-loop bugs.
-                        await self._handle_dead_letter(msg_id_str, fields)
-                        self._pending_acks.append(msg_id_str)
-                    count += 1
+                        log.warning(
+                            "redis_consumer.reclaimed_message_still_pending",
+                            message_id=msg_id_str,
+                            deliveries=deliveries,
+                        )
+                count += 1
 
             await self._flush_acks()
             log.info("redis_consumer.reclaimed_pending", count=count)

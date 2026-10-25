@@ -1,0 +1,3 @@
+profile,planned_attack,planned_control,planned_total,attempted,succeeded,failed,inconclusive,status
+pilot,9,9,18,0,0,0,0,withheld_preflight
+extended,18,9,27,0,0,0,0,not_run

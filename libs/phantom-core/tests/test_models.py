@@ -265,16 +265,28 @@ class TestDriftEventIngestRequest:
             tenant_id=_UUID,
         )
 
+    def test_runtime_file_provenance_fields_are_optional_and_validated(self) -> None:
+        request = self._build_valid_request().model_dump(mode="json")
+        request["process"]["executable_hash"] = "sha256:" + "a" * 64
+        request["evidence"]["resource_path"] = "/usr/lib/example.so"
+        request["evidence"]["resource_hash"] = "b" * 64
+        parsed = DriftEventIngestRequest.model_validate(request)
+        assert parsed.process.executable_hash == "sha256:" + "a" * 64
+        assert parsed.evidence.resource_path == "/usr/lib/example.so"
+        assert parsed.evidence.resource_hash == "b" * 64
+        request["process"]["executable_hash"] = "not-a-digest"
+        with pytest.raises(ValidationError):
+            DriftEventIngestRequest.model_validate(request)
+
     def test_valid_request(self) -> None:
         """Construct a valid drift event ingest request."""
         req = self._build_valid_request()
         assert req.schema_version == "v1"
         assert len(req.violations) == 1
 
-    def test_empty_violations_rejected(self) -> None:
-        """violations list must have at least 1 item."""
-        with pytest.raises(ValidationError):
-            DriftEventIngestRequest(
+    def test_empty_violations_are_valid_without_an_independent_contract_finding(self) -> None:
+        """An event without a verified contract violation must remain non-alerting."""
+        request = DriftEventIngestRequest(
                 event_id=_UUID,
                 observed_at=_NOW,
                 node_name="node-1",
@@ -304,7 +316,8 @@ class TestDriftEventIngestRequest:
                 ),
                 agent_sequence=0,
                 tenant_id=_UUID,
-            )
+        )
+        assert request.violations == []
 
 
 # ---------------------------------------------------------------------------

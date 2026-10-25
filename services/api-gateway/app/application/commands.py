@@ -63,7 +63,8 @@ class IngestDriftEventCommand:
         redis_client: aioredis client.
     """
 
-    def __init__(self, pool: asyncpg.Pool, redis_client: aioredis.Redis) -> None:
+    def __init__(self, pool: asyncpg.Pool, redis_client: aioredis.Redis,
+                 sbom_client: Any | None = None) -> None:
         """Initialise with infrastructure dependencies.
 
         Args:
@@ -73,6 +74,98 @@ class IngestDriftEventCommand:
         self._repo = DriftEventRepository(pool)
         self._pool = pool
         self._redis = redis_client
+        self._sbom_client = sbom_client
+
+    async def _publish_outbox_record(self, bdg_update_id: uuid.UUID) -> bool:
+        """Publish one durable outbox item; failed attempts remain retryable."""
+        record = await self._repo.get_outbox_record(bdg_update_id)
+        if record is None or record["status"] == "published":
+            return record is not None
+        try:
+            message_id = await publish_graph_mutation_job(
+                self._redis,
+                record["drift_event_id"],
+                record["bdg_update_id"],
+                record["mutation_payload"],
+            )
+            await self._repo.mark_outbox_published(bdg_update_id, message_id)
+            return True
+        except Exception as exc:  # noqa: BLE001
+            try:
+                await self._repo.mark_outbox_failed(bdg_update_id, str(exc))
+            except Exception as db_exc:  # noqa: BLE001
+                log.error("ingest_drift_event.outbox_failure_record_failed",
+                          bdg_update_id=str(bdg_update_id), error=str(db_exc))
+            log.warning("ingest_drift_event.redis_publish_failed",
+                        bdg_update_id=str(bdg_update_id), error=str(exc))
+            return False
+
+    async def _resolve_runtime_binding(
+        self, event_id: uuid.UUID, request: dict[str, Any], tenant_id: uuid.UUID
+    ) -> dict[str, Any] | None:
+        """Resolve one event against the SBOM service or preserve explicit unknown."""
+        def as_dict(value: Any) -> dict[str, Any]:  # noqa: ANN401
+            return value if isinstance(value, dict) else value.model_dump()
+
+        process = as_dict(request["process"])
+        workload = as_dict(request["workload"])
+        evidence = as_dict(request["evidence"])
+        digest = workload.get("image_digest")
+        if not digest:
+            return None
+        fallback_reason = "SBOM mapping service was not available for this event"
+        container_id = workload.get("container_id")
+        if self._sbom_client is not None and container_id not in (None, "", "unknown"):
+            try:
+                observed_at = request["observed_at"]
+                mapped = await self._sbom_client.map_runtime_binding({
+                    "event_id": str(event_id),
+                    "run_id": str(evidence.get("run_id") or ""),
+                    "tenant_id": str(tenant_id),
+                    "event_type": request["event_type"],
+                    "observed_at": observed_at.isoformat() if isinstance(observed_at, datetime) else observed_at,
+                    "container_id": container_id,
+                    "image_digest": digest,
+                    "pod_uid": str(workload.get("pod_uid")) if workload.get("pod_uid") else None,
+                    "namespace": workload.get("namespace"),
+                    "workload_name": workload.get("pod_name"),
+                    "tgid": process["tgid"],
+                    "pid_start_time_ns": process["start_time_ns"],
+                    "executable_path": process.get("executable_path"),
+                    "executable_hash": process.get("executable_hash"),
+                    "comm": process.get("comm"),
+                    "uid": process.get("uid"),
+                    "resource_path": evidence.get("resource_path"),
+                    "resource_hash": evidence.get("resource_hash"),
+                })
+                return {
+                    "binding_status": mapped["binding_status"],
+                    "image_digest": mapped["image_digest"],
+                    "sbom_id": mapped.get("sbom_id"),
+                    "purl": mapped.get("purl"),
+                    "binding_confidence": mapped.get("confidence"),
+                    "resolver_version": mapped.get("resolver_version"),
+                    "mapping_method": mapped.get("method"),
+                    "evidence": mapped.get("evidence", []),
+                    "candidate_purls": mapped.get("candidate_purls", []),
+                    "mapping_reason": mapped.get("reason"),
+                }
+            except Exception as exc:  # noqa: BLE001
+                fallback_reason = f"SBOM mapping unavailable: {type(exc).__name__}"
+                log.warning("ingest_drift_event.sbom_mapping_unavailable",
+                            event_id=str(event_id), error=str(exc))
+        return {
+            "binding_status": "insufficient_evidence",
+            "image_digest": digest,
+            "sbom_id": None,
+            "purl": None,
+            "binding_confidence": None,
+            "resolver_version": "v1",
+            "mapping_method": "abstain",
+            "evidence": [],
+            "candidate_purls": [],
+            "mapping_reason": fallback_reason,
+        }
 
     async def execute(self, request: dict[str, Any], tenant_id: uuid.UUID) -> dict[str, Any]:
         """Execute the drift event ingestion transactional outbox algorithm.
@@ -99,6 +192,11 @@ class IngestDriftEventCommand:
         # Step 4 (pre-transaction fast path): idempotency check.
         existing = await self._repo.get_by_event_id(event_id, tenant_id)
         if existing:
+            outbox_id = existing.get("bdg_update_id")
+            delivery_ok = (
+                await self._publish_outbox_record(outbox_id)
+                if outbox_id else False
+            )
             log.info(
                 "ingest_drift_event.duplicate",
                 event_id=str(event_id),
@@ -109,6 +207,7 @@ class IngestDriftEventCommand:
                 "event_id": existing["event_id"],
                 "bdg_update_id": existing["bdg_update_id"],
                 "ingestion_status": "duplicate",
+                "causal_delivery_status": "published" if delivery_ok else "pending_or_unknown",
                 "received_at": existing["received_at"],
             }
 
@@ -126,16 +225,6 @@ class IngestDriftEventCommand:
             for v in request.get("violations", [])
         ]
 
-        mutation_payload = {
-            "drift_event_id": str(drift_event_id),
-            "event_id": str(event_id),
-            "tenant_id": str(tenant_id),
-            "event_type": request["event_type"],
-            "image_digest": wl.get("image_digest") if isinstance(wl, dict) else wl.image_digest,
-            "observed_at": str(request["observed_at"]),
-            "violations": violations,
-        }
-
         # Normalise nested models to dicts.
         def _d(obj: Any) -> dict[str, Any]:  # noqa: ANN401
             if isinstance(obj, dict):
@@ -145,6 +234,36 @@ class IngestDriftEventCommand:
         proc_d = _d(proc)
         wl_d = _d(wl)
         ev_d = _d(ev)
+        if binding is None:
+            binding = await self._resolve_runtime_binding(event_id, request, tenant_id)
+        binding_d = _d(binding) if binding else None
+        causal_binding = None
+        if binding_d:
+            causal_binding = {
+                "binding_status": binding_d["binding_status"],
+                "image_digest": binding_d["image_digest"],
+                "sbom_id": binding_d.get("sbom_id"),
+                "purl": binding_d.get("purl"),
+                "confidence": binding_d.get("binding_confidence")
+                if binding_d.get("binding_status") == "bound" else None,
+                "resolver_version": binding_d.get("resolver_version") or "",
+                "method": binding_d.get("mapping_method") or "",
+                "evidence": binding_d.get("evidence", []),
+                "candidate_purls": binding_d.get("candidate_purls", []),
+                "reason": binding_d.get("mapping_reason"),
+            }
+        mutation_payload = {
+            "event_id": str(event_id),
+            "tenant_id": str(tenant_id),
+            "event_type": request["event_type"],
+            "observed_at": request["observed_at"],
+            "cluster": wl_d["cluster_name"],
+            "workload": wl_d,
+            "process": proc_d,
+            "runtime_evidence": ev_d,
+            "sbom_binding": causal_binding,
+            "contract_violations": violations,
+        }
 
         # Steps 3–7: transactional INSERT.
         async with self._pool.acquire() as conn, conn.transaction():
@@ -191,10 +310,14 @@ class IngestDriftEventCommand:
                 container_id=wl_d["container_id"],
                 image_digest=wl_d["image_digest"],
                 service_account=wl_d.get("service_account"),
-                sbom_id=_d(binding)["sbom_id"] if binding else None,
-                purl=_d(binding)["purl"] if binding else None,
-                binding_confidence=_d(binding)["binding_confidence"] if binding else None,
-                binding_status=_d(binding)["binding_status"] if binding else None,
+                sbom_id=binding_d["sbom_id"] if binding_d and binding_d["binding_status"] == "bound" else None,
+                purl=binding_d["purl"] if binding_d and binding_d["binding_status"] == "bound" else None,
+                binding_confidence=binding_d["binding_confidence"] if binding_d and binding_d["binding_status"] == "bound" else None,
+                binding_status=(
+                    {"bound": "resolved", "ambiguous": "ambiguous", "unbound": "missing",
+                     "insufficient_evidence": "missing"}[binding_d["binding_status"]]
+                    if binding_d else None
+                ),
                 violations=violations,
                 violation_count=len(violations),
                 kernel_timestamp_ns=ev_d["kernel_timestamp_ns"],
@@ -222,11 +345,8 @@ class IngestDriftEventCommand:
 
         # Step 8: Publish to Redis (after durable commit, at-least-once).
         received_at = datetime.now(tz=UTC)  # used in fan-out payload below
+        delivery_ok = await self._publish_outbox_record(bdg_update_id)
         try:
-            redis_message_id = await publish_graph_mutation_job(
-                self._redis, drift_event_id, bdg_update_id, mutation_payload
-            )
-            await self._repo.mark_outbox_published(bdg_update_id, redis_message_id)
             # Fan-out to WebSocket subscribers.
             # Compute derived fields once so they can be reused below.
             _max_sev = max(
@@ -262,12 +382,8 @@ class IngestDriftEventCommand:
                 },
             )
         except Exception as exc:
-            # Redis is best-effort after commit. Log and continue.
-            log.warning(
-                "ingest_drift_event.redis_publish_failed",
-                drift_event_id=str(drift_event_id),
-                error=str(exc),
-            )
+            log.warning("ingest_drift_event.websocket_fanout_failed",
+                        drift_event_id=str(drift_event_id), error=str(exc))
 
         log.info(
             "ingest_drift_event.accepted",
@@ -282,6 +398,7 @@ class IngestDriftEventCommand:
             "event_id": event_id,
             "bdg_update_id": bdg_update_id,
             "ingestion_status": "accepted",
+            "causal_delivery_status": "published" if delivery_ok else "pending",
             "received_at": received_at,
         }
 

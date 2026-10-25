@@ -40,6 +40,9 @@ spec:
             - name: health
               containerPort: 8080
               protocol: TCP
+            - name: metrics
+              containerPort: 9101
+              protocol: TCP
           securityContext:
             privileged: true
           resources:
@@ -64,6 +67,11 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: PHANTOM_CLUSTER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: cluster_identity
             - name: PHANTOM_GATEWAY_URL
               valueFrom:
                 configMapKeyRef:
@@ -98,3 +106,17 @@ spec:
               port: 8080
             initialDelaySeconds: 15
             periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phantom-ebpf-agent
+  namespace: phantom
+spec:
+  type: ClusterIP
+  selector:
+    app: phantom-ebpf-agent
+  ports:
+    - name: metrics
+      port: 9101
+      targetPort: metrics

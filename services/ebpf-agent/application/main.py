@@ -18,15 +18,21 @@ Fixed root causes (2026-08-31):
 
 import asyncio
 import ctypes
+import hashlib
+import itertools
+import json
 import os
 import re
+import time
 import uuid
 from datetime import datetime, timezone
+from dataclasses import asdict
 from typing import Any
 
 import structlog
 from aiohttp import web
 from redis.asyncio import Redis
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 from infrastructure.api.dispatcher import ApiDispatcher
 from infrastructure.ebpf.event_parser import (
@@ -41,6 +47,7 @@ from infrastructure.ebpf.loader import (
     RingBufferManager,
 )
 from infrastructure.k8s.attributor import CgroupPodAttributor
+from domain.event_lag import event_delivery_lag_seconds
 
 log = structlog.get_logger(__name__)
 
@@ -54,6 +61,41 @@ _CONTAINER_ID_CACHE: dict[tuple[int, int, int], str | None] = {}
 
 # Asyncio queue between the C ring-buffer callback and the Python processor.
 event_queue: asyncio.Queue[ParsedEvent] = asyncio.Queue(maxsize=50000)
+
+# Measures kernel event timestamp to userspace ring-buffer callback entry.
+# bpf_ktime_get_ns() and time.monotonic_ns() share the node CLOCK_MONOTONIC
+# domain when the pod has no time-namespace offset (the k3s lab default).
+EVENT_DELIVERY_LAG_SECONDS = Histogram(
+    "phantom_event_delivery_lag_seconds",
+    "Time from kernel event timestamp to eBPF agent ring-buffer callback entry.",
+    buckets=(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0),
+)
+EVENT_DELIVERY_LAG_INVALID_TOTAL = Counter(
+    "phantom_event_delivery_lag_invalid_total",
+    "Events excluded from delivery-lag measurement due to invalid timestamps.",
+    labelnames=("reason",),
+)
+
+
+def _observe_event_delivery_lag(
+    kernel_timestamp_ns: int, callback_monotonic_ns: int | None = None
+) -> float | None:
+    """Observe kernel-to-callback lag if timestamps are valid in the shared monotonic domain.
+
+    ``kernel_timestamp_ns`` is emitted by ``bpf_ktime_get_ns``. The callback
+    timestamp is captured from ``time.monotonic_ns`` at callback entry. Zero
+    kernel timestamps and negative deltas are rejected and counted; no zero
+    sample is fabricated. The metric describes ring-buffer delivery only,
+    not API ingestion, detection latency, or end-to-end latency.
+    """
+    received_ns = callback_monotonic_ns if callback_monotonic_ns is not None else time.monotonic_ns()
+    lag_seconds, invalid_reason = event_delivery_lag_seconds(kernel_timestamp_ns, received_ns)
+    if invalid_reason is not None:
+        EVENT_DELIVERY_LAG_INVALID_TOTAL.labels(reason=invalid_reason).inc()
+        return None
+    assert lag_seconds is not None
+    EVENT_DELIVERY_LAG_SECONDS.observe(lag_seconds)
+    return lag_seconds
 
 # Namespaces the agent should forward events for.
 # Read from WATCH_NAMESPACES (comma-separated).  Empty → forward everything.
@@ -116,6 +158,7 @@ def rb_callback(ctx: Any, data: Any, size: int) -> int:  # noqa: ANN401
     stashes results in _CONTAINER_ID_CACHE, then enqueues the parsed event
     for async processing.
     """
+    callback_monotonic_ns = time.monotonic_ns()
     try:
         raw_bytes = ctypes.string_at(data, size)
         event = parse_event(raw_bytes)
@@ -123,6 +166,11 @@ def rb_callback(ctx: Any, data: Any, size: int) -> int:  # noqa: ANN401
         # Skip ring-buffer loss bookkeeping events.
         if event.header.event_type == EventType.LOSS:
             return 0
+
+        _observe_event_delivery_lag(
+            event.header.kernel_timestamp_ns,
+            callback_monotonic_ns=callback_monotonic_ns,
+        )
 
         # --- Read /proc synchronously NOW while the process is alive ---
         pid = event.header.pid
@@ -155,6 +203,10 @@ async def health_handler(request: web.Request) -> web.Response:
     return web.json_response({"status": "ok"})
 
 
+async def metrics_handler(request: web.Request) -> web.Response:
+    return web.Response(body=generate_latest(), headers={"Content-Type": CONTENT_TYPE_LATEST})
+
+
 # ---------------------------------------------------------------------------
 # Async event processor
 # ---------------------------------------------------------------------------
@@ -171,8 +223,7 @@ _EVENT_TYPE_MAP: dict[EventType, str] = {
     EventType.MODULE_LOAD: "module_load",
 }
 
-# Placeholder digest used when we cannot retrieve the real value.
-_ZERO_DIGEST = "sha256:" + "0" * 64
+_AGENT_SEQUENCE = itertools.count(1)
 
 
 async def event_processor(
@@ -195,6 +246,23 @@ async def event_processor(
             # Attribute workload identity.
             identity = await attributor.attribute(event.header.cgroup_id, container_id)
 
+            if (
+                identity.status.value != "resolved"
+                or not identity.pod_uid
+                or not identity.namespace
+                or not identity.container_name
+                or not identity.image_digest
+                or not container_id
+            ):
+                log.warning(
+                    "event_processor.identity_insufficient",
+                    event_id=f"{event.header.event_id_hi:016x}{event.header.event_id_lo:016x}",
+                    status=identity.status.value,
+                    has_image_digest=bool(identity.image_digest),
+                )
+                event_queue.task_done()
+                continue
+
             # Resolve executable_path for every event type.
             exec_path: str = getattr(event, "executable_path", "") or ""
             if not exec_path:
@@ -210,12 +278,11 @@ async def event_processor(
 
             # Observed string for the violation: use path for file events,
             # exec path for exec events, comm for everything else.
-            observed_str = (
-                getattr(event, "path", None)
-                or exec_path
-                or event.header.comm
-                or "unknown"
-            )
+            raw_serialized = json.dumps(
+                asdict(event), sort_keys=True, separators=(",", ":"),
+                default=lambda value: value.hex() if isinstance(value, bytes) else str(value),
+            ).encode()
+            raw_event_digest = "sha256:" + hashlib.sha256(raw_serialized).hexdigest()
 
             payload: dict[str, Any] = {
                 "schema_version": "v1",
@@ -230,39 +297,34 @@ async def event_processor(
                     "start_time_ns": event.header.pid_start_time_ns,
                     "comm": event.header.comm or "unknown",
                     "executable_path": exec_path,
+                    "executable_hash": None,
                     "uid": event.header.uid,
                     "gid": event.header.gid,
                 },
                 "workload": {
-                    "cluster_name": "phantom-eks",
+                    "cluster_name": os.environ.get("PHANTOM_CLUSTER_NAME", "unknown"),
                     "namespace": identity.namespace or "unknown",
                     "pod_name": identity.pod_name or "unknown",
-                    "pod_uid": str(identity.pod_uid) if identity.pod_uid else str(uuid.UUID(int=0)),
+                    "pod_uid": str(identity.pod_uid),
                     "container_name": identity.container_name or "unknown",
                     "container_id": (
                         f"containerd://{container_id}" if container_id else "unknown"
                     ),
-                    "image_digest": identity.image_digest or _ZERO_DIGEST,
+                    "image_digest": identity.image_digest,
                     "cgroup_id": event.header.cgroup_id,
-                    "service_account": "default",
+                    "service_account": None,
                 },
                 "identity_status": identity.status.value,
-                "violations": [
-                    {
-                        "violation_type": "unexpected_process_relation",
-                        "observed": observed_str,
-                        "severity": "high",
-                        "confidence": 0.99,
-                    }
-                ],
+                "violations": [],
                 "evidence": {
                     "kernel_timestamp_ns": event.header.kernel_timestamp_ns,
                     "cpu": event.header.cpu,
                     "architecture": "x86_64",
                     "event_loss_observed": False,
-                    "raw_event_digest": _ZERO_DIGEST,
+                    "raw_event_digest": raw_event_digest,
+                    "resource_path": getattr(event, "path", None),
                 },
-                "agent_sequence": 1,
+                "agent_sequence": next(_AGENT_SEQUENCE),
                 "tenant_id": tenant_id,
             }
 
@@ -331,11 +393,15 @@ async def async_main() -> None:
     # Health server
     app = web.Application()
     app.router.add_get("/healthz", health_handler)
+    app.router.add_get("/metrics", metrics_handler)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", 8080)
     await site.start()
     log.info("health_server.listening", port=8080)
+    metrics_site = web.TCPSite(runner, "0.0.0.0", 9101)
+    await metrics_site.start()
+    log.info("metrics_server.listening", port=9101)
 
     bpf_dir = "/agent/bpf"
     c_callback = RING_BUFFER_SAMPLE_FN(rb_callback)
@@ -358,6 +424,7 @@ async def async_main() -> None:
     except Exception as exc:  # noqa: BLE001
         log.exception("bpf_loader_error", error=str(exc))
     finally:
+        await metrics_site.stop()
         await runner.cleanup()
         await dispatcher.close()
         if redis_client:

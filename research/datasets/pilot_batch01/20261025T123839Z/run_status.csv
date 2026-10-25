@@ -1,0 +1,2 @@
+planned_runs,attempted_runs,injection_successes,injection_failures,complete_telemetry,partial_telemetry,missing_telemetry,verified_behavioral_outcomes,verified_contract_drift,phantom_alert_outcomes,status
+18,0,0,0,0,0,0,0,0,0,not_executed_environment_gate

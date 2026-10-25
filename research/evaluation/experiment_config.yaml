@@ -1,14 +1,10 @@
 # research/evaluation/experiment_config.yaml
 #
-# Sample reproducible experiment configuration for PHANTOM evaluation.
+# Executable experiment configuration loaded by run_all_scenarios.py.
 #
-# Usage:
-#   python research/evaluation/scenarios/run_all_scenarios.py \
-#       --config research/evaluation/experiment_config.yaml
-#
-# All field values here use the existing oracle scenario IDs from
-# research/evaluation/oracles/ and match the parameters in
-# research/evaluation/run_full_evaluation.sh.
+# This YAML is the source of truth for scenario membership, workload pairing,
+# repetitions, namespace, phase timing, and the output root. CLI options can
+# override documented values for a specific controlled run.
 #
 # To reproduce an exact run, commit this file and record the git SHA,
 # the PHANTOM image digest, and the Kubernetes version at run time.
@@ -44,8 +40,7 @@ recovery_duration_s: 120             # Phase 5: post-recovery observation
 repetitions: 3
 
 # -----------------------------------------------------------------------
-# Attack scenarios
-# (must match attack_id values in research/evaluation/oracles/*.yaml)
+# Attack scenarios in the runner's pilot profile (documentation only)
 # -----------------------------------------------------------------------
 attack_scenarios:
   - id: "xzutils-001"
@@ -54,6 +49,20 @@ attack_scenarios:
   - id: "dep-confusion-001"
     target_service: "emailservice"
     family: "dependency_confusion"
+  - id: "solarwinds-001"
+    target_service: "cartservice"
+    family: "build_tampering"
+
+extended_attack_scenarios:
+  - id: "proc-spawn-001"
+    target_service: "recommendationservice"
+    family: "unauthorized_process"
+  - id: "net-egress-001"
+    target_service: "cartservice"
+    family: "unauthorized_network_egress"
+  - id: "file-tamper-001"
+    target_service: "recommendationservice"
+    family: "file_integrity_violation"
 
 # -----------------------------------------------------------------------
 # Benign control scenarios
@@ -63,7 +72,7 @@ benign_scenarios:
     target_service: "recommendationservice"
     family: "benign_update"
   - id: "benign-load-001"
-    target_service: "recommendationservice"
+    target_service: "emailservice"
     family: "high_load"
   - id: "benign-restart-001"
     target_service: "cartservice"
@@ -72,14 +81,9 @@ benign_scenarios:
 # -----------------------------------------------------------------------
 # Output
 # -----------------------------------------------------------------------
-raw_output_dir: "research/datasets/raw"
+raw_output_dir: "research/datasets/pilot_batch01"
 tables_output_dir: "research/evaluation/results"
 skip_notebooks: true                 # set to false for full paper artifact build
-
-# -----------------------------------------------------------------------
-# Dry-run
-# -----------------------------------------------------------------------
-dry_run: false          # set to true to skip all kubectl/subprocess calls
 
 # -----------------------------------------------------------------------
 # Evaluation unit

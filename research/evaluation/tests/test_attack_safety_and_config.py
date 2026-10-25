@@ -331,33 +331,17 @@ def test_attack_class_enforces_safety_validation():
 # ===========================================================================
 
 
-def test_oracle_manifest_files_exist_and_validate():
-    """All oracle YAML files must exist and parse into valid AttackManifest objects."""
-    oracle_dir = _REPO_ROOT / "research" / "evaluation" / "oracles"
-    assert oracle_dir.exists(), "Oracle directory missing"
-
-    yaml_files = list(oracle_dir.glob("*.yaml")) + list((oracle_dir / "variants").glob("*.yaml"))
-    assert len(yaml_files) >= 9, f"Expected at least 9 oracle files, found {len(yaml_files)}"
-
-    for yf in yaml_files:
-        with yf.open("r", encoding="utf-8") as fh:
-            data = yaml.safe_load(fh)
-
-        # Validate core fields
-        assert "attack_id" in data
-        assert "attack_family" in data
-        assert "target_service" in data
-        assert "ground_truth_label" in data
-        assert data["ground_truth_label"] in (0, 1)
-        assert isinstance(data["expected_behavioral_changes"], list)
-        assert "recovery_steps" in data
-
-        # Check endpoint safety for attacks
-        if data["ground_truth_label"] == 1:
-            SafetyPreflight.check_control_endpoint(data["control_endpoint"])
-            SafetyPreflight.check_service(data["target_service"])
-
-
+def test_experiment_yaml_matrix_is_authoritative_and_well_formed():
+    """The configured matrix is executable metadata, not a separate oracle."""
+    path = _REPO_ROOT / "research" / "evaluation" / "experiment_config.yaml"
+    config = yaml.safe_load(path.read_text(encoding="utf-8"))
+    rows = config["attack_scenarios"] + config["extended_attack_scenarios"] + config["benign_scenarios"]
+    assert len(rows) == 9
+    assert len({row["id"] for row in rows}) == 9
+    assert all(row["target_service"] in ALLOWLISTED_SERVICES for row in rows)
+    assert set(row["id"] for row in config["attack_scenarios"]) == set(PILOT_SCENARIO_IDS) - {
+        row["id"] for row in config["benign_scenarios"]
+    }
 # ===========================================================================
 # 4. Decoupled Ground-Truth Dimensions
 # ===========================================================================
@@ -490,26 +474,22 @@ def test_default_pilot_dir_preserves_historical_datasets():
 
 
 def test_pilot_workload_pairing_alignment():
-    """Verify 1:1 microservice pairing between attack scenarios and benign controls."""
-    oracle_dir = _REPO_ROOT / "research" / "evaluation" / "oracles"
-
-    def _get_target_service(attack_id: str) -> str:
-        p = oracle_dir / f"{attack_id}.yaml"
-        with p.open("r", encoding="utf-8") as fh:
-            data = yaml.safe_load(fh)
-        return data["target_service"]
+    """Verify paired attack/control targets from the runner's YAML source."""
+    config = yaml.safe_load((_REPO_ROOT / "research/evaluation/experiment_config.yaml").read_text())
+    targets = {row["id"]: row["target_service"] for row in
+               config["attack_scenarios"] + config["benign_scenarios"]}
 
     # Pair 1: recommendationservice
-    assert _get_target_service("xzutils-001") == "recommendationservice"
-    assert _get_target_service("benign-update-001") == "recommendationservice"
+    assert targets["xzutils-001"] == "recommendationservice"
+    assert targets["benign-update-001"] == "recommendationservice"
 
     # Pair 2: emailservice
-    assert _get_target_service("dep-confusion-001") == "emailservice"
-    assert _get_target_service("benign-load-001") == "emailservice"
+    assert targets["dep-confusion-001"] == "emailservice"
+    assert targets["benign-load-001"] == "emailservice"
 
     # Pair 3: cartservice
-    assert _get_target_service("solarwinds-001") == "cartservice"
-    assert _get_target_service("benign-restart-001") == "cartservice"
+    assert targets["solarwinds-001"] == "cartservice"
+    assert targets["benign-restart-001"] == "cartservice"
 
 
 def test_static_manifest_labels_describe_expected_outcomes_only():

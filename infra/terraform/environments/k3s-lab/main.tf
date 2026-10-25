@@ -145,13 +145,15 @@ resource "aws_iam_instance_profile" "ssm" {
 # ---------------------------------------------------------------------------
 
 resource "tls_private_key" "lab" {
-  count     = var.key_name == "" ? 1 : 0
+  # SSM-only labs do not need an SSH credential. Avoid generating a private
+  # key into Terraform state or the working tree when SSM is enabled.
+  count     = var.key_name == "" && !var.enable_ssm ? 1 : 0
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
 resource "aws_key_pair" "generated" {
-  count      = var.key_name == "" ? 1 : 0
+  count      = var.key_name == "" && !var.enable_ssm ? 1 : 0
   key_name   = "${var.lab_name}-key"
   public_key = tls_private_key.lab[0].public_key_openssh
 
@@ -163,7 +165,7 @@ resource "aws_key_pair" "generated" {
 }
 
 resource "local_file" "private_key" {
-  count           = var.key_name == "" ? 1 : 0
+  count           = var.key_name == "" && !var.enable_ssm ? 1 : 0
   content         = tls_private_key.lab[0].private_key_pem
   filename        = "${path.module}/.ssh/phantom-lab-key.pem"
   file_permission = "0600"
@@ -179,7 +181,7 @@ resource "aws_instance" "k3s_lab" {
   subnet_id                   = tolist(data.aws_subnets.default.ids)[0]
   vpc_security_group_ids      = [aws_security_group.lab.id]
   iam_instance_profile        = var.enable_ssm ? aws_iam_instance_profile.ssm[0].name : null
-  key_name                    = var.key_name != "" ? var.key_name : aws_key_pair.generated[0].key_name
+  key_name                    = var.key_name != "" ? var.key_name : (var.enable_ssm ? null : aws_key_pair.generated[0].key_name)
   associate_public_ip_address = true
 
   root_block_device {
@@ -268,5 +270,12 @@ resource "aws_instance" "k3s_lab" {
     Project      = "PHANTOM"
     Environment  = "disposable-lab"
     AutoTeardown = "true"
+  }
+
+  lifecycle {
+    precondition {
+      condition     = var.enable_ssm || var.operator_ip != ""
+      error_message = "Enable SSM or provide an operator_ip so the disposable lab has a controlled administration path."
+    }
   }
 }

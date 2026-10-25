@@ -17,9 +17,9 @@ from __future__ import annotations
 import re
 import uuid
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
 from phantom_core.constants import (
     DIGEST_PATTERN,
@@ -32,7 +32,6 @@ from phantom_core.constants import (
     DRIFT_VIOLATION_CONFIDENCE_MAX,
     DRIFT_VIOLATION_CONFIDENCE_MIN,
     DRIFT_VIOLATIONS_MAX,
-    DRIFT_VIOLATIONS_MIN,
     SCHEMA_VERSION,
 )
 from phantom_core.models.common import _PhantomBaseModel
@@ -67,7 +66,7 @@ ViolationType = Literal[
     "rate_limit",
 ]
 
-BindingStatus = Literal["resolved", "ambiguous", "missing"]
+BindingStatus = Literal["bound", "ambiguous", "unbound", "insufficient_evidence"]
 
 Architecture = Literal["x86_64", "arm64"]
 
@@ -99,6 +98,14 @@ class ProcessIdentity(_PhantomBaseModel):
     comm: str = Field(..., min_length=1, max_length=DRIFT_COMM_MAX_LENGTH)
     executable_path: str = Field(..., min_length=1, max_length=DRIFT_EXECUTABLE_PATH_MAX_LENGTH)
     start_time_ns: int = Field(..., ge=0)
+    executable_hash: str | None = None
+
+    @field_validator("executable_hash")
+    @classmethod
+    def _check_executable_hash(cls, value: str | None) -> str | None:
+        if value is not None and not re.fullmatch(r"(?:sha256:)?[0-9a-fA-F]{64}", value):
+            raise ValueError("executable_hash must be a SHA-256 digest")
+        return value
 
 
 class WorkloadIdentity(_PhantomBaseModel):
@@ -152,14 +159,37 @@ class SbomBinding(_PhantomBaseModel):
         binding_status: Whether the binding was resolved, ambiguous, or missing.
     """
 
-    sbom_id: uuid.UUID
-    purl: str = Field(..., min_length=1, max_length=DRIFT_PURL_MAX_LENGTH)
-    binding_confidence: float = Field(
-        ...,
-        ge=DRIFT_BINDING_CONFIDENCE_MIN,
-        le=DRIFT_BINDING_CONFIDENCE_MAX,
-    )
+    sbom_id: uuid.UUID | None = None
+    purl: str | None = Field(default=None, min_length=1, max_length=DRIFT_PURL_MAX_LENGTH)
+    image_digest: str
+    binding_confidence: float = Field(0.0, ge=DRIFT_BINDING_CONFIDENCE_MIN, le=DRIFT_BINDING_CONFIDENCE_MAX)
     binding_status: BindingStatus
+    resolver_version: str | None = None
+    mapping_method: str | None = None
+    evidence: list[dict[str, Any]] = Field(default_factory=list)
+    candidate_purls: list[str] = Field(default_factory=list)
+    mapping_reason: str | None = None
+
+    @field_validator("image_digest")
+    @classmethod
+    def _check_binding_digest(cls, value: str) -> str:
+        if not re.fullmatch(DIGEST_PATTERN, value):
+            raise ValueError("binding image_digest must be a sha256 digest")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_binding_evidence(self) -> "SbomBinding":
+        if self.binding_status == "bound":
+            if (not self.sbom_id or not self.purl or self.binding_confidence <= 0
+                    or not self.resolver_version or not self.mapping_method or not self.evidence):
+                raise ValueError("bound component requires SBOM identity, PURL, resolver, method, and evidence")
+        elif self.purl is not None:
+            raise ValueError("non-bound component mapping cannot assert a PURL")
+        if self.binding_status != "bound" and not self.mapping_reason:
+            raise ValueError("non-bound component mapping requires a reason")
+        if self.binding_status == "ambiguous" and len(self.candidate_purls) < 2:
+            raise ValueError("ambiguous component mapping requires candidate PURLs")
+        return self
 
 
 class ContractViolation(_PhantomBaseModel):
@@ -202,6 +232,15 @@ class RuntimeEvidence(_PhantomBaseModel):
     event_loss_observed: bool
     correlation_id: uuid.UUID | None = None
     raw_event_digest: str
+    resource_path: str | None = None
+    resource_hash: str | None = None
+
+    @field_validator("resource_hash")
+    @classmethod
+    def _check_resource_hash(cls, value: str | None) -> str | None:
+        if value is not None and not re.fullmatch(r"(?:sha256:)?[0-9a-fA-F]{64}", value):
+            raise ValueError("resource_hash must be a SHA-256 digest")
+        return value
 
     @field_validator("raw_event_digest", mode="after")
     @classmethod
@@ -240,7 +279,7 @@ class DriftEventIngestRequest(_PhantomBaseModel):
         workload: Kubernetes workload identity.
         identity_status: Quality of the workload identity resolution.
         sbom_binding: Optional SBOM-to-component binding evidence.
-        violations: One or more contract violations; 1..64 items required.
+        violations: Independently evaluated contract violations; may be empty.
         evidence: Low-level runtime evidence from the eBPF agent.
         agent_sequence: Monotonically increasing agent-local sequence number; >= 0.
         tenant_id: Logical isolation key.
@@ -256,13 +295,19 @@ class DriftEventIngestRequest(_PhantomBaseModel):
     identity_status: IdentityStatus
     sbom_binding: SbomBinding | None = None
     violations: list[ContractViolation] = Field(
-        ...,
-        min_length=DRIFT_VIOLATIONS_MIN,
+        default_factory=list,
         max_length=DRIFT_VIOLATIONS_MAX,
     )
     evidence: RuntimeEvidence
     agent_sequence: int = Field(..., ge=0)
     tenant_id: uuid.UUID
+
+    @field_validator("observed_at")
+    @classmethod
+    def _observed_at_must_be_timezone_aware(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("observed_at must include a timezone")
+        return value
 
 
 class DriftEventRecord(_PhantomBaseModel):

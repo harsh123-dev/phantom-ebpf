@@ -476,18 +476,18 @@ Before executing any scenario manually:
 
 Benign controls test false positive rates (FPR) under normal operational events, matched 1:1 with corresponding attack scenarios on the same target microservices:
 
-1. **`benign-update-001` (Hash-Pinned Dependency Update)**:
+1. **`benign-update-001` (Harmless Deployment Metadata Update)**:
    - **Target Microservice**: `recommendationservice` (Matched control for `xzutils-001`).
-   - Legitimate security patch `lzmaffi@1.0.1` conforming to declared contract.
-   - Expected outcome: `Y_drift = 0`, `ground_truth_label = 0`.
+   - Apply a unique pod-template annotation, verify rollout and unchanged image references, then remove it during recovery. No package update is claimed.
+   - Contract-state ground truth remains unknown unless separately verified from a trusted source.
 2. **`benign-load-001` (High-Load Burst)**:
    - **Target Microservice**: `emailservice` (Matched control for `dep-confusion-001`).
-   - High request burst via k6 load generator (200 req/sec) without image or dependency changes.
-   - Expected outcome: `Y_drift = 0`, `ground_truth_label = 0`.
+   - Bounded 200-request HTTP burst through internal `emailservice`; verify run-token receipts in service logs. No image or dependency changes.
+   - Contract-state ground truth remains unknown unless separately verified from a trusted source.
 3. **`benign-restart-001` (Pod Reschedule / Rolling Restart)**:
    - **Target Microservice**: `cartservice` (Matched control for `solarwinds-001`).
    - Deleting pods to trigger ReplicaSet replacement under unchanged contracts.
-   - Expected outcome: `Y_drift = 0`, `ground_truth_label = 0`.
+   - Verify a replacement Pod reaches Ready with a different UID and unchanged image. Contract-state ground truth remains unknown unless separately verified.
 
 ---
 

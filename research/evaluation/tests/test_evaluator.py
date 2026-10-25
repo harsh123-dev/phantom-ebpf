@@ -39,6 +39,7 @@ from research.evaluation.metrics.evaluator import (
     _safe_percentile,
 )
 from research.evaluation.baselines.base_baseline import Detection
+from research.evaluation.scenarios.scenario_runner import MetricsSnapshot
 
 from .conftest import (
     _T0,
@@ -57,6 +58,29 @@ pytestmark = pytest.mark.unit
 
 def _evaluator() -> ScenarioEvaluator:
     return ScenarioEvaluator(detection_window_s=120.0)
+
+
+def test_missing_overhead_samples_remain_unmeasured(tp_attack_result):
+    tp_attack_result.metrics_snapshots = [
+        MetricsSnapshot(_t(10), None, None, None, "baseline"),
+        MetricsSnapshot(_t(20), None, None, None, "attack"),
+    ]
+    report = _evaluator().evaluate([tp_attack_result], {})[0]
+    assert report.overhead_status == "unmeasured"
+    assert report.cpu_overhead_pct is None
+    assert report.memory_overhead_mb is None
+    assert report.event_lag_p95_ms is None
+
+
+def test_unknown_contract_state_does_not_create_true_negative():
+    run = _make_benign_result()
+    run.scenario_label["ground_truth_status"] = "unknown_contract_state"
+    report = _evaluator().evaluate([run], {})[0]
+    assert report.status == "ground_truth_unavailable"
+    assert report.n_benign_scenarios == 0
+    assert report.fp is None
+    assert report.tn is None
+    assert report.fpr is None
 
 
 # ===========================================================================

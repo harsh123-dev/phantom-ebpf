@@ -1,0 +1,15 @@
+NAMESPACE      NAME                                      READY   STATUS    RESTARTS   AGE     IP           NODE                NOMINATED NODE   READINESS GATES
+kube-system    coredns-7cfb7bc9c7-98mkj                  1/1     Running   0          28m     10.42.0.4    ip-172-31-109-121   <none>           <none>
+kube-system    local-path-provisioner-77b9867795-t79bz   1/1     Running   0          28m     10.42.0.2    ip-172-31-109-121   <none>           <none>
+kube-system    metrics-server-6dc596dfb8-hb9sn           1/1     Running   0          28m     10.42.0.3    ip-172-31-109-121   <none>           <none>
+monitoring     prometheus-7fb8649465-78rnk               1/1     Running   0          4m17s   10.42.0.20   ip-172-31-109-121   <none>           <none>
+phantom-eval   cartservice-7958549c8f-v5wwx              1/1     Running   0          9m50s   10.42.0.9    ip-172-31-109-121   <none>           <none>
+phantom-eval   emailservice-fd75976b-rdbnz               1/1     Running   0          9m50s   10.42.0.8    ip-172-31-109-121   <none>           <none>
+phantom-eval   phantom-sink-56b4f68b5-9wvtq              1/1     Running   0          9m50s   10.42.0.10   ip-172-31-109-121   <none>           <none>
+phantom-eval   recommendationservice-5dc98bbcb9-4t4pp    1/1     Running   0          9m50s   10.42.0.7    ip-172-31-109-121   <none>           <none>
+phantom        phantom-api-gateway-84dd64878c-cprj9      1/1     Running   0          5m7s    10.42.0.17   ip-172-31-109-121   <none>           <none>
+phantom        phantom-causal-engine-84c6bd6d95-s4zrd    1/1     Running   0          9m39s   10.42.0.12   ip-172-31-109-121   <none>           <none>
+phantom        phantom-ebpf-agent-9h7x5                  1/1     Running   0          5m      10.42.0.18   ip-172-31-109-121   <none>           <none>
+phantom        phantom-postgres-57dd79788f-b7xlb         1/1     Running   0          9m57s   10.42.0.5    ip-172-31-109-121   <none>           <none>
+phantom        phantom-redis-64555c745-gzkt2             1/1     Running   0          9m57s   10.42.0.6    ip-172-31-109-121   <none>           <none>
+phantom        phantom-sbom-service-5d676cc84f-n6lx9     1/1     Running   0          9m39s   10.42.0.13   ip-172-31-109-121   <none>           <none>

@@ -22,6 +22,7 @@ This module only does I/O and caching.
 from __future__ import annotations
 
 import json
+import re
 import uuid
 from dataclasses import dataclass
 from enum import Enum
@@ -46,8 +47,16 @@ vs. k8s API load for rapidly rescheduled pods."""
 _CACHE_KEY_PREFIX: str = "phantom:attr:cgroup:"
 """Redis key prefix. Full key: phantom:attr:cgroup:<cgroup_id>"""
 
-_MAX_PODS_PER_CGROUP: int = 2
-"""If more than this many pods claim the same cgroup ID, we report ambiguous."""
+_MAX_PODS_PER_CGROUP: int = 1
+"""Any duplicate container identity match is ambiguous and must abstain."""
+
+
+def immutable_image_digest(image_id: str | None) -> str | None:
+    """Return an OCI digest only when the runtime reports an immutable sha256 ID."""
+    if not image_id:
+        return None
+    match = re.search(r"sha256:[0-9a-f]{64}(?:$|[^0-9a-f])", image_id)
+    return match.group(0)[:71] if match else None
 
 
 # ---------------------------------------------------------------------------
@@ -319,6 +328,9 @@ class CgroupPodAttributor:
                 binding_confidence=0.0,
             )
 
+        if not container_id:
+            return AttributionResult(cgroup_id=cgroup_id, status=AttributionStatus.MISSING)
+
         # Match pods by searching each pod's container IDs against the
         # cgroup_id. The actual mapping is maintained by the agent's
         # /proc scanner (see: infrastructure/k8s/cgroup_scanner.py).
@@ -335,7 +347,9 @@ class CgroupPodAttributor:
                 if cs.container_id and cs.state and cs.state.running:
                     # Match logic: if container_id is provided, check if it's a substring
                     # of cs.container_id (which is typically 'containerd://<id>')
-                    if container_id and container_id not in cs.container_id:
+                    observed_id = cs.container_id.rsplit("/", 1)[-1]
+                    requested_id = container_id.rsplit("/", 1)[-1]
+                    if observed_id != requested_id:
                         continue
                     
                     matches.append({
@@ -344,8 +358,7 @@ class CgroupPodAttributor:
                         "namespace": pod.metadata.namespace,
                         "container_name": cs.name,
                         "container_id": cs.container_id,
-                        "image": pod.status.container_statuses[0].image
-                        if pod.status.container_statuses else "",
+                        "image_digest": immutable_image_digest(cs.image_id),
                     })
 
         if not matches:
@@ -384,7 +397,7 @@ class CgroupPodAttributor:
             pod_name=m["pod_name"],
             namespace=m["namespace"],
             container_name=m["container_name"],
-            image_digest="",  # Filled by agent from pod status image_id field.
+            image_digest=m["image_digest"],
             purl=None,        # Filled by SBOM binding step.
             binding_confidence=0.7,  # Reduced until image digest is verified.
         )

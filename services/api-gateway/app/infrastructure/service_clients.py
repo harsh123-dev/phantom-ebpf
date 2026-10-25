@@ -153,6 +153,15 @@ class SbomServiceClient:
             raise ServiceUnavailableError("SBOM service is unreachable.") from exc
         return self._handle_response(resp, "ingest_sbom")
 
+    async def map_runtime_binding(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Resolve runtime evidence against tenant-scoped verified SBOM data."""
+        try:
+            resp = await self._client.post("/internal/v1/runtime-bindings", json=payload)
+        except (httpx.ConnectError, httpx.TimeoutException) as exc:
+            log.warning("service_client.sbom.runtime_mapping_failed", error=str(exc))
+            raise ServiceUnavailableError("SBOM service is unreachable.") from exc
+        return self._handle_response(resp, "map_runtime_binding")
+
     async def get_sbom(self, sbom_id: uuid.UUID, tenant_id: uuid.UUID) -> dict[str, Any]:
         """Fetch a single SBOM detail from the SBOM service.
 

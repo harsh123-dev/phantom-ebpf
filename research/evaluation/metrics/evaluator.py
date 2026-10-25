@@ -317,14 +317,29 @@ class ScenarioEvaluator:
         Returns:
             EvaluationReport for PHANTOM.
         """
-        attack_results = [r for r in scenario_results if r.ground_truth_label == 1]
-        benign_results = [r for r in scenario_results if r.ground_truth_label == 0]
+        unresolved_ground_truth = [
+            r for r in scenario_results
+            if (r.scenario_label or {}).get("ground_truth_status") == "unknown_contract_state"
+        ]
+        eligible_results = [
+            r for r in scenario_results
+            if (r.scenario_label or {}).get("ground_truth_status") != "unknown_contract_state"
+        ]
+        attack_results = [r for r in eligible_results if r.ground_truth_label == 1]
+        benign_results = [r for r in eligible_results if r.ground_truth_label == 0]
 
         valid_attack_results = [r for r in attack_results if not is_failed_injection(r)]
         failed_attack_results = [r for r in attack_results if is_failed_injection(r)]
 
-        tp = sum(1 for r in valid_attack_results if r.is_true_positive)
-        fn = sum(1 for r in valid_attack_results if not r.is_true_positive)
+        if valid_attack_results:
+            tp: int | None = sum(1 for r in valid_attack_results if r.is_true_positive)
+            fn: int | None = sum(1 for r in valid_attack_results if not r.is_true_positive)
+        elif unresolved_ground_truth and not eligible_results:
+            tp = None
+            fn = None
+        else:
+            tp = 0
+            fn = 0
         if benign_results:
             fp: int | None = sum(
                 1 for r in benign_results
@@ -349,31 +364,31 @@ class ScenarioEvaluator:
             if s.phase == "attack"
         ]
 
-        has_live_overhead = any(
-            s.cpu_usage_cores > 0.0 or s.memory_rss_mb > 0.0 or s.event_lag_p95_ms > 0.0
-            for s in (baseline_snaps + attack_snaps)
-        )
+        # Zero is not a credible live sample for a running agent's RSS or for
+        # its kernel-to-callback histogram. Older collectors serialized empty
+        # Prometheus query results as 0.0, so exclude those sentinel values.
+        baseline_cpu = [s.cpu_usage_cores for s in baseline_snaps if s.cpu_usage_cores is not None and s.cpu_usage_cores > 0]
+        attack_cpu = [s.cpu_usage_cores for s in attack_snaps if s.cpu_usage_cores is not None and s.cpu_usage_cores > 0]
+        baseline_memory = [s.memory_rss_mb for s in baseline_snaps if s.memory_rss_mb is not None and s.memory_rss_mb > 0]
+        attack_memory = [s.memory_rss_mb for s in attack_snaps if s.memory_rss_mb is not None and s.memory_rss_mb > 0]
+        attack_lag = [s.event_lag_p95_ms for s in attack_snaps if s.event_lag_p95_ms is not None and s.event_lag_p95_ms > 0]
 
-        if not has_live_overhead or not baseline_snaps or not attack_snaps:
-            cpu_overhead_pct = None
-            memory_overhead_mb = None
-            event_lag_p95 = None
-            overhead_status = "unmeasured"
-        else:
-            cpu_base = _safe_mean([s.cpu_usage_cores for s in baseline_snaps])
-            cpu_attack = _safe_mean([s.cpu_usage_cores for s in attack_snaps])
-            cpu_overhead_pct = (
-                100.0 * (cpu_attack - cpu_base) / cpu_base
-                if cpu_base > 0
-                else None
-            )
-            mem_base = _safe_mean([s.memory_rss_mb for s in baseline_snaps])
-            mem_attack = _safe_mean([s.memory_rss_mb for s in attack_snaps])
-            memory_overhead_mb = mem_attack - mem_base
-            event_lag_p95 = _safe_percentile(
-                [s.event_lag_p95_ms for s in attack_snaps], 95
-            )
-            overhead_status = "measured"
+        cpu_overhead_pct = None
+        if baseline_cpu and attack_cpu:
+            cpu_base = _safe_mean(baseline_cpu)
+            if cpu_base > 0:
+                cpu_overhead_pct = 100.0 * (_safe_mean(attack_cpu) - cpu_base) / cpu_base
+
+        memory_overhead_mb = None
+        if baseline_memory and attack_memory:
+            memory_overhead_mb = _safe_mean(attack_memory) - _safe_mean(baseline_memory)
+
+        event_lag_p95 = _safe_percentile(attack_lag, 95) if attack_lag else None
+        overhead_status = (
+            "measured"
+            if (baseline_cpu and attack_cpu) or (baseline_memory and attack_memory) or attack_lag
+            else "unmeasured"
+        )
 
         # Attribution accuracy (from scenario_label.top_attributed_purl if present).
         attribution_accuracy, attribution_exact, attribution_partial = (
@@ -405,7 +420,8 @@ class ScenarioEvaluator:
             memory_overhead_mb=memory_overhead_mb,
             event_lag_p95_ms=event_lag_p95,
             overhead_status=overhead_status,
-            status="evaluated",
+            status=("ground_truth_unavailable" if not eligible_results and unresolved_ground_truth else "evaluated"),
+            notes=(f"Excluded {len(unresolved_ground_truth)} run(s) with unverified contract state." if unresolved_ground_truth else ""),
             excluded_failed_injections=len(failed_attack_results),
         )
         report.attribution_accuracy = attribution_accuracy
@@ -442,8 +458,12 @@ class ScenarioEvaluator:
         Returns:
             EvaluationReport for this baseline.
         """
-        attack_results = [r for r in scenario_results if r.ground_truth_label == 1]
-        benign_results = [r for r in scenario_results if r.ground_truth_label == 0]
+        eligible_results = [
+            r for r in scenario_results
+            if (r.scenario_label or {}).get("ground_truth_status") != "unknown_contract_state"
+        ]
+        attack_results = [r for r in eligible_results if r.ground_truth_label == 1]
+        benign_results = [r for r in eligible_results if r.ground_truth_label == 0]
 
         valid_attack_results = [r for r in attack_results if not is_failed_injection(r)]
         failed_attack_results = [r for r in attack_results if is_failed_injection(r)]

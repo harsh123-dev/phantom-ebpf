@@ -1,0 +1,42 @@
+{
+  "region": "ap-south-1",
+  "terraform_destroy_plan": {
+    "adds": 0,
+    "changes": 0,
+    "destroys": 5,
+    "applyable": true,
+    "scope": "dedicated infra/terraform/environments/k3s-lab state only"
+  },
+  "terraform_apply": {
+    "added": 0,
+    "changed": 0,
+    "destroyed": 5,
+    "result": "success"
+  },
+  "resources": {
+    "instance_id": {
+      "id": "i-003c65aeee29735f0",
+      "final_state": "terminated"
+    },
+    "volume_id": {
+      "id": "vol-036bac9c0dc4f31bf",
+      "final_state": "deleted",
+      "type": "encrypted 80 GB gp3"
+    },
+    "security_group_id": {
+      "id": "sg-0c4ba611357357e03",
+      "final_state": "deleted"
+    },
+    "iam_role": "phantom-k3s-lab-ssm-role (deleted)",
+    "iam_instance_profile": "phantom-k3s-lab-instance-profile (deleted)",
+    "public_ipv4": "13.203.64.74 (released with instance termination)"
+  },
+  "verification": {
+    "tagged_phantom_volumes": 0,
+    "tagged_phantom_security_groups": 0,
+    "lab_role_present": false,
+    "terraform_managed_resources_remaining": 0,
+    "terminated_instance_record_remains_in_ec2_inventory": true
+  },
+  "ongoing_project_resource_charges": "none; accrued usage billing may still post"
+}

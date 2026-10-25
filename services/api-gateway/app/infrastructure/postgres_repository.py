@@ -353,7 +353,9 @@ class DriftEventRepository(_TimedRepository):
                 UPDATE graph_mutations_outbox
                 SET status = 'published',
                     published_at = NOW(),
-                    redis_message_id = $2
+                    redis_message_id = $2,
+                    attempt_count = attempt_count + 1,
+                    last_error = NULL
                 WHERE bdg_update_id = $1
                 """,
                 bdg_update_id,
@@ -370,6 +372,32 @@ class DriftEventRepository(_TimedRepository):
             "mark_outbox_published",
             self._do_mark_outbox_published(bdg_update_id, redis_message_id),
         )
+
+    async def get_outbox_record(self, bdg_update_id: uuid.UUID) -> dict[str, Any] | None:
+        """Load a durable outbox payload for at-least-once retry."""
+        async with self._pool.acquire() as conn:
+            row = await conn.fetchrow(
+                "SELECT bdg_update_id, drift_event_id, mutation_payload, status "
+                "FROM graph_mutations_outbox WHERE bdg_update_id = $1",
+                bdg_update_id,
+            )
+        if row is None:
+            return None
+        record = dict(row)
+        if isinstance(record["mutation_payload"], str):
+            record["mutation_payload"] = json.loads(record["mutation_payload"])
+        return record
+
+    async def mark_outbox_failed(self, bdg_update_id: uuid.UUID, error: str) -> None:
+        """Persist a failed delivery attempt without deleting the outbox row."""
+        async with self._pool.acquire() as conn:
+            await conn.execute(
+                "UPDATE graph_mutations_outbox SET status='failed', "
+                "attempt_count=attempt_count+1, last_error=$2 "
+                "WHERE bdg_update_id=$1 AND status <> 'published'",
+                bdg_update_id,
+                error[:2000],
+            )
 
     async def _do_update_event_outbox_id(
         self,

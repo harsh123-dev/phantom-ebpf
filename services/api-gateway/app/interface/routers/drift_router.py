@@ -76,9 +76,10 @@ async def ingest_drift_event(
 
     pool = request.app.state.db_pool
     redis = request.app.state.redis
-
-    command = IngestDriftEventCommand(pool, redis)
-    result = await command.execute(validated.model_dump(), principal.tenant_id)
+    from app.infrastructure.service_clients import SbomServiceClient
+    async with SbomServiceClient() as sbom_client:
+        command = IngestDriftEventCommand(pool, redis, sbom_client=sbom_client)
+        result = await command.execute(validated.model_dump(), principal.tenant_id)
 
     log.info(
         "drift_router.ingested",

@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-10-25T15:08:26.437217+00:00",
+  "phase": "preflight_smoke",
+  "cpu_usage_cores": 0.009415208775809593,
+  "memory_rss_mb": 69.7265625,
+  "event_lag_p95_ms": 32.96296296296295,
+  "raw": {}
+}

@@ -1,0 +1,31 @@
+Name:         isolate-phantom-eval-egress
+Namespace:    phantom-eval
+Created on:   2026-10-25 14:57:09 +0000 UTC
+Labels:       <none>
+Annotations:  <none>
+Spec:
+  PodSelector:     <none> (Allowing the specific traffic to all pods in this namespace)
+  Not affecting ingress traffic
+  Allowing egress traffic:
+    To Port: 53/UDP
+    To Port: 53/TCP
+    To:
+      NamespaceSelector: kubernetes.io/metadata.name=kube-system
+    ----------
+    To Port: 8443/TCP
+    To Port: 4445/TCP
+    To Port: 4446/TCP
+    To Port: 8080/TCP
+    To:
+      PodSelector: app=phantom-sink
+    ----------
+    To Port: 8080/TCP
+    To:
+      PodSelector: app=pypiserver-mirror
+    ----------
+    To Port: 80/TCP
+    To Port: 8080/TCP
+    To Port: 7070/TCP
+    To:
+      PodSelector: app in (cartservice,emailservice,recommendationservice)
+  Policy Types: Egress

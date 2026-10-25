@@ -249,6 +249,24 @@ class PostgresSbomRepository(SbomRepositoryPort):
             raise SbomNotFoundError(sbom_id=str(sbom_id))
         return _row_to_sbom(row)
 
+    async def get_by_image_digest(
+        self, image_digest: str, tenant_id: uuid.UUID
+    ) -> list[Sbom]:
+        """Return tenant-scoped SBOMs for an exact immutable image digest."""
+        try:
+            async with self._pool.acquire() as conn:
+                rows = await conn.fetch(
+                    "SELECT * FROM sboms WHERE image_digest = $1 AND tenant_id = $2 "
+                    "ORDER BY created_at, sbom_id",
+                    image_digest,
+                    tenant_id,
+                )
+        except asyncpg.PostgresError as exc:
+            raise SbomStorageError(
+                f"Failed to fetch SBOMs for image digest: {exc}"
+            ) from exc
+        return [_row_to_sbom(row) for row in rows]
+
     async def update_verification(self, sbom: Sbom) -> None:
         """Persist updated verification state for an existing SBOM.
 

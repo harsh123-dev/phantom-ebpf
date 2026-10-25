@@ -1,0 +1,2 @@
+timestamp_utc,scope,cpu_cores,memory_rss_mib,event_lag_p95_ms,event_lag_semantics
+2026-10-25T15:08:26.437217Z,harmless_preflight_smoke,0.009415208775809593,69.7265625,32.96296296296295,kernel_monotonic_to_agent_ring_buffer_callback_monotonic
