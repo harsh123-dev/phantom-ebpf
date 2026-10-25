@@ -1,0 +1,209 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phantom-api-gateway
+  namespace: phantom
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phantom-api-gateway
+  template:
+    metadata:
+      labels:
+        app: phantom-api-gateway
+    spec:
+      serviceAccountName: phantom-api-gateway
+      containers:
+        - name: api-gateway
+          image: phantom/api-gateway:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-api-gateway-secret
+                  key: database_url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-api-gateway-secret
+                  key: redis_url
+            - name: SBOM_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: sbom_service_url
+            - name: CAUSAL_ENGINE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: causal_engine_url
+            - name: AUTH_BYPASS_ENABLED
+              value: "true"
+            - name: AUTH_BYPASS_TOKEN
+              value: "dev-bypass-token-for-local-testing"
+            - name: CORS_ALLOW_ORIGINS
+              value: "*"
+            - name: LOG_LEVEL
+              value: "INFO"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phantom-api-gateway
+  namespace: phantom
+spec:
+  type: ClusterIP
+  selector:
+    app: phantom-api-gateway
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phantom-causal-engine
+  namespace: phantom
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phantom-causal-engine
+  template:
+    metadata:
+      labels:
+        app: phantom-causal-engine
+    spec:
+      serviceAccountName: phantom-causal-engine
+      containers:
+        - name: causal-engine
+          image: phantom/causal-engine:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: health
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-causal-engine-secret
+                  key: database_url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-causal-engine-secret
+                  key: redis_url
+            - name: HEALTH_PORT
+              value: "8080"
+            - name: LOG_LEVEL
+              value: "INFO"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phantom-causal-engine
+  namespace: phantom
+spec:
+  type: ClusterIP
+  selector:
+    app: phantom-causal-engine
+  ports:
+    - name: health
+      port: 8080
+      targetPort: health
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phantom-sbom-service
+  namespace: phantom
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phantom-sbom-service
+  template:
+    metadata:
+      labels:
+        app: phantom-sbom-service
+    spec:
+      serviceAccountName: phantom-sbom-service
+      containers:
+        - name: sbom-service
+          image: phantom/sbom-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: SBOM_SERVICE_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: phantom-sbom-service-secret
+                  key: database_url
+            - name: LOG_LEVEL
+              value: "INFO"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phantom-sbom-service
+  namespace: phantom
+spec:
+  type: ClusterIP
+  selector:
+    app: phantom-sbom-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP

@@ -1,0 +1,38 @@
+# services/causal-engine/requirements-causal-runtime.txt
+#
+# Compatible causal runtime dependencies for PHANTOM (Python 3.12).
+#
+# Resolved Incompatibilities:
+# 1. dowhy==0.11.1 requires Python <3.12 (incompatible with Python >=3.12).
+#    dowhy==0.12.0 adds support for Python >=3.8, <3.13.
+# 2. networkx>=3.4 deprecated/removed nx.algorithms.d_separated, which dowhy 0.12
+#    calls during backdoor identification. Pinned to networkx==3.3.
+# 3. pandas>=3.0 removed positional integer fallback on string-indexed Series
+#    (ser[0] raises KeyError: 0). DoWhy regression estimator accesses self.model.params[0].
+#    Pinned to pandas==2.2.2.
+# 4. gmpy2 native DLL crashes (Windows NTSTATUS 0xc0000139) on Python 3.14 are
+#    eliminated under Python 3.12 with sympy/scipy native wheels.
+
+# Core causal estimation
+dowhy==0.12.0
+networkx==3.3
+pandas==2.2.2
+numpy>=1.26.0
+scipy>=1.14.0
+scikit-learn>=1.5.0
+sympy>=1.10.1
+statsmodels>=0.14.0
+
+# PHANTOM framework dependencies
+pydantic>=2.7.4
+pydantic-settings>=2.3.3
+structlog>=24.2.0
+asyncpg>=0.29.0
+prometheus-client>=0.20.0
+jsonschema>=4.22.0
+fastapi>=0.111.0
+httpx>=0.27.0
+
+# Test runner
+pytest>=8.2.2
+pytest-asyncio>=0.23.7

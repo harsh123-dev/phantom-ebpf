@@ -1,0 +1,694 @@
+{
+  "schema_version": "v1.0.0",
+  "generated_at": "2026-10-24T13:27:16.655721+00:00",
+  "python_version": "3.14.6 | packaged by Anaconda, Inc. | (main, Jul  9 2026, 14:29:05) [MSC v.1942 64 bit (AMD64)]",
+  "dowhy_available": true,
+  "data_dir": "research\\datasets\\raw",
+  "total_runs_in_index": 6,
+  "runs": [
+    {
+      "report_id": "4a06d27a-33a5-405f-a754-c06adbdddedd",
+      "run_id": "20260823T201630Z_xzutils-001_rep1",
+      "scenario_id": "xzutils-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 1,
+      "evidence_record_count": 0,
+      "observations_built": 0,
+      "observations_excluded": 1,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 0 causal observation(s) available; minimum required is 10. Minimum technical guard: N >= 10 required to prevent rank-deficient regression matrices. Does not imply statistical power or identifiability.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260823T201630Z_xzutils-001_rep1",
+          "reason_code": "unknown_outcome",
+          "explanation": "Run '20260823T201630Z_xzutils-001_rep1': Outcome cannot be determined. Contract missing, ambiguous, incomplete, or unverified; outcome is unknown. Cannot attribute causal effect without ground-truth labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label.",
+          "missing_fields": [
+            "runtime_sbom_drift",
+            "verified_contract_drift"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260823T201630Z_xzutils-001_rep1",
+          "scenario_id": "xzutils-001",
+          "window_index": 0,
+          "window_start_iso": "2026-08-23T20:16:30.772190+00:00",
+          "window_end_iso": "2026-08-23T20:19:38.098034+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "unknown",
+          "outcome_label_source": "unverified_drift_telemetry",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": "unknown_outcome",
+          "window_id": "20260823T201630Z_xzutils-001_rep1_w0",
+          "event_refs": []
+        }
+      ],
+      "missing_data_summary": [
+        "runtime_sbom_drift",
+        "verified_contract_drift"
+      ],
+      "exclusion_reasons": [
+        "Run '20260823T201630Z_xzutils-001_rep1': Outcome cannot be determined. Contract missing, ambiguous, incomplete, or unverified; outcome is unknown. Cannot attribute causal effect without ground-truth labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label."
+      ]
+    },
+    {
+      "report_id": "0e0998ce-da56-40d1-ae61-94c01218e8ac",
+      "run_id": "20260823T201938Z_dep-confusion-001_rep1",
+      "scenario_id": "dep-confusion-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 1,
+      "evidence_record_count": 0,
+      "observations_built": 0,
+      "observations_excluded": 1,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 0 causal observation(s) available; minimum required is 10. Minimum technical guard: N >= 10 required to prevent rank-deficient regression matrices. Does not imply statistical power or identifiability.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260823T201938Z_dep-confusion-001_rep1",
+          "reason_code": "unknown_outcome",
+          "explanation": "Run '20260823T201938Z_dep-confusion-001_rep1': Outcome cannot be determined. Contract missing, ambiguous, incomplete, or unverified; outcome is unknown. Cannot attribute causal effect without ground-truth labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label.",
+          "missing_fields": [
+            "runtime_sbom_drift",
+            "verified_contract_drift"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260823T201938Z_dep-confusion-001_rep1",
+          "scenario_id": "dep-confusion-001",
+          "window_index": 0,
+          "window_start_iso": "2026-08-23T20:19:38.700366+00:00",
+          "window_end_iso": "2026-08-23T20:22:55.153598+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "unknown",
+          "outcome_label_source": "unverified_drift_telemetry",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": "unknown_outcome",
+          "window_id": "20260823T201938Z_dep-confusion-001_rep1_w0",
+          "event_refs": []
+        }
+      ],
+      "missing_data_summary": [
+        "runtime_sbom_drift",
+        "verified_contract_drift"
+      ],
+      "exclusion_reasons": [
+        "Run '20260823T201938Z_dep-confusion-001_rep1': Outcome cannot be determined. Contract missing, ambiguous, incomplete, or unverified; outcome is unknown. Cannot attribute causal effect without ground-truth labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label."
+      ]
+    },
+    {
+      "report_id": "90450d33-6e69-4c6b-9cb6-d98f37cdefcb",
+      "run_id": "20260823T202255Z_solarwinds-001_rep1",
+      "scenario_id": "solarwinds-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 1,
+      "evidence_record_count": 0,
+      "observations_built": 0,
+      "observations_excluded": 1,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 0 causal observation(s) available; minimum required is 10. Minimum technical guard: N >= 10 required to prevent rank-deficient regression matrices. Does not imply statistical power or identifiability.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260823T202255Z_solarwinds-001_rep1",
+          "reason_code": "unknown_outcome",
+          "explanation": "Run '20260823T202255Z_solarwinds-001_rep1': Outcome cannot be determined. Contract missing, ambiguous, incomplete, or unverified; outcome is unknown. Cannot attribute causal effect without ground-truth labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label.",
+          "missing_fields": [
+            "runtime_sbom_drift",
+            "verified_contract_drift"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260823T202255Z_solarwinds-001_rep1",
+          "scenario_id": "solarwinds-001",
+          "window_index": 0,
+          "window_start_iso": "2026-08-23T20:22:55.758373+00:00",
+          "window_end_iso": "2026-08-23T20:28:26.014452+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "unknown",
+          "outcome_label_source": "unverified_drift_telemetry",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": "unknown_outcome",
+          "window_id": "20260823T202255Z_solarwinds-001_rep1_w0",
+          "event_refs": []
+        }
+      ],
+      "missing_data_summary": [
+        "runtime_sbom_drift",
+        "verified_contract_drift"
+      ],
+      "exclusion_reasons": [
+        "Run '20260823T202255Z_solarwinds-001_rep1': Outcome cannot be determined. Contract missing, ambiguous, incomplete, or unverified; outcome is unknown. Cannot attribute causal effect without ground-truth labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label."
+      ]
+    },
+    {
+      "report_id": "07f97abc-9116-4c1a-89c3-3a1359157e69",
+      "run_id": "20260823T202826Z_benign-update-001_rep1",
+      "scenario_id": "benign-update-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 0,
+      "evidence_record_count": 0,
+      "observations_built": 0,
+      "observations_excluded": 1,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 0 causal observation(s) available; minimum required is 10. Minimum technical guard: N >= 10 required to prevent rank-deficient regression matrices. Does not imply statistical power or identifiability.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260823T202826Z_benign-update-001_rep1",
+          "reason_code": "unknown_outcome",
+          "explanation": "Run '20260823T202826Z_benign-update-001_rep1': Outcome cannot be determined. Contract missing, ambiguous, incomplete, or unverified; outcome is unknown. Cannot attribute causal effect without ground-truth labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label.",
+          "missing_fields": [
+            "runtime_sbom_drift",
+            "verified_contract_drift"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260823T202826Z_benign-update-001_rep1",
+          "scenario_id": "benign-update-001",
+          "window_index": 0,
+          "window_start_iso": "2026-08-23T20:28:26.611322+00:00",
+          "window_end_iso": "2026-08-23T20:31:27.410257+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "unknown",
+          "outcome_label_source": "unverified_drift_telemetry",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": "unknown_outcome",
+          "window_id": "20260823T202826Z_benign-update-001_rep1_w0",
+          "event_refs": []
+        }
+      ],
+      "missing_data_summary": [
+        "runtime_sbom_drift",
+        "verified_contract_drift"
+      ],
+      "exclusion_reasons": [
+        "Run '20260823T202826Z_benign-update-001_rep1': Outcome cannot be determined. Contract missing, ambiguous, incomplete, or unverified; outcome is unknown. Cannot attribute causal effect without ground-truth labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label."
+      ]
+    },
+    {
+      "report_id": "3f28352d-e950-4301-9c2a-c135d0ca7365",
+      "run_id": "20260823T203128Z_benign-load-001_rep1",
+      "scenario_id": "benign-load-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 0,
+      "evidence_record_count": 0,
+      "observations_built": 0,
+      "observations_excluded": 1,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 0 causal observation(s) available; minimum required is 10. Minimum technical guard: N >= 10 required to prevent rank-deficient regression matrices. Does not imply statistical power or identifiability.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260823T203128Z_benign-load-001_rep1",
+          "reason_code": "unknown_outcome",
+          "explanation": "Run '20260823T203128Z_benign-load-001_rep1': Outcome cannot be determined. Contract missing, ambiguous, incomplete, or unverified; outcome is unknown. Cannot attribute causal effect without ground-truth labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label.",
+          "missing_fields": [
+            "runtime_sbom_drift",
+            "verified_contract_drift"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260823T203128Z_benign-load-001_rep1",
+          "scenario_id": "benign-load-001",
+          "window_index": 0,
+          "window_start_iso": "2026-08-23T20:31:28.031177+00:00",
+          "window_end_iso": "2026-08-23T20:34:28.484446+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "unknown",
+          "outcome_label_source": "unverified_drift_telemetry",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": "unknown_outcome",
+          "window_id": "20260823T203128Z_benign-load-001_rep1_w0",
+          "event_refs": []
+        }
+      ],
+      "missing_data_summary": [
+        "runtime_sbom_drift",
+        "verified_contract_drift"
+      ],
+      "exclusion_reasons": [
+        "Run '20260823T203128Z_benign-load-001_rep1': Outcome cannot be determined. Contract missing, ambiguous, incomplete, or unverified; outcome is unknown. Cannot attribute causal effect without ground-truth labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label."
+      ]
+    },
+    {
+      "report_id": "04a0233d-3c6b-43f7-81fe-6a6bfad4d54d",
+      "run_id": "20260823T203429Z_benign-restart-001_rep1",
+      "scenario_id": "benign-restart-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 0,
+      "evidence_record_count": 0,
+      "observations_built": 0,
+      "observations_excluded": 1,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 0 causal observation(s) available; minimum required is 10. Minimum technical guard: N >= 10 required to prevent rank-deficient regression matrices. Does not imply statistical power or identifiability.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260823T203429Z_benign-restart-001_rep1",
+          "reason_code": "unknown_outcome",
+          "explanation": "Run '20260823T203429Z_benign-restart-001_rep1': Outcome cannot be determined. Contract missing, ambiguous, incomplete, or unverified; outcome is unknown. Cannot attribute causal effect without ground-truth labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label.",
+          "missing_fields": [
+            "runtime_sbom_drift",
+            "verified_contract_drift"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260823T203429Z_benign-restart-001_rep1",
+          "scenario_id": "benign-restart-001",
+          "window_index": 0,
+          "window_start_iso": "2026-08-23T20:34:29.086372+00:00",
+          "window_end_iso": "2026-08-23T20:37:29.543940+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "unknown",
+          "outcome_label_source": "unverified_drift_telemetry",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": "unknown_outcome",
+          "window_id": "20260823T203429Z_benign-restart-001_rep1_w0",
+          "event_refs": []
+        }
+      ],
+      "missing_data_summary": [
+        "runtime_sbom_drift",
+        "verified_contract_drift"
+      ],
+      "exclusion_reasons": [
+        "Run '20260823T203429Z_benign-restart-001_rep1': Outcome cannot be determined. Contract missing, ambiguous, incomplete, or unverified; outcome is unknown. Cannot attribute causal effect without ground-truth labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label."
+      ]
+    }
+  ],
+  "summary": {
+    "total_runs": 6,
+    "attack_runs": 3,
+    "benign_runs": 3,
+    "completed_runs": 6,
+    "failed_injection_runs": 0,
+    "observation_batches_sufficient_for_estimation": 0,
+    "preflight_passed_count": 0,
+    "estimation_attempted_count": 0,
+    "estimation_completed_count": 0,
+    "real_estimates_produced": 0,
+    "completed_attacks": 0,
+    "failed_injections": 0,
+    "collection_dropouts": 3,
+    "benign_count": 3,
+    "mapping_status_totals": {},
+    "abstention_reason_counts": {
+      "too_few_observations": 6
+    },
+    "missing_data_fields": [
+      "runtime_sbom_drift",
+      "verified_contract_drift"
+    ]
+  },
+  "data_quality": {
+    "total_runs": 6,
+    "completed_attacks": 0,
+    "failed_injections": 0,
+    "collection_dropouts": 3,
+    "benign_count": 3
+  },
+  "exclusions": [],
+  "metrics": {
+    "detector_name": "phantom",
+    "status": "evaluated",
+    "tpr": 0.0,
+    "tpr_ci_wilson": [
+      0.0,
+      0.5615
+    ],
+    "fpr": 0.0,
+    "precision": null,
+    "recall": 0.0,
+    "f1": null,
+    "mttd_mean": null,
+    "mttd_median": null,
+    "mttd_iqr": null,
+    "mttd_p95": null,
+    "mttd_ci_bootstrap": null,
+    "tp": 0,
+    "fp": 0,
+    "fn": 3,
+    "tn": 3,
+    "n_attack_scenarios": 3,
+    "n_benign_scenarios": 3,
+    "excluded_failed_injections": 0
+  },
+  "detection_metrics": {
+    "detector_name": "phantom",
+    "status": "evaluated",
+    "tpr": 0.0,
+    "tpr_ci_wilson": [
+      0.0,
+      0.5615
+    ],
+    "fpr": 0.0,
+    "precision": null,
+    "recall": 0.0,
+    "f1": null,
+    "mttd_mean": null,
+    "mttd_median": null,
+    "mttd_iqr": null,
+    "mttd_p95": null,
+    "mttd_ci_bootstrap": null,
+    "tp": 0,
+    "fp": 0,
+    "fn": 3,
+    "tn": 3,
+    "n_attack_scenarios": 3,
+    "n_benign_scenarios": 3,
+    "excluded_failed_injections": 0
+  },
+  "overhead": {
+    "status": "unmeasured",
+    "cpu_overhead_pct": null,
+    "memory_overhead_mb": null,
+    "event_lag_p95_ms": null
+  },
+  "baselines": {
+    "falco-default-rules": {
+      "status": "telemetry_unavailable",
+      "tpr": null,
+      "tpr_ci_wilson": null,
+      "fpr": null,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "mttd_mean_s": null,
+      "notes": "telemetry_unavailable"
+    },
+    "trivy-sbom-static": {
+      "status": "task_mismatch_and_telemetry_unavailable",
+      "tpr": null,
+      "tpr_ci_wilson": null,
+      "fpr": null,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "mttd_mean_s": null,
+      "notes": "task_mismatch_and_telemetry_unavailable"
+    },
+    "isolation-forest-syscall-frequency": {
+      "status": "telemetry_unavailable",
+      "tpr": null,
+      "tpr_ci_wilson": null,
+      "fpr": null,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "mttd_mean_s": null,
+      "notes": "telemetry_unavailable"
+    }
+  },
+  "detector_reports": [
+    {
+      "detector_name": "phantom",
+      "status": "evaluated",
+      "n_attack_scenarios": 3,
+      "n_benign_scenarios": 3,
+      "excluded_failed_injections": 0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 3,
+      "tn": 3,
+      "tpr": 0.0,
+      "tpr_ci_wilson": [
+        0.0,
+        0.5615
+      ],
+      "tpr_wilson_ci": [
+        0.0,
+        0.5615
+      ],
+      "fpr": 0.0,
+      "precision": null,
+      "recall": 0.0,
+      "f1": null,
+      "false_positives_per_hour": 0.0,
+      "mttd_mean_s": null,
+      "mttd_p50_s": null,
+      "mttd_median_s": null,
+      "mttd_iqr_s": null,
+      "mttd_p95_s": null,
+      "mttd_ci_bootstrap": null,
+      "mttd_values_s": [],
+      "overhead_status": "unmeasured",
+      "cpu_overhead_pct": null,
+      "memory_overhead_mb": null,
+      "event_lag_p95_ms": null,
+      "attribution_accuracy": null,
+      "attribution_exact": null,
+      "attribution_partial": null,
+      "brier_score": null,
+      "notes": ""
+    },
+    {
+      "detector_name": "falco-default-rules",
+      "status": "telemetry_unavailable",
+      "n_attack_scenarios": 3,
+      "n_benign_scenarios": 3,
+      "excluded_failed_injections": 0,
+      "tp": null,
+      "fp": null,
+      "fn": null,
+      "tn": null,
+      "tpr": null,
+      "tpr_ci_wilson": null,
+      "tpr_wilson_ci": null,
+      "fpr": null,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "false_positives_per_hour": null,
+      "mttd_mean_s": null,
+      "mttd_p50_s": null,
+      "mttd_median_s": null,
+      "mttd_iqr_s": null,
+      "mttd_p95_s": null,
+      "mttd_ci_bootstrap": null,
+      "mttd_values_s": [],
+      "overhead_status": "unmeasured",
+      "cpu_overhead_pct": null,
+      "memory_overhead_mb": null,
+      "event_lag_p95_ms": null,
+      "attribution_accuracy": null,
+      "attribution_exact": null,
+      "attribution_partial": null,
+      "brier_score": null,
+      "notes": "telemetry_unavailable"
+    },
+    {
+      "detector_name": "trivy-sbom-static",
+      "status": "task_mismatch_and_telemetry_unavailable",
+      "n_attack_scenarios": 3,
+      "n_benign_scenarios": 3,
+      "excluded_failed_injections": 0,
+      "tp": null,
+      "fp": null,
+      "fn": null,
+      "tn": null,
+      "tpr": null,
+      "tpr_ci_wilson": null,
+      "tpr_wilson_ci": null,
+      "fpr": null,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "false_positives_per_hour": null,
+      "mttd_mean_s": null,
+      "mttd_p50_s": null,
+      "mttd_median_s": null,
+      "mttd_iqr_s": null,
+      "mttd_p95_s": null,
+      "mttd_ci_bootstrap": null,
+      "mttd_values_s": [],
+      "overhead_status": "unmeasured",
+      "cpu_overhead_pct": null,
+      "memory_overhead_mb": null,
+      "event_lag_p95_ms": null,
+      "attribution_accuracy": null,
+      "attribution_exact": null,
+      "attribution_partial": null,
+      "brier_score": null,
+      "notes": "task_mismatch_and_telemetry_unavailable"
+    },
+    {
+      "detector_name": "isolation-forest-syscall-frequency",
+      "status": "telemetry_unavailable",
+      "n_attack_scenarios": 3,
+      "n_benign_scenarios": 3,
+      "excluded_failed_injections": 0,
+      "tp": null,
+      "fp": null,
+      "fn": null,
+      "tn": null,
+      "tpr": null,
+      "tpr_ci_wilson": null,
+      "tpr_wilson_ci": null,
+      "fpr": null,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "false_positives_per_hour": null,
+      "mttd_mean_s": null,
+      "mttd_p50_s": null,
+      "mttd_median_s": null,
+      "mttd_iqr_s": null,
+      "mttd_p95_s": null,
+      "mttd_ci_bootstrap": null,
+      "mttd_values_s": [],
+      "overhead_status": "unmeasured",
+      "cpu_overhead_pct": null,
+      "memory_overhead_mb": null,
+      "event_lag_p95_ms": null,
+      "attribution_accuracy": null,
+      "attribution_exact": null,
+      "attribution_partial": null,
+      "brier_score": null,
+      "notes": "telemetry_unavailable"
+    }
+  ],
+  "limitations": [
+    "DoWhy causal estimator is functional in this environment (3.14.6). However, no real-data causal estimates were produced because real experiment runs lack per-window drift labels and have too few observations (preflight gate G1 failed).",
+    "Total telemetry collection dropout in raw/ (2026-08-23): All 6 indexed runs in raw/ contain zero detections due to collector API client port-forward disconnection; lack of detections represents a telemetry collection dropout, NOT evidence of negative drift or true negative detector silence.",
+    "Zero benign controls in raw3 (N_benign = 0): False Positive Rate (FPR), Precision, and F1 score are mathematically undefined without negative-class controls and cannot be fabricated as zero.",
+    "Upstream identity resolution failure: 100% of recorded drift detections in raw3 (3,701/3,701) have pod_name='unknown', container_name='unknown', null sbom_id, null purl, and dummy sha256:000... image digests. Component-level causal attribution cannot be empirically established from raw telemetry.",
+    "Unmeasured Prometheus overhead: Resource metrics (cpu_usage_cores, memory_rss_mb, event_lag_p95_ms) all defaulted to 0.0 due to unhandled collection errors on query failure. True monitoring overhead is unmeasured, not zero.",
+    "Failed injection exclusions: 3 out of 9 runs in raw3 (all 3 repetitions of solarwinds-001) failed injection rollout (inject_ok=False) and were excluded from detection sensitivity (TPR) denominators per protocol.",
+    "Preflight Gate G1 software sanity guard: Sample size N < 10 failed preflight sanity check; causal estimation cleanly abstained with 'insufficient_evidence: too_few_observations' without bypassing technical software gates.",
+    "Per-window runtime_sbom_drift outcome labels do not exist. CausalObservation rows cannot be built with valid outcome values from the current dataset.",
+    "Baseline telemetry absence: Falco alert logs are empty, Trivy static scans represent point-in-time image vulnerability scans unlinked to runtime drift windows, and IsolationForest runtime anomaly streams were uncollected. Baseline metrics are recorded as telemetry_unavailable / NR."
+  ],
+  "claims_NOT_supported_by_this_data": [
+    "Detection rate (TPR / recall)",
+    "False positive rate (FPR)",
+    "Precision",
+    "F1 score",
+    "Mean time to detection (MTTD)",
+    "Causal attribution accuracy (CAA)",
+    "PCEPS Brier score",
+    "CPU/memory overhead (all metrics are zero in the dataset)",
+    "Real-data average treatment effect (ATE)",
+    "Any comparison to baseline detectors from this run batch"
+  ]
+}

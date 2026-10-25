@@ -1,0 +1,10 @@
+attack_id,event_positive_label,events_with_purl_and_sbom_binding,failed_injection,failure,first_event_mttd_s_recomputed,ground_truth_label,identity_status_counts,latency_match,raw_drift_records,run_id,source_file,stored_mttd_s,unique_drift_ids,valid_attack_run
+xzutils-001,True,0,False,,70.331969,1,"{""ambiguous"": 21}",True,239,20260905T223101Z_xzutils-001_rep1,20260905T223101Z_xzutils-001_rep1.json,70.331969,21,True
+xzutils-001,True,0,False,,6.349775,1,"{""ambiguous"": 36}",True,654,20260905T223752Z_xzutils-001_rep2,20260905T223752Z_xzutils-001_rep2.json,6.349775,36,True
+xzutils-001,True,0,False,,4.681537,1,"{""missing"": 4, ""ambiguous"": 32}",True,684,20260905T224442Z_xzutils-001_rep3,20260905T224442Z_xzutils-001_rep3.json,4.681537,36,True
+dep-confusion-001,True,0,False,,2.607243,1,"{""ambiguous"": 38}",True,720,20260905T225102Z_dep-confusion-001_rep1,20260905T225102Z_dep-confusion-001_rep1.json,2.607243,38,True
+dep-confusion-001,True,0,False,,7.87591,1,"{""ambiguous"": 36}",True,684,20260905T225804Z_dep-confusion-001_rep2,20260905T225804Z_dep-confusion-001_rep2.json,7.87591,36,True
+dep-confusion-001,True,0,False,,2.578247,1,"{""ambiguous"": 38}",True,720,20260905T230506Z_dep-confusion-001_rep3,20260905T230506Z_dep-confusion-001_rep3.json,2.578247,38,True
+solarwinds-001,False,0,True,inject() returned False,,1,{},,0,20260905T231139Z_solarwinds-001_rep1,20260905T231139Z_solarwinds-001_rep1.json,,0,False
+solarwinds-001,False,0,True,inject() returned False,,1,{},,0,20260905T231616Z_solarwinds-001_rep2,20260905T231616Z_solarwinds-001_rep2.json,,0,False
+solarwinds-001,False,0,True,inject() returned False,,1,{},,0,20260905T232054Z_solarwinds-001_rep3,20260905T232054Z_solarwinds-001_rep3.json,,0,False

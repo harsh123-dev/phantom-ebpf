@@ -15,6 +15,8 @@ Design contract:
 - Injection is idempotent: calling inject() twice must leave the pod
   in the same attacked state.
 - Recovery is idempotent: calling recover() on a clean pod must be safe.
+- Default execution mode is dry_run=True. Live execution requires
+  explicit allow_live_execution=True and passes all safety preflight gates.
 """
 
 from __future__ import annotations
@@ -30,6 +32,8 @@ from pathlib import Path
 from typing import Any
 
 import yaml  # PyYAML
+
+from research.evaluation.attacks.safety import SafetyCheckError, SafetyPreflight
 
 log = logging.getLogger(__name__)
 
@@ -49,16 +53,19 @@ ORACLE_DIR: Path = Path(__file__).resolve().parents[3] / "research" / "evaluatio
 class AttackManifest:
     """Oracle ground-truth descriptor for one attack scenario.
 
-    This dataclass is serialized to YAML before each run and constitutes
-    the independent ground-truth record against which all detector outputs
-    are compared. It must never be populated from PHANTOM output.
+    This dataclass is serialized to YAML before each run and describes the
+    expected scenario outcome. Static manifest labels describe expected scenario
+    outcomes only. Actual experimental ground truth must be assigned from
+    independent runtime and contract evidence after a run. Missing or ambiguous
+    evidence must remain unknown. Ground truth must never be populated from PHANTOM output.
 
     Attributes:
         attack_id: Unique stable identifier (e.g. 'xzutils-001').
         attack_family: Taxonomy label for the attack class.
             One of: 'supply_chain_backdoor', 'dependency_confusion',
-                    'build_pipeline_tampering', 'benign_update',
-                    'high_load', 'pod_restart'.
+                    'build_pipeline_tampering', 'unauthorized_process',
+                    'unauthorized_network_egress', 'file_integrity_violation',
+                    'benign_update', 'high_load', 'pod_restart'.
         target_service: Kubernetes Deployment/Service name (e.g.
             'recommendationservice').
         target_image: Docker image repository:tag of the attack image.
@@ -75,8 +82,10 @@ class AttackManifest:
             'unexpected_process_spawn', 'unexpected_network_connect',
             'unexpected_file_access', 'privilege_transition',
             'namespace_change', 'module_load'.
-        ground_truth_label: 1 = attack, 0 = benign. Set at manifest
-            construction; never updated after the scenario runs.
+        ground_truth_label: 1 = attack, 0 = benign. Expected scenario outcome
+            descriptor. Actual experimental ground truth Y_drift is determined
+            from post-run independent runtime and contract verification, remaining
+            UNKNOWN if verification is missing or ambiguous.
         control_endpoint: Beacon/sink endpoint (host:port or FQDN:port).
             Always localhost or cluster-internal for safety.
         recovery_steps: Ordered list of human-readable recovery actions,
@@ -166,6 +175,7 @@ class BaseAttack(ABC):
         kubectl_context: Optional kubectl context name. If None, the current
             context is used.
         dry_run: If True, log all commands without executing them.
+        allow_live_execution: Explicit confirmation flag required to exit dry-run mode.
     """
 
     manifest: AttackManifest
@@ -173,16 +183,42 @@ class BaseAttack(ABC):
     def __init__(
         self,
         kubectl_context: str | None = None,
-        dry_run: bool = False,
+        dry_run: bool = True,
+        allow_live_execution: bool = False,
     ) -> None:
         """Initialise the attack runner.
 
         Args:
             kubectl_context: kubectl context to use. None = current context.
-            dry_run: If True, print commands without executing.
+            dry_run: If True, print commands without executing (default: True).
+            allow_live_execution: Explicit opt-in flag required when dry_run=False.
         """
         self.kubectl_context = kubectl_context
         self.dry_run = dry_run
+        self.allow_live_execution = allow_live_execution
+
+    def validate_safety(self, namespace: str, service: str | None = None) -> None:
+        """Run safety preflight validation for this attack and target.
+
+        Args:
+            namespace: Kubernetes namespace.
+            service: Target service name (optional).
+
+        Raises:
+            SafetyCheckError: If any safety condition is violated.
+        """
+        target_svc = service or getattr(self.manifest, "target_service", None)
+        endpoint = getattr(self.manifest, "control_endpoint", None)
+        scenario_id = getattr(self.manifest, "attack_id", None)
+        SafetyPreflight.validate(
+            namespace=namespace,
+            service=target_svc,
+            endpoint=endpoint,
+            context=self.kubectl_context,
+            dry_run=self.dry_run,
+            allow_live_execution=self.allow_live_execution,
+            scenario_id=scenario_id,
+        )
 
     # ------------------------------------------------------------------ #
     # Abstract interface                                                   #
@@ -234,12 +270,24 @@ class BaseAttack(ABC):
     # Ground-truth labeling                                                #
     # ------------------------------------------------------------------ #
 
-    def label(self) -> dict[str, Any]:
+    def label(
+        self,
+        inject_ok: bool | None = None,
+        behavior_verified: bool | None = None,
+        contract_drift_verified: bool | None = None,
+        phantom_alerted: bool | None = None,
+    ) -> dict[str, Any]:
         """Return ground-truth metadata for dataset packaging.
 
         This is the dict written to ``labels.parquet`` for this scenario.
-        It is derived entirely from the manifest; it never reflects
-        PHANTOM output.
+        It is derived entirely from the manifest and oracle observations;
+        it never infers ground truth from PHANTOM alerts.
+
+        Args:
+            inject_ok: True if injection succeeded, False if failed.
+            behavior_verified: True if independent behavioral checks passed.
+            contract_drift_verified: True if independently confirmed contract violation.
+            phantom_alerted: True if PHANTOM fired detection alert.
 
         Returns:
             Dict matching the labels.parquet schema fields for this attack.
@@ -250,11 +298,16 @@ class BaseAttack(ABC):
             "target_service": self.manifest.target_service,
             "target_purl": self.manifest.target_component_purl,
             "clean_purl": self.manifest.clean_component_purl,
+            "expected_label": self.manifest.ground_truth_label,
             "label": self.manifest.ground_truth_label,
             "injection_time_offset_s": self.manifest.injection_time_offset_s,
             "expected_changes": self.manifest.expected_behavioral_changes,
             "detection_window_s": self.manifest.detection_window_s,
             "control_endpoint": self.manifest.control_endpoint,
+            "inject_ok": inject_ok,
+            "behavior_verified": behavior_verified,
+            "contract_drift_verified": contract_drift_verified,
+            "phantom_alerted": phantom_alerted,
         }
 
     # ------------------------------------------------------------------ #
@@ -280,6 +333,7 @@ class BaseAttack(ABC):
             CompletedProcess with stdout/stderr attributes.
 
         Raises:
+            SafetyCheckError: If live execution is attempted without proper safety authorization.
             subprocess.CalledProcessError: On non-zero exit code.
         """
         cmd = ["kubectl"]
@@ -292,6 +346,10 @@ class BaseAttack(ABC):
         if self.dry_run:
             log.info("kubectl.dry_run", extra={"cmd": " ".join(cmd)})
             return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+        # Enforce safety gate before real execution
+        SafetyPreflight.check_execution_permission(self.dry_run, self.allow_live_execution)
+        SafetyPreflight.check_context(self.kubectl_context)
 
         return subprocess.run(
             cmd,
@@ -364,6 +422,10 @@ class BaseAttack(ABC):
             label_selector: e.g. 'app=recommendationservice'.
             timeout_s: Maximum seconds to wait.
         """
+        if self.dry_run:
+            log.info("wait_for_pod_ready.dry_run", extra={"selector": label_selector})
+            return
+
         deadline = time.monotonic() + timeout_s
         while time.monotonic() < deadline:
             try:

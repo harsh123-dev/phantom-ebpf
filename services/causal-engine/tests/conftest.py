@@ -133,7 +133,7 @@ def sample_observations() -> list[CausalObservation]:
             outcome_value=outcome,
             covariates={
                 "workload_role": float(i % 3),
-                "namespace_risk": 0.5 if i < 20 else 0.8,
+                "namespace_risk": 0.5 if (i % 4 < 2) else 0.8,
                 "baseline_event_rate": 10.0 + i,
             },
         ))

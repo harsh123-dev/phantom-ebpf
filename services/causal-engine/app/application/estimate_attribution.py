@@ -21,12 +21,14 @@ Clean Architecture: imports from domain/ only; no infrastructure imports.
 
 from __future__ import annotations
 
+import math
 import uuid
 
 import structlog
 
 from app.domain.bdg import BehavioralDependencyGraph
 from app.domain.causal import construct_causal_model
+from app.domain.causal_validation import DEFAULT_CAUSAL_ASSUMPTIONS
 from app.domain.entities import (
     AttributionResult,
     AttributionStatus,
@@ -67,28 +69,35 @@ def compute_attribution_confidence(
     ate_ci_lower: float | None,
     ate_ci_upper: float | None,
     refutations: list[RefutationResult],
+    required_refuter_count: int | None = None,
     event_loss_rate: float = 0.0,
     identity_resolution_rate: float = 1.0,
     contract_verified: bool = True,
 ) -> float:
-    """Compute a composite attribution confidence score.
+    """Compute a composite heuristic diagnostic stability score in [0, 1].
 
-    Per handoff §6.4 line 26: ComputeAttributionConfidence uses
-    data quality, projection quality, estimate stability, and
-    refutation results.
+    Note: This is a diagnostic stability and data-quality index, NOT a
+    calibrated probability that an attribution is true. Passing sensitivity
+    analyses / refutations checks robustness against tested perturbations
+    under assumed ignorability; it does not establish empirical truth.
 
     Args:
         ate: Average Treatment Effect estimate.
         ate_ci_lower: Lower bound of ATE confidence interval.
         ate_ci_upper: Upper bound of ATE confidence interval.
         refutations: List of refutation results.
+        required_refuter_count: Expected number of refutations. If refutations
+            are missing or skipped, the score is penalized proportionally.
         event_loss_rate: Fraction of events lost (higher = lower confidence).
         identity_resolution_rate: Fraction of events with resolved identity.
         contract_verified: Whether the contract is cosign-verified.
 
     Returns:
-        Confidence score in [0, 1].
+        Diagnostic score in [0, 1]. Returns 0.0 if ATE is None or non-finite.
     """
+    if ate is None or not math.isfinite(ate):
+        return 0.0
+
     confidence = 1.0
 
     # Penalize for event loss.
@@ -107,8 +116,11 @@ def compute_attribution_confidence(
         if ci_width > 0.5:
             confidence *= max(0.3, 1.0 - ci_width)
 
-    # Penalize for failed refutations.
-    if refutations:
+    # Penalize for failed or omitted refutations.
+    if required_refuter_count is not None and required_refuter_count > 0:
+        passed_count = sum(1 for r in refutations if r.passed)
+        confidence *= passed_count / max(len(refutations), required_refuter_count)
+    elif refutations:
         passed_count = sum(1 for r in refutations if r.passed)
         confidence *= passed_count / len(refutations)
 
@@ -126,11 +138,12 @@ async def estimate_causal_attribution(
     treatment_spec: TreatmentSpec,
     outcome_spec: OutcomeSpec,
     covariates: list[CovariateSpec],
-    estimator: CausalEstimatorName,
+    estimator: CausalEstimatorName = "backdoor.linear_regression",
     window_count: int = 10,
     event_loss_rate: float = 0.0,
     identity_resolution_rate: float = 1.0,
     contract_verified: bool = True,
+    projection: TemporalDAGProjection | None = None,
 ) -> AttributionResult:
     """Execute the full causal attribution pipeline (Algorithm 4).
 
@@ -145,9 +158,11 @@ async def estimate_causal_attribution(
         event_loss_rate: Event loss rate for confidence adjustment.
         identity_resolution_rate: Identity resolution rate.
         contract_verified: Whether the contract is cosign-verified.
+        projection: Optional pre-constructed TemporalDAGProjection. If None,
+            projected from bdg via bdg.project_to_temporal_dag().
 
     Returns:
-        An AttributionResult with status=completed or not_identifiable.
+        An AttributionResult with status=completed, not_identifiable, or invalid_graph.
     """
     attribution_id = uuid.uuid4()
     bound_log = log.bind(
@@ -160,21 +175,28 @@ async def estimate_causal_attribution(
     covariate_names = [c.variable_name for c in covariates]
 
     # ---- Step 1: Project BDG to temporal DAG (§6.4 line 02) ----
-    bound_log.info("attribution.projecting_bdg")
-    projection = bdg.project_to_temporal_dag(
-        treatment_variable=treatment_name,
-        outcome_variable=outcome_name,
-        window_count=window_count,
-    )
+    if projection is None:
+        bound_log.info("attribution.projecting_bdg")
+        projection = bdg.project_to_temporal_dag(
+            treatment_variable=treatment_name,
+            outcome_variable=outcome_name,
+            window_count=window_count,
+        )
 
     # ---- Step 2: Check for cycles (§6.4 lines 03–04) ----
     if projection.treatment_or_outcome_in_cycle:
         bound_log.warning("attribution.cyclic_treatment_or_outcome")
         return AttributionResult(
             attribution_id=attribution_id,
-            status=AttributionStatus.NOT_IDENTIFIABLE,
+            status=AttributionStatus.INVALID_GRAPH,
             reason="cyclic_treatment_or_outcome",
+            explanation=(
+                "The treatment or outcome variable participates in an "
+                "unresolved cycle in the Behavioral Dependency Graph. "
+                "A DAG-based estimator cannot be applied to a cyclic graph."
+            ),
             graph_diagnostics=projection.diagnostics,
+            observation_count=len(observations),
         )
 
     # ---- Steps 3–5: Construct CausalModel ----
@@ -189,30 +211,46 @@ async def estimate_causal_attribution(
     except GraphCycleError as exc:
         return AttributionResult(
             attribution_id=attribution_id,
-            status=AttributionStatus.NOT_IDENTIFIABLE,
-            reason=f"cyclic_treatment_or_outcome: {exc}",
+            status=AttributionStatus.INVALID_GRAPH,
+            reason="invalid_graph_cycle",
+            explanation=f"SCM graph contains a cycle: {exc}",
             graph_diagnostics=projection.diagnostics,
+            observation_count=len(observations),
         )
     except InsufficientVariationError as exc:
         return AttributionResult(
             attribution_id=attribution_id,
-            status=AttributionStatus.NOT_IDENTIFIABLE,
-            reason=f"no_empirical_variation: {exc.variable}",
+            status=AttributionStatus.INSUFFICIENT_EVIDENCE,
+            reason="no_empirical_variation",
+            explanation=(
+                f"Variable '{exc.variable}' has no variation across the "
+                "observation window. Both treatment=0 and treatment=1 (or "
+                "outcome=0 and outcome=1) must be present."
+            ),
             graph_diagnostics=projection.diagnostics,
+            observation_count=len(observations),
         )
     except PositivityFailureError as exc:
         return AttributionResult(
             attribution_id=attribution_id,
-            status=AttributionStatus.NOT_IDENTIFIABLE,
-            reason=f"positivity_failure: {exc.details}",
+            status=AttributionStatus.INSUFFICIENT_EVIDENCE,
+            reason="positivity_failure",
+            explanation=(
+                f"Positivity check failed: {exc.details}. "
+                "Every covariate stratum must contain both treated and "
+                "control observations."
+            ),
             graph_diagnostics=projection.diagnostics,
+            observation_count=len(observations),
         )
     except CausalModelConstructionError as exc:
         return AttributionResult(
             attribution_id=attribution_id,
-            status=AttributionStatus.NOT_IDENTIFIABLE,
-            reason=f"model_construction_error: {exc.reason}",
+            status=AttributionStatus.INVALID_GRAPH,
+            reason="model_construction_error",
+            explanation=f"DoWhy CausalModel construction failed: {exc.reason}",
             graph_diagnostics=projection.diagnostics,
+            observation_count=len(observations),
         )
 
     model = handle.model
@@ -229,16 +267,42 @@ async def estimate_causal_attribution(
         return AttributionResult(
             attribution_id=attribution_id,
             status=AttributionStatus.NOT_IDENTIFIABLE,
-            reason=f"unidentified_effect: {exc}",
+            reason="unidentified_effect",
+            explanation=(
+                f"DoWhy identify_effect() raised: {exc}. "
+                "No valid backdoor adjustment set was found."
+            ),
             graph_diagnostics=projection.diagnostics,
+            observation_count=len(observations),
+            causal_assumptions=DEFAULT_CAUSAL_ASSUMPTIONS,
         )
 
-    if estimand is None:
+    is_identified = False
+    if estimand is not None:
+        estimands_dict = getattr(estimand, "estimands", {})
+        if estimator.startswith("backdoor"):
+            is_identified = estimands_dict.get("backdoor") is not None
+        elif estimator.startswith("iv"):
+            is_identified = estimands_dict.get("iv") is not None
+        elif estimator.startswith("frontdoor"):
+            is_identified = estimands_dict.get("frontdoor") is not None
+        else:
+            is_identified = any(v is not None for v in estimands_dict.values())
+
+    if not is_identified:
+        bound_log.warning("attribution.unidentified_effect")
         return AttributionResult(
             attribution_id=attribution_id,
             status=AttributionStatus.NOT_IDENTIFIABLE,
-            reason="unidentified_effect: no valid adjustment set",
+            reason="unidentified_backdoor_effect" if estimator.startswith("backdoor") else "unidentified_effect",
+            explanation=(
+                f"The causal effect is not identifiable via {estimator}: "
+                "no valid adjustment set of observed covariates blocks all confounding paths "
+                "under the specified causal graph and assumptions."
+            ),
             graph_diagnostics=projection.diagnostics,
+            observation_count=len(observations),
+            causal_assumptions=DEFAULT_CAUSAL_ASSUMPTIONS,
         )
 
     # ---- Step 7: Estimate effect (§6.4 lines 19–21) ----
@@ -256,10 +320,18 @@ async def estimate_causal_attribution(
         bound_log.error("attribution.estimation_failed", error=str(exc))
         return AttributionResult(
             attribution_id=attribution_id,
-            status=AttributionStatus.NOT_IDENTIFIABLE,
-            reason=f"estimation_failed: {exc}",
+            status=AttributionStatus.ESTIMATION_FAILED,
+            reason="estimation_failed",
+            explanation=(
+                f"The causal effect was identifiable, but the estimator "
+                f"'{estimator}' raised an exception: {exc}. "
+                "The ATE is unavailable. This is a numerical/model failure, "
+                "not an identification failure."
+            ),
             estimator_name=estimator,
             graph_diagnostics=projection.diagnostics,
+            observation_count=len(observations),
+            causal_assumptions=DEFAULT_CAUSAL_ASSUMPTIONS,
         )
 
     ate_value = float(estimate.value) if hasattr(estimate, "value") else None
@@ -310,9 +382,18 @@ async def estimate_causal_attribution(
             p_value: float | None = None
             if hasattr(refutation, "refutation_result"):
                 p_value = getattr(refutation.refutation_result, "p_value", None)
-            # Consider refutation passed if new effect is within 50% of original.
+            # Evaluate refutation pass condition:
+            # - For placebo refuters, the treatment is replaced by noise, so the
+            #   expected effect is zero (treatment effect vanishes).
+            # - For stability refuters (random common cause, data subset), the
+            #   new effect should remain stable within 50% of the original estimate.
             passed = True
-            if ate_value is not None and ate_value != 0:
+            if refuter_name == "placebo_treatment_refuter":
+                if p_value is not None:
+                    passed = p_value > 0.05 or abs(new_effect) < (0.2 * abs(ate_value) if ate_value else 0.1)
+                else:
+                    passed = abs(new_effect) < (0.2 * abs(ate_value) if ate_value else 0.1)
+            elif ate_value is not None and ate_value != 0:
                 passed = abs(new_effect - ate_value) / abs(ate_value) < 0.5
             refutations.append(RefutationResult(
                 refuter_name=refuter_name,
@@ -341,6 +422,7 @@ async def estimate_causal_attribution(
         ate_ci_lower=ci_lower,
         ate_ci_upper=ci_upper,
         refutations=refutations,
+        required_refuter_count=len(REQUIRED_REFUTERS),
         event_loss_rate=event_loss_rate,
         identity_resolution_rate=identity_resolution_rate,
         contract_verified=contract_verified,
@@ -365,4 +447,6 @@ async def estimate_causal_attribution(
         confidence=confidence,
         estimator_name=estimator,
         graph_diagnostics=projection.diagnostics,
+        observation_count=len(observations),
+        causal_assumptions=DEFAULT_CAUSAL_ASSUMPTIONS,
     )

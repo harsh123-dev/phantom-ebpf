@@ -1,0 +1,54 @@
+{
+  "source_directory": "D:\\project-1\\research\\datasets\\raw3",
+  "all_json_records": 9,
+  "valid_attack_runs": 6,
+  "failed_or_incomplete_runs_excluded": 3,
+  "failed_run_reasons": {
+    "20260905T231139Z_solarwinds-001_rep1": "inject() returned False",
+    "20260905T231616Z_solarwinds-001_rep2": "inject() returned False",
+    "20260905T232054Z_solarwinds-001_rep3": "inject() returned False"
+  },
+  "run_unit_attack_confusion_counts": {
+    "tp": 6,
+    "fn": 0,
+    "fp": null,
+    "tn": null
+  },
+  "attack_run_event_positive_fraction": 1.0,
+  "precision": null,
+  "f1": null,
+  "fpr": null,
+  "benign_control_runs": 0,
+  "latency_n": 6,
+  "latency_mean_s": 15.737446833333333,
+  "latency_median_s": 5.515656,
+  "latency_p95_linear_s": 54.71795425,
+  "latency_timestamps_match_stored_mttd": true,
+  "latency_values_s": [
+    70.331969,
+    6.349775,
+    4.681537,
+    2.607243,
+    7.87591,
+    2.578247
+  ],
+  "attack_families": {
+    "dependency_confusion": {
+      "valid_runs": 3,
+      "event_positive_runs": 3,
+      "failed_runs": 0
+    },
+    "supply_chain_backdoor": {
+      "valid_runs": 3,
+      "event_positive_runs": 3,
+      "failed_runs": 0
+    }
+  },
+  "claims_not_verifiable_from_raw3": [
+    "false-positive rate (no benign controls)",
+    "precision and F1 as full binary-detection metrics (no negative-class controls)",
+    "component-level causal attribution (detections have unresolved identity and no PURL/SBOM bindings)",
+    "PCEPS predictive performance and calibration (no PCEPS scores or labeled pre-compromise windows)",
+    "runtime overhead and event-loss rates (saved metric snapshots are all zero and no measurement provenance is included)"
+  ]
+}

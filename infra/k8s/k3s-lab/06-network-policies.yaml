@@ -1,0 +1,53 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: isolate-phantom-eval-egress
+  namespace: phantom-eval
+spec:
+  podSelector: {} # Applies to all pods in phantom-eval
+  policyTypes:
+    - Egress
+  egress:
+    # 1. Allow DNS resolution to kube-dns
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+    # 2. Allow egress strictly to the in-cluster phantom-sink on designated scenario ports
+    - to:
+        - podSelector:
+            matchLabels:
+              app: phantom-sink
+      ports:
+        - protocol: TCP
+          port: 8443
+        - protocol: TCP
+          port: 4445
+        - protocol: TCP
+          port: 4446
+        - protocol: TCP
+          port: 8080
+
+    # 3. Allow internal service-to-service RPC between victim workloads in phantom-eval
+    - to:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values: ["recommendationservice", "emailservice", "cartservice"]
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 7070
+
+    # NOTE: Any traffic to the public internet, cloud metadata (169.254.169.254),
+    # or external sinks is denied by default by this policy.

@@ -86,19 +86,34 @@ _DISPLAY_NAMES: dict[str, str] = {
 }
 
 
+def format_latex_cell(val: float | None, precision: int = 3, is_best: bool = False) -> str:
+    """Format a numeric value for LaTeX, rendering None as \\text{---} and bolding best."""
+    if val is None:
+        return r"\text{---}"
+    formatted = f"{val:.{precision}f}"
+    if is_best:
+        return rf"\textbf{{{formatted}}}"
+    return formatted
+
+
+def format_csv_cell(val: float | None, precision: int = 4) -> str:
+    """Format a numeric value for CSV, rendering None as '---'."""
+    if val is None:
+        return "---"
+    return f"{val:.{precision}f}"
+
+
 def _fmt(val: float | None, decimal: int = 3) -> str:
     """Format a metric value for the LaTeX table cell.
 
     Args:
-        val: Metric value or None (displayed as —).
+        val: Metric value or None (displayed as \\text{---}).
         decimal: Number of decimal places.
 
     Returns:
         Formatted string.
     """
-    if val is None:
-        return r"\text{---}"
-    return f"{val:.{decimal}f}"
+    return format_latex_cell(val, precision=decimal, is_best=False)
 
 
 def _bold(s: str) -> str:
@@ -138,6 +153,9 @@ def _find_best(
 ) -> float | None:
     """Find the best value for a metric field across all reports.
 
+    Excludes detectors with unavailable telemetry or unmeasured metrics.
+    Never treats unmeasured zeros or undefined fallbacks as best.
+
     Args:
         reports: List of EvaluationReport.
         field: Attribute name.
@@ -146,9 +164,19 @@ def _find_best(
     Returns:
         Best value or None if all values are None.
     """
+    valid_reports = [
+        r for r in reports
+        if not (hasattr(r, "status") and "unavailable" in getattr(r, "status", ""))
+    ]
+    if "overhead" in field or "cpu" in field or "memory" in field:
+        valid_reports = [
+            r for r in valid_reports
+            if getattr(r, "overhead_status", "measured") != "unmeasured"
+        ]
+
     vals = [
         getattr(r, field)
-        for r in reports
+        for r in valid_reports
         if getattr(r, field) is not None
     ]
     if not vals:
@@ -203,16 +231,21 @@ def generate_comparison_table(
             report.detector_name.replace("_", r"\_"),
         )
         cells: list[str] = [display]
+        is_unavailable = hasattr(report, "status") and "unavailable" in getattr(report, "status", "")
+        is_unmeasured_overhead = getattr(report, "overhead_status", "measured") == "unmeasured"
+
         for field, _, higher_is_better in cols:
             val = getattr(report, field)
-            formatted = _fmt(val, decimal=3)
             best_val = best.get(field)
-            if (
-                best_val is not None
+            is_field_overhead = ("overhead" in field or "cpu" in field or "memory" in field)
+            can_bold = not is_unavailable and not (is_field_overhead and is_unmeasured_overhead)
+            is_best = (
+                can_bold
+                and best_val is not None
                 and val is not None
                 and abs(val - best_val) < 1e-9
-            ):
-                formatted = _bold(formatted)
+            )
+            formatted = format_latex_cell(val, precision=3, is_best=is_best)
             cells.append(formatted)
         rows.append(" & ".join(cells) + r" \\")
 
@@ -246,6 +279,7 @@ def generate_csv(
     """Generate a CSV of all metric values for notebook processing.
 
     Includes all fields from EvaluationReport that are numeric or None.
+    Undefined or missing metrics render as '---'.
 
     Args:
         reports: List of EvaluationReport.
@@ -270,11 +304,11 @@ def generate_csv(
         row: dict[str, Any] = {"detector_name": report.detector_name}
         for field, _, _ in all_cols:
             val = getattr(report, field)
-            row[field] = f"{val:.4f}" if isinstance(val, float) else (str(val) if val is not None else "")
-        row["tp"] = report.tp
-        row["fp"] = report.fp
-        row["fn"] = report.fn
-        row["tn"] = report.tn
+            row[field] = f"{val:.4f}" if val is not None else ""
+        row["tp"] = report.tp if report.tp is not None else ""
+        row["fp"] = report.fp if report.fp is not None else ""
+        row["fn"] = report.fn if report.fn is not None else ""
+        row["tn"] = report.tn if report.tn is not None else ""
         row["n_attack_scenarios"] = report.n_attack_scenarios
         row["n_benign_scenarios"] = report.n_benign_scenarios
         writer.writerow(row)

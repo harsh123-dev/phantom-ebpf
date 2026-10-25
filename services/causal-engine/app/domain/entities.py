@@ -324,10 +324,30 @@ class CausalModelHandle:
 
 
 class AttributionStatus(str, Enum):
-    """Status of a causal attribution attempt."""
+    """Status of a causal attribution attempt.
+
+    Values are mutually exclusive and increasingly specific:
+
+    - ``COMPLETED``: An estimator was run and returned a numerical result.
+    - ``NOT_IDENTIFIABLE``: The effect is not identifiable under the supplied
+      causal graph and assumptions (DoWhy identification step failed, or the
+      treatment/outcome is in an unresolved BDG cycle).
+    - ``INSUFFICIENT_EVIDENCE``: Required telemetry, observations, or temporal
+      coverage is absent before even attempting identification.
+    - ``ESTIMATION_FAILED``: Identification succeeded but the estimator raised
+      a numerical or model exception. The ATE is NOT available.
+    - ``INVALID_GRAPH``: The causal graph contains a structural defect (cycle,
+      missing nodes) that prevents SCM construction.
+    - ``AMBIGUOUS_COMPONENT``: The treatment variable's SBOM component identity
+      is ambiguous or unresolved; attribution cannot defensibly proceed.
+    """
 
     COMPLETED = "completed"
     NOT_IDENTIFIABLE = "not_identifiable"
+    INSUFFICIENT_EVIDENCE = "insufficient_evidence"
+    ESTIMATION_FAILED = "estimation_failed"
+    INVALID_GRAPH = "invalid_graph"
+    AMBIGUOUS_COMPONENT = "ambiguous_component"
 
 
 @dataclass
@@ -355,23 +375,41 @@ class AttributionResult:
 
     Attributes:
         attribution_id: UUID of this attribution run.
-        status: completed or not_identifiable.
-        reason: Human-readable reason when not_identifiable.
-        ate: Average Treatment Effect estimate (None if not identifiable).
+        status: One of the AttributionStatus codes.
+        reason: Machine-readable abstention code (snake_case).  Non-empty for
+            any status other than COMPLETED.
+        explanation: Human-readable explanation of the reason.  Empty string
+            if status is COMPLETED.
+        ate: Average Treatment Effect estimate (None unless COMPLETED).
         ate_ci_lower: Lower bound of ATE confidence interval.
         ate_ci_upper: Upper bound of ATE confidence interval.
         counterfactual_drift_probability: P(D|do(C=0)) for treated cohort.
         counterfactual_status: available / unavailable.
         refutations: List of refutation results.
-        confidence: Attribution confidence score in [0, 1].
+        confidence: Heuristic diagnostic stability score in [0, 1] based on
+            refutation pass rate, CI width, and telemetry completeness.
+            Note: This is an internal stability/quality diagnostic index, NOT a
+            calibrated statistical probability that the attribution is true.
+        diagnostic_stability_score: Explicit alias for the diagnostic stability
+            score (identical to confidence), clarifying that this value reflects
+            refutation stability rather than a calibrated causal posterior probability.
         snapshot_id: UUID of the BDG snapshot used.
         estimator_name: The estimator that was used.
         graph_diagnostics: Diagnostic info about the projected DAG.
+        mapping_provenance: Mapping status strings for the treatment component
+            (e.g. ``["INFERRED", "INFERRED"]``).  Present when Part 3
+            provenance is available; empty list otherwise.
+        evidence_ids: UUIDs of the RuntimeEventRecords that contributed
+            evidence to the treatment component mapping.
+        observation_count: Number of CausalObservations used for estimation.
+        causal_assumptions: List of explicit causal assumptions made during
+            graph construction (e.g. forced treatment→outcome edge).
     """
 
     attribution_id: uuid.UUID
     status: AttributionStatus
     reason: str = ""
+    explanation: str = ""
     ate: float | None = None
     ate_ci_lower: float | None = None
     ate_ci_upper: float | None = None
@@ -379,9 +417,21 @@ class AttributionResult:
     counterfactual_status: str = "unavailable"
     refutations: list[RefutationResult] = field(default_factory=list)
     confidence: float = 0.0
+    diagnostic_stability_score: float = 0.0
     snapshot_id: uuid.UUID | None = None
     estimator_name: str = ""
     graph_diagnostics: dict[str, Any] = field(default_factory=dict)
+    mapping_provenance: list[str] = field(default_factory=list)
+    evidence_ids: list[uuid.UUID] = field(default_factory=list)
+    observation_count: int = 0
+    causal_assumptions: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        """Synchronize confidence and diagnostic_stability_score."""
+        if self.diagnostic_stability_score == 0.0 and self.confidence != 0.0:
+            self.diagnostic_stability_score = self.confidence
+        elif self.confidence == 0.0 and self.diagnostic_stability_score != 0.0:
+            self.confidence = self.diagnostic_stability_score
 
 
 # ---------------------------------------------------------------------------

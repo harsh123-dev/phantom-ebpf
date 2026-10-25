@@ -1,0 +1,45 @@
+PHANTOM revision notes
+
+Change: Rewrote the abstract to exactly 200 words, separating implementation from observed event timing and explicitly stating the missing PURL binding, benign controls, attribution validation, calibration, and overhead evidence.
+Location: Abstract.
+Addresses: Reviewer concerns 1, 3, 6, and 8.
+
+Change: Reworked the introduction around the SBOM-to-runtime identity gap; categorized implemented/observed, implemented/tested, and implemented/unvalidated work; and added a design-distinction paragraph. Removed any unsupported claim that PHANTOM is the first system to combine these features.
+Location: Section I.
+Addresses: Reviewer concerns 2 and 3.
+
+Change: Added an evidence-bounded related-work gap and clarified that the capability matrix is a design comparison, not a performance benchmark. Recorded the skipped Falco/Trivy setup and synthetic Isolation Forest baseline evidence.
+Location: Section II and Table I.
+Addresses: Reviewer concerns 3 and 7.
+
+Change: Made Algorithm 1's image-digest/PURL/time-window partition explicit, formatted the minimum-token rejection as algorithmic control flow, and added complexity bounds without claiming unmeasured sub-millisecond performance.
+Location: Section III, Behavioral Contract Generation.
+Addresses: Reviewer concerns 4 and 9A, 10A.
+
+Change: Added numbered equations for Laplace smoothing, KL scoring, and BDG edge decay. Documented the six code-defined causal tiers and described them as assumptions rather than proof of causality.
+Location: Section III, Behavioral Dependency Graph.
+Addresses: Reviewer concerns 3, 4, and 9B.
+
+Change: Clarified that tests exercise cycle/no-variation abstention paths but do not establish causal validity. Reframed PCEPS as analyst triage, added implementation input sources for all 16 features, and retained the lack of model/calibration evidence.
+Location: Section III, Structural Causal Attribution and PCEPS.
+Addresses: Reviewer concerns 4C, 4D, and 9C/E.
+
+Change: Added an experimental manifest table. Known fields come from raw3; missing environment/version fields are labeled as unrecorded with TODO comments. Corrected detection window to 120 seconds, as recorded in raw data and the attack code, rather than the proposed 300 seconds.
+Location: Section V, Experimental Setup.
+Addresses: Reviewer concern 5.
+
+Change: Added a benign-control design as proposed future work, not as implemented infrastructure. Clarified that six event-positive runs do not estimate recall or false-positive behavior.
+Location: Section V, Benign Control Design and Current Gap.
+Addresses: Reviewer concern 6.
+
+Change: Rewrote the conclusion around verified implementation, the local test run (454 passed, 1 skipped), and the limited six-run event evidence. Listed next evidence needed without asserting the infrastructure is already ready.
+Location: Section VI.
+Addresses: Reviewer concern 8.
+
+Change: Corrected the EuroSys edition and page range for reference [14] against the official conference program and checked all 28 bibliography numbers are cited in the paper text. Added source citations where existing repository components are discussed.
+Location: Sections II-IV and References.
+Addresses: Reviewer concern 9D.
+
+Verification: LaTeX source compiled successfully with the built-in desktop editor compiler. Test command ran the core library and five service test directories: 454 passed, 1 skipped. These software tests are not experimental validation of attribution, predictive calibration, or runtime performance.
+
+Remaining limitation: The requested 7,000-8,000-word target was not padded with unsupported claims; the revised source is approximately 5,800 words including references. Additional validated methodology or results would be needed to expand it responsibly. Existing attack records still lack component-ground-truth bindings, benign controls, and environment provenance.

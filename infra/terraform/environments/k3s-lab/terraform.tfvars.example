@@ -1,0 +1,18 @@
+# infra/terraform/environments/k3s-lab/terraform.tfvars.example
+# Copy this file to terraform.tfvars and fill in your values before running 'terraform apply'.
+
+aws_region       = "ap-south-1"
+instance_type    = "t3.xlarge"   # 4 vCPU, 16 GiB RAM (~$0.1664/hr in ap-south-1)
+root_volume_size = 50            # 50 GB gp3 EBS root disk (~$0.0055/hr)
+
+# Set to your workstation's public IPv4 address (e.g., from 'curl -s https://ifconfig.me')
+# Inbound SSH is strictly restricted to this single IP (/32).
+# If left empty, SSH ingress is disabled and connection is made via AWS SSM Session Manager.
+operator_ip      = "203.0.113.50"
+
+# Optional: Name of an existing AWS Key Pair. If left empty, Terraform generates a new keypair
+# and saves the private key to .ssh/phantom-lab-key.pem
+key_name         = ""
+
+# Enable AWS Systems Manager for zero-inbound-port access
+enable_ssm       = true

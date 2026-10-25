@@ -225,14 +225,15 @@ def test_failed_run_not_tp(failed_result):
 
 
 def test_failed_run_fn_in_evaluator(failed_result):
-    """A failed attack run is counted as FN, not TP or silently excluded."""
+    """A failed attack run (inject_ok=False) is excluded from TPR denominators, not counted as FN."""
     ev = _evaluator()
     reports = ev.evaluate([failed_result], {})
     phantom = reports[0]
     assert phantom.tp == 0
-    assert phantom.fn == 1
-    # n_attack_scenarios includes failed runs
-    assert phantom.n_attack_scenarios == 1
+    assert phantom.fn == 0
+    assert phantom.tpr is None
+    assert phantom.excluded_failed_injections == 1
+    assert phantom.n_attack_scenarios == 0
 
 
 # ===========================================================================
@@ -241,7 +242,7 @@ def test_failed_run_fn_in_evaluator(failed_result):
 
 
 def test_precision_undefined_no_tp_fp():
-    """Precision = 0.0 (not NaN) when TP=0 and FP=0."""
+    """Precision is None (undefined denominator) when TP=0 and FP=0."""
     report = _build_report(
         detector_name="test",
         tp=0, fp=0, fn=3, tn=0,
@@ -252,12 +253,11 @@ def test_precision_undefined_no_tp_fp():
         memory_overhead_mb=0.0,
         event_lag_p95_ms=0.0,
     )
-    assert not math.isnan(report.precision)
-    assert report.precision == pytest.approx(0.0)
+    assert report.precision is None
 
 
 def test_tpr_undefined_no_positives():
-    """TPR = 0.0 (not NaN) when TP=0 and FN=0 (no attack runs at all)."""
+    """TPR is None (undefined denominator) when TP=0 and FN=0 (no attack runs at all)."""
     report = _build_report(
         detector_name="test",
         tp=0, fp=0, fn=0, tn=2,
@@ -268,12 +268,11 @@ def test_tpr_undefined_no_positives():
         memory_overhead_mb=0.0,
         event_lag_p95_ms=0.0,
     )
-    assert not math.isnan(report.tpr)
-    assert report.tpr == pytest.approx(0.0)
+    assert report.tpr is None
 
 
 def test_fpr_undefined_no_negatives():
-    """FPR = 0.0 (not NaN) when FP=0 and TN=0 (no benign runs at all)."""
+    """FPR is None (undefined denominator) when FP=0 and TN=0 (no benign runs at all)."""
     report = _build_report(
         detector_name="test",
         tp=3, fp=0, fn=0, tn=0,
@@ -284,12 +283,11 @@ def test_fpr_undefined_no_negatives():
         memory_overhead_mb=0.0,
         event_lag_p95_ms=0.0,
     )
-    assert not math.isnan(report.fpr)
-    assert report.fpr == pytest.approx(0.0)
+    assert report.fpr is None
 
 
 def test_f1_undefined_all_zero():
-    """F1 = 0.0 (not NaN) when precision=0 and recall=0."""
+    """F1 is None (undefined) when precision or recall is undefined or sum is zero."""
     report = _build_report(
         detector_name="test",
         tp=0, fp=0, fn=5, tn=5,
@@ -300,8 +298,7 @@ def test_f1_undefined_all_zero():
         memory_overhead_mb=0.0,
         event_lag_p95_ms=0.0,
     )
-    assert not math.isnan(report.f1)
-    assert report.f1 == pytest.approx(0.0)
+    assert report.f1 is None
 
 
 def test_mttd_none_when_no_tp():
@@ -474,3 +471,74 @@ def test_safe_percentile_single():
 def test_safe_percentile_median():
     """Median of [1, 2, 3] is 2."""
     assert _safe_percentile([1.0, 2.0, 3.0], 50) == pytest.approx(2.0)
+
+
+# ===========================================================================
+# Milestone 3 tests — Wilson Score, Bootstrap MTTD, Baselines & Overhead
+# ===========================================================================
+
+
+def test_evaluator_wilson_score_six_of_six():
+    """Wilson score confidence interval for 6/6 TPR matches [0.6096, 1.0000]."""
+    report = _build_report(
+        detector_name="phantom",
+        tp=6, fp=None, fn=0, tn=None,
+        n_attack=6, n_benign=0,
+        mttd_values=[10.0, 15.0, 20.0, 25.0, 30.0, 35.0],
+        total_benign_s=0.0,
+    )
+    assert report.tpr == pytest.approx(1.0)
+    assert report.tpr_ci_wilson is not None
+    lower, upper = report.tpr_ci_wilson
+    assert lower == pytest.approx(0.6096, abs=0.001)
+    assert upper == pytest.approx(1.0, abs=0.001)
+
+
+def test_evaluator_bootstrap_mttd_statistics():
+    """MTTD reports mean, median, IQR, and non-parametric bootstrap CI."""
+    latencies = [70.33, 6.35, 4.68, 2.61, 7.88, 2.58]
+    report = _build_report(
+        detector_name="phantom",
+        tp=6, fp=None, fn=0, tn=None,
+        n_attack=6, n_benign=0,
+        mttd_values=latencies,
+        total_benign_s=0.0,
+    )
+    assert report.mttd_mean_s == pytest.approx(15.74, abs=0.1)
+    assert report.mttd_median_s == pytest.approx(5.52, abs=0.1)
+    assert report.mttd_iqr_s is not None
+    assert report.mttd_iqr_s > 0.0
+    assert report.mttd_ci_bootstrap is not None
+    ci_low, ci_high = report.mttd_ci_bootstrap
+    assert ci_low <= report.mttd_mean_s <= ci_high
+
+
+def test_evaluator_baseline_telemetry_unavailable(tp_attack_result):
+    """Empty baseline detections list is classified as telemetry_unavailable / NR."""
+    ev = _evaluator()
+    reports = ev.evaluate(
+        scenario_results=[tp_attack_result],
+        detections={"falco-default-rules": [], "trivy-sbom-static": []},
+    )
+    assert len(reports) == 3
+    falco = next(r for r in reports if r.detector_name == "falco-default-rules")
+    trivy = next(r for r in reports if r.detector_name == "trivy-sbom-static")
+
+    assert falco.status == "telemetry_unavailable"
+    assert falco.tpr is None
+    assert falco.fn is None
+
+    assert trivy.status == "task_mismatch_and_telemetry_unavailable"
+    assert trivy.tpr is None
+
+
+def test_evaluator_unmeasured_overhead(tp_attack_result):
+    """Missing or all-zero Prometheus snapshots result in unmeasured overhead (None)."""
+    # tp_attack_result has empty metrics_snapshots
+    ev = _evaluator()
+    reports = ev.evaluate([tp_attack_result], {})
+    phantom = reports[0]
+    assert phantom.overhead_status == "unmeasured"
+    assert phantom.cpu_overhead_pct is None
+    assert phantom.memory_overhead_mb is None
+    assert phantom.event_lag_p95_ms is None

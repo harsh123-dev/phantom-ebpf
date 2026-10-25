@@ -1,0 +1,423 @@
+{
+  "generated_at": "2026-10-23T07:16:31.629254+00:00",
+  "python_version": "3.14.6 | packaged by Anaconda, Inc. | (main, Jul  9 2026, 14:29:05) [MSC v.1942 64 bit (AMD64)]",
+  "dowhy_available": true,
+  "data_dir": "D:\\project-1\\research\\datasets\\raw",
+  "total_runs_in_index": 6,
+  "runs": [
+    {
+      "report_id": "86edfe03-71f5-4125-af4e-df52a0e83e0b",
+      "run_id": "20260823T201630Z_xzutils-001_rep1",
+      "scenario_id": "xzutils-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 1,
+      "evidence_record_count": 0,
+      "observations_built": 0,
+      "observations_excluded": 1,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 0 causal observation(s) available; minimum required is 10. DoWhy estimates are numerically unstable for very small N. Collect more runtime windows before attempting attribution.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260823T201630Z_xzutils-001_rep1",
+          "reason_code": "unknown_outcome",
+          "explanation": "Run '20260823T201630Z_xzutils-001_rep1': Outcome cannot be determined. Attack run with null detection timestamp. Cannot determine whether the attack caused a drift outcome without per-window labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label.",
+          "missing_fields": [
+            "runtime_sbom_drift",
+            "first_phantom_detection_timestamp"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260823T201630Z_xzutils-001_rep1",
+          "scenario_id": "xzutils-001",
+          "window_index": 0,
+          "window_start_iso": "2026-08-23T20:16:30.772190+00:00",
+          "window_end_iso": "2026-08-23T20:19:38.098034+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "unknown",
+          "outcome_label_source": "no_detection_timestamp",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": "unknown_outcome"
+        }
+      ],
+      "missing_data_summary": [
+        "runtime_sbom_drift",
+        "first_phantom_detection_timestamp"
+      ],
+      "exclusion_reasons": [
+        "Run '20260823T201630Z_xzutils-001_rep1': Outcome cannot be determined. Attack run with null detection timestamp. Cannot determine whether the attack caused a drift outcome without per-window labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label."
+      ]
+    },
+    {
+      "report_id": "da2f2c69-2c62-43a1-9cbf-09c8b67265ad",
+      "run_id": "20260823T201938Z_dep-confusion-001_rep1",
+      "scenario_id": "dep-confusion-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 1,
+      "evidence_record_count": 0,
+      "observations_built": 0,
+      "observations_excluded": 1,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 0 causal observation(s) available; minimum required is 10. DoWhy estimates are numerically unstable for very small N. Collect more runtime windows before attempting attribution.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260823T201938Z_dep-confusion-001_rep1",
+          "reason_code": "unknown_outcome",
+          "explanation": "Run '20260823T201938Z_dep-confusion-001_rep1': Outcome cannot be determined. Attack run with null detection timestamp. Cannot determine whether the attack caused a drift outcome without per-window labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label.",
+          "missing_fields": [
+            "runtime_sbom_drift",
+            "first_phantom_detection_timestamp"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260823T201938Z_dep-confusion-001_rep1",
+          "scenario_id": "dep-confusion-001",
+          "window_index": 0,
+          "window_start_iso": "2026-08-23T20:19:38.700366+00:00",
+          "window_end_iso": "2026-08-23T20:22:55.153598+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "unknown",
+          "outcome_label_source": "no_detection_timestamp",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": "unknown_outcome"
+        }
+      ],
+      "missing_data_summary": [
+        "runtime_sbom_drift",
+        "first_phantom_detection_timestamp"
+      ],
+      "exclusion_reasons": [
+        "Run '20260823T201938Z_dep-confusion-001_rep1': Outcome cannot be determined. Attack run with null detection timestamp. Cannot determine whether the attack caused a drift outcome without per-window labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label."
+      ]
+    },
+    {
+      "report_id": "36c4a512-ff0a-4b98-9e2d-3542a0fef0d6",
+      "run_id": "20260823T202255Z_solarwinds-001_rep1",
+      "scenario_id": "solarwinds-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 1,
+      "evidence_record_count": 0,
+      "observations_built": 0,
+      "observations_excluded": 1,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 0 causal observation(s) available; minimum required is 10. DoWhy estimates are numerically unstable for very small N. Collect more runtime windows before attempting attribution.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260823T202255Z_solarwinds-001_rep1",
+          "reason_code": "unknown_outcome",
+          "explanation": "Run '20260823T202255Z_solarwinds-001_rep1': Outcome cannot be determined. Attack run with null detection timestamp. Cannot determine whether the attack caused a drift outcome without per-window labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label.",
+          "missing_fields": [
+            "runtime_sbom_drift",
+            "first_phantom_detection_timestamp"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260823T202255Z_solarwinds-001_rep1",
+          "scenario_id": "solarwinds-001",
+          "window_index": 0,
+          "window_start_iso": "2026-08-23T20:22:55.758373+00:00",
+          "window_end_iso": "2026-08-23T20:28:26.014452+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "unknown",
+          "outcome_label_source": "no_detection_timestamp",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": "unknown_outcome"
+        }
+      ],
+      "missing_data_summary": [
+        "runtime_sbom_drift",
+        "first_phantom_detection_timestamp"
+      ],
+      "exclusion_reasons": [
+        "Run '20260823T202255Z_solarwinds-001_rep1': Outcome cannot be determined. Attack run with null detection timestamp. Cannot determine whether the attack caused a drift outcome without per-window labels. Per-window drift labels are not available in the current dataset. The observation cannot be constructed without fabricating a label."
+      ]
+    },
+    {
+      "report_id": "0e19139f-f7f5-4f9f-b255-ab944aea1d1b",
+      "run_id": "20260823T202826Z_benign-update-001_rep1",
+      "scenario_id": "benign-update-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 0,
+      "evidence_record_count": 0,
+      "observations_built": 1,
+      "observations_excluded": 0,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 1 causal observation(s) available; minimum required is 10. DoWhy estimates are numerically unstable for very small N. Collect more runtime windows before attempting attribution.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260823T202826Z_benign-update-001_rep1",
+          "reason_code": "too_few_observations",
+          "explanation": "Run '20260823T202826Z_benign-update-001_rep1': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set.",
+          "missing_fields": [
+            "per_window_drift_labels"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260823T202826Z_benign-update-001_rep1",
+          "scenario_id": "benign-update-001",
+          "window_index": 0,
+          "window_start_iso": "2026-08-23T20:28:26.611322+00:00",
+          "window_end_iso": "2026-08-23T20:31:27.410257+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "negative",
+          "outcome_label_source": "run_manifest_benign_label",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": ""
+        }
+      ],
+      "missing_data_summary": [
+        "per_window_drift_labels"
+      ],
+      "exclusion_reasons": [
+        "Run '20260823T202826Z_benign-update-001_rep1': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set."
+      ]
+    },
+    {
+      "report_id": "b981ea1f-60c2-412a-a3b4-7450961db220",
+      "run_id": "20260823T203128Z_benign-load-001_rep1",
+      "scenario_id": "benign-load-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 0,
+      "evidence_record_count": 0,
+      "observations_built": 1,
+      "observations_excluded": 0,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 1 causal observation(s) available; minimum required is 10. DoWhy estimates are numerically unstable for very small N. Collect more runtime windows before attempting attribution.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260823T203128Z_benign-load-001_rep1",
+          "reason_code": "too_few_observations",
+          "explanation": "Run '20260823T203128Z_benign-load-001_rep1': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set.",
+          "missing_fields": [
+            "per_window_drift_labels"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260823T203128Z_benign-load-001_rep1",
+          "scenario_id": "benign-load-001",
+          "window_index": 0,
+          "window_start_iso": "2026-08-23T20:31:28.031177+00:00",
+          "window_end_iso": "2026-08-23T20:34:28.484446+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "negative",
+          "outcome_label_source": "run_manifest_benign_label",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": ""
+        }
+      ],
+      "missing_data_summary": [
+        "per_window_drift_labels"
+      ],
+      "exclusion_reasons": [
+        "Run '20260823T203128Z_benign-load-001_rep1': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set."
+      ]
+    },
+    {
+      "report_id": "5b77a07e-7b8e-4f47-83e0-7f8f9302d200",
+      "run_id": "20260823T203429Z_benign-restart-001_rep1",
+      "scenario_id": "benign-restart-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 0,
+      "evidence_record_count": 0,
+      "observations_built": 1,
+      "observations_excluded": 0,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 1 causal observation(s) available; minimum required is 10. DoWhy estimates are numerically unstable for very small N. Collect more runtime windows before attempting attribution.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260823T203429Z_benign-restart-001_rep1",
+          "reason_code": "too_few_observations",
+          "explanation": "Run '20260823T203429Z_benign-restart-001_rep1': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set.",
+          "missing_fields": [
+            "per_window_drift_labels"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260823T203429Z_benign-restart-001_rep1",
+          "scenario_id": "benign-restart-001",
+          "window_index": 0,
+          "window_start_iso": "2026-08-23T20:34:29.086372+00:00",
+          "window_end_iso": "2026-08-23T20:37:29.543940+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "negative",
+          "outcome_label_source": "run_manifest_benign_label",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": ""
+        }
+      ],
+      "missing_data_summary": [
+        "per_window_drift_labels"
+      ],
+      "exclusion_reasons": [
+        "Run '20260823T203429Z_benign-restart-001_rep1': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set."
+      ]
+    }
+  ],
+  "summary": {
+    "total_runs": 6,
+    "attack_runs": 3,
+    "benign_runs": 3,
+    "completed_runs": 6,
+    "failed_injection_runs": 0,
+    "observation_batches_sufficient_for_estimation": 0,
+    "preflight_passed_count": 0,
+    "estimation_attempted_count": 0,
+    "estimation_completed_count": 0,
+    "real_estimates_produced": 0,
+    "mapping_status_totals": {},
+    "abstention_reason_counts": {
+      "too_few_observations": 6
+    },
+    "missing_data_fields": [
+      "first_phantom_detection_timestamp",
+      "per_window_drift_labels",
+      "runtime_sbom_drift"
+    ]
+  },
+  "limitations": [
+    "DoWhy is not installed in this environment (Python 3.14; dowhy requires <3.12 for versions >=0.9). No real causal estimates were produced.",
+    "The available dataset has no phantom_detections recorded in the last batch (2026-08-23). TP/FP/FN/TN, MTTD, and CAA metrics cannot be computed from this data.",
+    "Per-window runtime_sbom_drift outcome labels do not exist. CausalObservation rows cannot be built with valid outcome values from the current dataset.",
+    "Benign-run outcome labels (NEGATIVE) are assigned from ground_truth_label=0, not from confirmed absence of PHANTOM alerts during coverage-verified observation windows.",
+    "Resource metrics (cpu_usage_cores, memory_rss_mb) are all zero in the available records. CPU overhead cannot be computed.",
+    "The Part 3 mapper (RuntimeToSbomMapper) is not wired to UpdateBdgUseCase. Mapping provenance in BDG nodes is unavailable.",
+    "WARNING: DoWhy reports as available but pipeline still requires per-window outcome labels to produce a valid estimate."
+  ],
+  "claims_NOT_supported_by_this_data": [
+    "Detection rate (TPR / recall)",
+    "False positive rate (FPR)",
+    "Precision",
+    "F1 score",
+    "Mean time to detection (MTTD)",
+    "Causal attribution accuracy (CAA)",
+    "PCEPS Brier score",
+    "CPU/memory overhead (all metrics are zero in the dataset)",
+    "Real-data average treatment effect (ATE)",
+    "Any comparison to baseline detectors from this run batch"
+  ]
+}

@@ -146,6 +146,67 @@ def build_causal_data_table(
     return df
 
 
+POST_TREATMENT_MEDIATOR_NAMES: set[str] = {
+    "process_behavior",
+    "file_behavior",
+    "network_behavior",
+    "privilege_behavior",
+    "contract_deviation",
+    "runtime_sbom_drift",
+    "run_duration_s",
+    "run_duration",
+    "b_behavior",
+    "b_process",
+    "spawned_pids",
+    "syscall_count",
+    "network_packets",
+    "intermediate_process_spawns",
+}
+
+POST_TREATMENT_MEDIATOR_SUBSTRINGS: tuple[str, ...] = (
+    "process_behavior",
+    "file_behavior",
+    "network_behavior",
+    "privilege_behavior",
+    "contract_deviation",
+    "runtime_sbom_drift",
+    "run_duration",
+    "b_behavior",
+    "b_process",
+    "spawned_pid",
+    "intermediate_process",
+)
+
+
+def is_post_treatment_mediator(var_name: str) -> bool:
+    """Check if a variable represents a post-treatment execution artifact/mediator.
+
+    Per EXPERIMENT_PROTOCOL.md §5.3 (Anti-Mediator Conditioning Rules):
+    Mediators: B_behavior, B_process, spawned pids, cgroups, syscall counts,
+    network packets, file writes, contract deviations, run duration.
+    Conditioning on post-treatment execution artifacts blocks the causal mechanism
+    or induces collider/M-bias. Confounder adjustments must be strictly restricted
+    to Tier 0 pre-treatment variables.
+
+    Args:
+        var_name: Name of the variable.
+
+    Returns:
+        True if the variable is a post-treatment mediator, False if pre-treatment.
+    """
+    lower = var_name.lower()
+    if lower in POST_TREATMENT_MEDIATOR_NAMES:
+        return True
+    try:
+        from app.domain.bdg import CAUSAL_TIERS  # noqa: PLC0415
+        if CAUSAL_TIERS.get(lower, 0) >= 2:
+            return True
+    except ImportError:
+        pass
+
+    return any(sub in lower for sub in POST_TREATMENT_MEDIATOR_SUBSTRINGS)
+
+
 def build_scm_graph(
     projection: TemporalDAGProjection,
     treatment_name: str,
@@ -157,8 +218,9 @@ def build_scm_graph(
     Nodes are variable names (treatment, outcome, covariates). Edges are
     directed causal relationships from the temporal DAG projection.
 
-    The graph uses only the semantic variable names (not windowed tuples)
-    for DoWhy compatibility.
+    Enforces strict anti-mediator DAG conditioning rules:
+    - Confounder adjustments are strictly restricted to Tier 0 pre-treatment variables.
+    - Edges from post-treatment execution mediators into treatment or outcome are blocked.
 
     Args:
         projection: The TemporalDAGProjection from BDG.
@@ -171,8 +233,10 @@ def build_scm_graph(
     """
     dag = nx.DiGraph()
 
-    # Add all variable nodes.
-    all_vars = {treatment_name, outcome_name} | set(covariate_names)
+    # Add all variable nodes (observed treatment/outcome/covariates plus
+    # any unobserved/latent variables explicitly defined in the projection).
+    projection_vars = {src_var for (src_var, _) in projection.projected_nodes}
+    all_vars = {treatment_name, outcome_name} | set(covariate_names) | projection_vars
     for var in all_vars:
         dag.add_node(var)
 
@@ -186,6 +250,15 @@ def build_scm_graph(
     # Add edges for projected pairs that involve known SCM variables.
     for src, tgt in projected_var_pairs:
         if src in all_vars and tgt in all_vars:
+            # Enforce anti-mediator DAG rule:
+            # Do NOT add edges from post-treatment execution mediators into treatment.
+            if tgt == treatment_name and is_post_treatment_mediator(src):
+                log.warning(
+                    "scm_builder.mediator_to_treatment_edge_blocked",
+                    source=src,
+                    target=tgt,
+                )
+                continue
             dag.add_edge(src, tgt)
 
     # Ensure treatment → outcome edge exists (the core causal question).
@@ -193,9 +266,17 @@ def build_scm_graph(
         dag.add_edge(treatment_name, outcome_name)
 
     # Ensure covariates → treatment and covariates → outcome edges.
-    # Per handoff §6.1: pre-treatment covariates cause both treatment
-    # assignment and outcome through confounding paths.
+    # Enforce strict anti-mediator DAG conditioning rules:
+    # Restrict confounder adjustments strictly to Tier 0 pre-treatment variables.
+    # Do NOT add edges from post-treatment execution mediators into treatment or outcome.
     for cov in covariate_names:
+        if is_post_treatment_mediator(cov):
+            log.warning(
+                "scm_builder.mediator_covariate_excluded_from_confounders",
+                covariate=cov,
+                reason="anti_mediator_conditioning_rule",
+            )
+            continue
         if not dag.has_edge(cov, treatment_name):
             dag.add_edge(cov, treatment_name)
         if not dag.has_edge(cov, outcome_name):

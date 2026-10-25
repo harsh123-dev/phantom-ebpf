@@ -1,0 +1,12 @@
+Dear Dr. Thanuja R,
+
+Please find attached the revised PHANTOM research manuscript and revision notes. I revised the paper to distinguish implemented software, behavior exercised by automated tests, and claims that still require controlled experiments. The paper now describes the six completed attack runs as event-presence observations with measured latency, rather than as proof of component-level detection or causal attribution. It records three failed SolarWinds-style injections separately and retains limitations caused by missing benign controls, unresolved PURL/SBOM bindings, absent environment provenance, and unmeasured overhead.
+
+The manuscript presents the contract-generation interface, BDG tier ordering, and DoWhy adapter's not_identifiable outcome as implementation properties, not proof of causal truth or a first-of-its-kind claim. I added equations, algorithm control flow, complexity bounds, a reproducibility manifest marking unavailable fields, and a proposed benign-control design.
+
+The core library and five service test suites completed with 454 tests passing and one skipped. That result verifies tested code paths, not experimental attribution accuracy, predictive calibration, or operational performance. The revised paper therefore identifies benign controls, component-level ground truth, successful attack injection, baseline outputs, and a pinned environment manifest as priorities before submission claims can be broadened.
+
+Thank you for your guidance.
+
+Sincerely,
+Harsh Ranjan and Jai Goel

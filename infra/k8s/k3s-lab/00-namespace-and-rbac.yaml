@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: phantom
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: phantom-eval
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: phantom-node-agent
+  namespace: phantom
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: phantom-api-gateway
+  namespace: phantom
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: phantom-causal-engine
+  namespace: phantom
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: phantom-sbom-service
+  namespace: phantom
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: phantom-agent-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "namespaces", "nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "daemonsets", "replicasets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: phantom-agent-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: phantom-agent-role
+subjects:
+  - kind: ServiceAccount
+    name: phantom-node-agent
+    namespace: phantom

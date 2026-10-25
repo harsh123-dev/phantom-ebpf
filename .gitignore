@@ -27,6 +27,7 @@ MANIFEST
 
 # Virtual environments
 .venv/
+.venv-causal/
 venv/
 ENV/
 env/

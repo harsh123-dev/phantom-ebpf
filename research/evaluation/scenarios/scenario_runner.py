@@ -21,6 +21,8 @@ Ground-truth contract:
     - injection_timestamp is set immediately before attack.inject() returns.
     - These timestamps are the independent ground truth used for MTTD
       computation. They are never derived from PHANTOM outputs.
+    - Ground-truth dimensions (inject_ok, behavior_verified, contract_drift_verified,
+      phantom_alerted) are decoupled and explicitly tracked.
 
 PHANTOM detections:
     - Polled from GET /api/v1/drift-events?since=<iso_ts> every
@@ -35,7 +37,7 @@ Overhead metrics:
 
 Baseline detections (Falco):
     - Collected from Falco JSON alert log file on the node.
-    - Parsed by FalcoCollector (implemented below).
+    - Parsed by FalcoCollector.
 """
 
 from __future__ import annotations
@@ -49,6 +51,7 @@ from typing import Any
 import httpx
 
 from research.evaluation.attacks.base_attack import BaseAttack
+from research.evaluation.attacks.safety import SafetyPreflight
 
 log = logging.getLogger(__name__)
 
@@ -151,6 +154,10 @@ class ScenarioResult:
         metrics_snapshots: Prometheus overhead snapshots.
         scenario_label: Ground truth label dict from attack.label().
         error: Error message if scenario did not complete.
+        inject_ok: True if injection succeeded.
+        behavior_verified: True if independent behavioral checks confirmed activity.
+        contract_drift_verified: True if verified contract violation.
+        phantom_alerted: True if PHANTOM fired alerts.
     """
 
     run_id: str
@@ -170,6 +177,10 @@ class ScenarioResult:
     metrics_snapshots: list[MetricsSnapshot] = field(default_factory=list)
     scenario_label: dict[str, Any] = field(default_factory=dict)
     error: str = ""
+    inject_ok: bool | None = None
+    behavior_verified: bool | None = None
+    contract_drift_verified: bool | None = None
+    phantom_alerted: bool | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize to a JSON-serializable dict for dataset storage.
@@ -216,6 +227,10 @@ class ScenarioResult:
             "metrics_snapshots": [_metric(m) for m in self.metrics_snapshots],
             "scenario_label": self.scenario_label,
             "error": self.error,
+            "inject_ok": self.inject_ok,
+            "behavior_verified": self.behavior_verified,
+            "contract_drift_verified": self.contract_drift_verified,
+            "phantom_alerted": self.phantom_alerted,
         }
 
 
@@ -259,14 +274,13 @@ class FalcoCollector:
 
         alerts: list[dict[str, Any]] = []
         try:
-            with path.open() as fh:
+            with path.open("r", encoding="utf-8", errors="replace") as fh:
                 for line in fh:
                     line = line.strip()
                     if not line:
                         continue
                     try:
                         alert = json.loads(line)
-                        # Falco timestamps: "time" field in RFC3339 format.
                         ts_raw = alert.get("time") or alert.get("output_fields", {}).get("evt.time")
                         if ts_raw:
                             ts = datetime.fromisoformat(ts_raw.rstrip("Z")).replace(tzinfo=timezone.utc)
@@ -298,7 +312,8 @@ class ScenarioRunner:
         api_token: Bearer token for PHANTOM API authentication.
         http_timeout_s: HTTP request timeout in seconds.
         dry_run: If True, skip actual attack injection but still record
-            timing and query metrics.
+            timing and query metrics (default: True).
+        allow_live_execution: Explicit opt-in flag required when dry_run=False.
     """
 
     def __init__(
@@ -308,7 +323,8 @@ class ScenarioRunner:
         falco_log_path: str = FALCO_ALERT_LOG,
         api_token: str = "",
         http_timeout_s: float = 10.0,
-        dry_run: bool = False,
+        dry_run: bool = True,
+        allow_live_execution: bool = False,
     ) -> None:
         """Initialise the runner.
 
@@ -318,7 +334,8 @@ class ScenarioRunner:
             falco_log_path: Falco alert log path.
             api_token: PHANTOM API bearer token.
             http_timeout_s: HTTP request timeout.
-            dry_run: If True, skip injection but still time phases.
+            dry_run: If True, skip injection but still time phases (default: True).
+            allow_live_execution: Explicit confirmation flag required to exit dry-run mode.
         """
         self._api_base = phantom_api_base_url.rstrip("/")
         self._prometheus = prometheus_url
@@ -326,6 +343,7 @@ class ScenarioRunner:
         self._token = api_token
         self._timeout = http_timeout_s
         self._dry_run = dry_run
+        self._allow_live_execution = allow_live_execution
 
     def run_scenario(
         self,
@@ -362,6 +380,17 @@ class ScenarioRunner:
         Returns:
             ScenarioResult with all collected data.
         """
+        # Run safety preflight before beginning
+        SafetyPreflight.validate(
+            namespace=namespace,
+            service=getattr(attack.manifest, "target_service", None),
+            endpoint=getattr(attack.manifest, "control_endpoint", None),
+            context=getattr(attack, "kubectl_context", None),
+            dry_run=self._dry_run,
+            allow_live_execution=self._allow_live_execution,
+            scenario_id=getattr(attack.manifest, "attack_id", None),
+        )
+
         run_id = (
             datetime.now(tz=timezone.utc).strftime("%Y%m%dT%H%M%SZ")
             + f"_{attack.manifest.attack_id}_rep{repetition}"
@@ -392,7 +421,8 @@ class ScenarioRunner:
         baseline_metrics = self.collect_metrics_snapshot("baseline")
         result.metrics_snapshots.append(baseline_metrics)
 
-        time.sleep(baseline_duration_s)
+        if not self._dry_run:
+            time.sleep(baseline_duration_s)
 
         phase_baseline.close()
         log.info("scenario.phase_baseline.complete")
@@ -415,24 +445,36 @@ class ScenarioRunner:
             inject_ok = True
             log.info("scenario.dry_run.inject_skipped")
 
-        # Record oracle injection timestamp AFTER inject() returns.
-        result.injection_timestamp = datetime.now(tz=timezone.utc)
+        result.inject_ok = inject_ok
+        result.scenario_label["inject_ok"] = inject_ok
+
+        # Record oracle injection timestamp AFTER inject() returns (None if benign)
+        if attack.manifest.ground_truth_label == 1:
+            result.injection_timestamp = datetime.now(tz=timezone.utc)
         phase_inject.close(notes=f"inject_ok={inject_ok}")
         log.info(
             "scenario.phase_inject.complete",
-            extra={"inject_ok": inject_ok, "ts": result.injection_timestamp.isoformat()},
+            extra={"inject_ok": inject_ok, "ts": str(result.injection_timestamp)},
         )
 
         if not inject_ok:
             result.error = result.error or "inject() returned False"
             return result
 
-        # Verify injection before measurement.
-        if not self._dry_run:
+        # Verify injection before measurement
+        verified = True if self._dry_run else False
+        if not self._dry_run and attack.manifest.ground_truth_label == 1:
             verified = attack.verify_injection(namespace, pod_name)
             if not verified:
                 log.warning("scenario.inject.verify_failed")
                 result.error = "verify_injection() returned False"
+        elif attack.manifest.ground_truth_label == 0:
+            verified = True
+
+        result.behavior_verified = verified
+        result.contract_drift_verified = (attack.manifest.ground_truth_label == 1 and verified)
+        result.scenario_label["behavior_verified"] = result.behavior_verified
+        result.scenario_label["contract_drift_verified"] = result.contract_drift_verified
 
         # ------------------------------------------------------------------ #
         # Phase 3: Attack observation                                         #
@@ -441,49 +483,50 @@ class ScenarioRunner:
         result.phases.append(phase_attack)
         log.info("scenario.phase_attack.start", extra={"duration_s": attack_duration_s})
 
-        detection_deadline = time.monotonic() + attack_duration_s
+        detection_deadline = time.monotonic() + (attack_duration_s if not self._dry_run else 0.01)
         detection_window_deadline = (
-            result.injection_timestamp.timestamp()
-            + attack.manifest.detection_window_s
+            result.injection_timestamp.timestamp() + attack.manifest.detection_window_s
+            if result.injection_timestamp else 0.0
         )
 
-        while time.monotonic() < detection_deadline:
-            time.sleep(DETECTION_POLL_INTERVAL_S)
+        if not self._dry_run and result.injection_timestamp:
+            while time.monotonic() < detection_deadline:
+                time.sleep(DETECTION_POLL_INTERVAL_S)
 
-            new_detections = self.collect_phantom_detections(
-                since=result.injection_timestamp
+                new_detections = self.collect_phantom_detections(
+                    since=result.injection_timestamp
+                )
+                result.phantom_detections.extend(new_detections)
+
+                # Record first detection within the oracle detection window.
+                if (
+                    result.first_phantom_detection_timestamp is None
+                    and new_detections
+                ):
+                    for det in new_detections:
+                        det_ts_raw = det.get("observed_at") or det.get("created_at", "")
+                        if det_ts_raw:
+                            try:
+                                det_ts = datetime.fromisoformat(
+                                    det_ts_raw.rstrip("Z")
+                                ).replace(tzinfo=timezone.utc)
+                                if det_ts.timestamp() <= detection_window_deadline:
+                                    result.first_phantom_detection_timestamp = det_ts
+                                    result.is_true_positive = True
+                                    result.mttd_s = (
+                                        det_ts - result.injection_timestamp
+                                    ).total_seconds()
+                                    log.info(
+                                        "scenario.tp_detected",
+                                        extra={"mttd_s": result.mttd_s},
+                                    )
+                            except ValueError:
+                                pass
+
+            # Collect attack-phase Falco alerts.
+            result.falco_detections.extend(
+                self._falco.collect_since(result.injection_timestamp)
             )
-            result.phantom_detections.extend(new_detections)
-
-            # Record first detection within the oracle detection window.
-            if (
-                result.first_phantom_detection_timestamp is None
-                and new_detections
-            ):
-                for det in new_detections:
-                    det_ts_raw = det.get("observed_at") or det.get("created_at", "")
-                    if det_ts_raw:
-                        try:
-                            det_ts = datetime.fromisoformat(
-                                det_ts_raw.rstrip("Z")
-                            ).replace(tzinfo=timezone.utc)
-                            if det_ts.timestamp() <= detection_window_deadline:
-                                result.first_phantom_detection_timestamp = det_ts
-                                result.is_true_positive = True
-                                result.mttd_s = (
-                                    det_ts - result.injection_timestamp
-                                ).total_seconds()
-                                log.info(
-                                    "scenario.tp_detected",
-                                    extra={"mttd_s": result.mttd_s},
-                                )
-                        except ValueError:
-                            pass
-
-        # Collect attack-phase Falco alerts.
-        result.falco_detections.extend(
-            self._falco.collect_since(result.injection_timestamp)
-        )
 
         # Overhead snapshot during attack.
         result.metrics_snapshots.append(self.collect_metrics_snapshot("attack"))
@@ -523,17 +566,19 @@ class ScenarioRunner:
         result.phases.append(phase_post)
         log.info("scenario.phase_post_recovery.start", extra={"duration_s": recovery_duration_s})
 
-        time.sleep(recovery_duration_s)
-
-        # Collect post-recovery detections (should be empty for a clean rollback).
-        recovery_start = datetime.now(tz=timezone.utc)
-        post_detections = self.collect_phantom_detections(since=recovery_start)
-        result.phantom_detections.extend(post_detections)
+        if not self._dry_run:
+            time.sleep(recovery_duration_s)
+            recovery_start = datetime.now(tz=timezone.utc)
+            post_detections = self.collect_phantom_detections(since=recovery_start)
+            result.phantom_detections.extend(post_detections)
 
         result.metrics_snapshots.append(self.collect_metrics_snapshot("post_recovery"))
 
         phase_post.close()
         log.info("scenario.phase_post_recovery.complete")
+
+        result.phantom_alerted = bool(result.phantom_detections)
+        result.scenario_label["phantom_alerted"] = result.phantom_alerted
 
         log.info(
             "scenario.complete",
@@ -561,6 +606,9 @@ class ScenarioRunner:
         Returns:
             List of drift-event dicts from PHANTOM API.
         """
+        if self._dry_run:
+            return []
+
         since_iso = since.isoformat().replace("+00:00", "Z")
         url = f"{self._api_base}/api/v1/drift-events"
         params = {"since": since_iso, "limit": 200}
@@ -601,6 +649,15 @@ class ScenarioRunner:
             MetricsSnapshot with current metric values.
         """
         now = datetime.now(tz=timezone.utc)
+
+        if self._dry_run:
+            return MetricsSnapshot(
+                timestamp=now,
+                cpu_usage_cores=0.0,
+                memory_rss_mb=0.0,
+                event_lag_p95_ms=0.0,
+                phase=phase,
+            )
 
         def _query(promql: str) -> float:
             try:

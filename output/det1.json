@@ -1,0 +1,843 @@
+{
+  "schema_version": "v1.0.0",
+  "generated_at": "2026-10-24T11:46:50.543841+00:00",
+  "python_version": "3.12.0 (tags/v3.12.0:0fb18b0, Oct  2 2023, 13:03:39) [MSC v.1935 64 bit (AMD64)]",
+  "dowhy_available": true,
+  "data_dir": "research\\datasets\\raw3",
+  "total_runs_in_index": 9,
+  "runs": [
+    {
+      "report_id": "df84b4b8-ffa9-48b5-9a76-d59cdd8d5d5a",
+      "run_id": "20260905T223101Z_xzutils-001_rep1",
+      "scenario_id": "xzutils-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 1,
+      "evidence_record_count": 0,
+      "observations_built": 1,
+      "observations_excluded": 0,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 1 causal observation(s) available; minimum required is 10. Minimum technical guard: N >= 10 required to prevent rank-deficient regression matrices. Does not imply statistical power or identifiability.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260905T223101Z_xzutils-001_rep1",
+          "reason_code": "too_few_observations",
+          "explanation": "Run '20260905T223101Z_xzutils-001_rep1': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set.",
+          "missing_fields": [
+            "per_window_drift_labels"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260905T223101Z_xzutils-001_rep1",
+          "scenario_id": "xzutils-001",
+          "window_index": 0,
+          "window_start_iso": "2026-09-05T22:31:01.628494+00:00",
+          "window_end_iso": "2026-09-05T22:37:21.465275+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "positive",
+          "outcome_label_source": "verified_contract_drift_true_positive",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": "",
+          "window_id": "20260905T223101Z_xzutils-001_rep1_w0",
+          "event_refs": []
+        }
+      ],
+      "missing_data_summary": [
+        "per_window_drift_labels"
+      ],
+      "exclusion_reasons": [
+        "Run '20260905T223101Z_xzutils-001_rep1': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set."
+      ]
+    },
+    {
+      "report_id": "8d2dc218-ab3e-4930-a684-a7e81993c815",
+      "run_id": "20260905T223752Z_xzutils-001_rep2",
+      "scenario_id": "xzutils-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 1,
+      "evidence_record_count": 0,
+      "observations_built": 1,
+      "observations_excluded": 0,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 1 causal observation(s) available; minimum required is 10. Minimum technical guard: N >= 10 required to prevent rank-deficient regression matrices. Does not imply statistical power or identifiability.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260905T223752Z_xzutils-001_rep2",
+          "reason_code": "too_few_observations",
+          "explanation": "Run '20260905T223752Z_xzutils-001_rep2': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set.",
+          "missing_fields": [
+            "per_window_drift_labels"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260905T223752Z_xzutils-001_rep2",
+          "scenario_id": "xzutils-001",
+          "window_index": 0,
+          "window_start_iso": "2026-09-05T22:37:52.088190+00:00",
+          "window_end_iso": "2026-09-05T22:44:11.508317+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "positive",
+          "outcome_label_source": "verified_contract_drift_true_positive",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": "",
+          "window_id": "20260905T223752Z_xzutils-001_rep2_w0",
+          "event_refs": []
+        }
+      ],
+      "missing_data_summary": [
+        "per_window_drift_labels"
+      ],
+      "exclusion_reasons": [
+        "Run '20260905T223752Z_xzutils-001_rep2': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set."
+      ]
+    },
+    {
+      "report_id": "95ca9e33-88b6-46f3-9a92-f0f3b40499ac",
+      "run_id": "20260905T224442Z_xzutils-001_rep3",
+      "scenario_id": "xzutils-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 1,
+      "evidence_record_count": 0,
+      "observations_built": 1,
+      "observations_excluded": 0,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 1 causal observation(s) available; minimum required is 10. Minimum technical guard: N >= 10 required to prevent rank-deficient regression matrices. Does not imply statistical power or identifiability.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260905T224442Z_xzutils-001_rep3",
+          "reason_code": "too_few_observations",
+          "explanation": "Run '20260905T224442Z_xzutils-001_rep3': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set.",
+          "missing_fields": [
+            "per_window_drift_labels"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260905T224442Z_xzutils-001_rep3",
+          "scenario_id": "xzutils-001",
+          "window_index": 0,
+          "window_start_iso": "2026-09-05T22:44:42.159143+00:00",
+          "window_end_iso": "2026-09-05T22:51:01.555200+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "positive",
+          "outcome_label_source": "verified_contract_drift_true_positive",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": "",
+          "window_id": "20260905T224442Z_xzutils-001_rep3_w0",
+          "event_refs": []
+        }
+      ],
+      "missing_data_summary": [
+        "per_window_drift_labels"
+      ],
+      "exclusion_reasons": [
+        "Run '20260905T224442Z_xzutils-001_rep3': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set."
+      ]
+    },
+    {
+      "report_id": "cfed034b-ea5b-4b56-8d60-4d5014aa4710",
+      "run_id": "20260905T225102Z_dep-confusion-001_rep1",
+      "scenario_id": "dep-confusion-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 1,
+      "evidence_record_count": 0,
+      "observations_built": 1,
+      "observations_excluded": 0,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 1 causal observation(s) available; minimum required is 10. Minimum technical guard: N >= 10 required to prevent rank-deficient regression matrices. Does not imply statistical power or identifiability.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260905T225102Z_dep-confusion-001_rep1",
+          "reason_code": "too_few_observations",
+          "explanation": "Run '20260905T225102Z_dep-confusion-001_rep1': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set.",
+          "missing_fields": [
+            "per_window_drift_labels"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260905T225102Z_dep-confusion-001_rep1",
+          "scenario_id": "dep-confusion-001",
+          "window_index": 0,
+          "window_start_iso": "2026-09-05T22:51:02.195161+00:00",
+          "window_end_iso": "2026-09-05T22:57:34.009175+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "positive",
+          "outcome_label_source": "verified_contract_drift_true_positive",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": "",
+          "window_id": "20260905T225102Z_dep-confusion-001_rep1_w0",
+          "event_refs": []
+        }
+      ],
+      "missing_data_summary": [
+        "per_window_drift_labels"
+      ],
+      "exclusion_reasons": [
+        "Run '20260905T225102Z_dep-confusion-001_rep1': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set."
+      ]
+    },
+    {
+      "report_id": "0a6a1449-5e29-4a6b-9ce4-4cf456ce9a7a",
+      "run_id": "20260905T225804Z_dep-confusion-001_rep2",
+      "scenario_id": "dep-confusion-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 1,
+      "evidence_record_count": 0,
+      "observations_built": 1,
+      "observations_excluded": 0,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 1 causal observation(s) available; minimum required is 10. Minimum technical guard: N >= 10 required to prevent rank-deficient regression matrices. Does not imply statistical power or identifiability.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260905T225804Z_dep-confusion-001_rep2",
+          "reason_code": "too_few_observations",
+          "explanation": "Run '20260905T225804Z_dep-confusion-001_rep2': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set.",
+          "missing_fields": [
+            "per_window_drift_labels"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260905T225804Z_dep-confusion-001_rep2",
+          "scenario_id": "dep-confusion-001",
+          "window_index": 0,
+          "window_start_iso": "2026-09-05T22:58:04.639350+00:00",
+          "window_end_iso": "2026-09-05T23:04:36.282943+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "positive",
+          "outcome_label_source": "verified_contract_drift_true_positive",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": "",
+          "window_id": "20260905T225804Z_dep-confusion-001_rep2_w0",
+          "event_refs": []
+        }
+      ],
+      "missing_data_summary": [
+        "per_window_drift_labels"
+      ],
+      "exclusion_reasons": [
+        "Run '20260905T225804Z_dep-confusion-001_rep2': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set."
+      ]
+    },
+    {
+      "report_id": "303fb850-6714-4ef9-8a02-48669facf942",
+      "run_id": "20260905T230506Z_dep-confusion-001_rep3",
+      "scenario_id": "dep-confusion-001",
+      "run_completed": true,
+      "injection_succeeded": true,
+      "ground_truth_label": 1,
+      "evidence_record_count": 0,
+      "observations_built": 1,
+      "observations_excluded": 0,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 1 causal observation(s) available; minimum required is 10. Minimum technical guard: N >= 10 required to prevent rank-deficient regression matrices. Does not imply statistical power or identifiability.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260905T230506Z_dep-confusion-001_rep3",
+          "reason_code": "too_few_observations",
+          "explanation": "Run '20260905T230506Z_dep-confusion-001_rep3': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set.",
+          "missing_fields": [
+            "per_window_drift_labels"
+          ]
+        }
+      ],
+      "provenance_records": [
+        {
+          "run_id": "20260905T230506Z_dep-confusion-001_rep3",
+          "scenario_id": "dep-confusion-001",
+          "window_index": 0,
+          "window_start_iso": "2026-09-05T23:05:06.945945+00:00",
+          "window_end_iso": "2026-09-05T23:11:38.843162+00:00",
+          "event_count": 0,
+          "mapping_statuses": [],
+          "evidence_ids": [],
+          "drift_outcome": "",
+          "drift_score": null,
+          "outcome_label": "positive",
+          "outcome_label_source": "verified_contract_drift_true_positive",
+          "missing_fields": [
+            "mapping_statuses: BDG node data not supplied; mapping provenance unavailable",
+            "evidence_ids: BDG node data not supplied; evidence IDs unavailable"
+          ],
+          "exclusion_reason": "",
+          "window_id": "20260905T230506Z_dep-confusion-001_rep3_w0",
+          "event_refs": []
+        }
+      ],
+      "missing_data_summary": [
+        "per_window_drift_labels"
+      ],
+      "exclusion_reasons": [
+        "Run '20260905T230506Z_dep-confusion-001_rep3': Only 1 observation(s) built; minimum required is 10. The current dataset provides at most one run-level observation per experiment run. Per-window drift labels are required to build a valid causal observation set."
+      ]
+    },
+    {
+      "report_id": "4efbff71-13c2-48d8-887a-3fb60f3f5eef",
+      "run_id": "20260905T231139Z_solarwinds-001_rep1",
+      "scenario_id": "solarwinds-001",
+      "run_completed": false,
+      "injection_succeeded": false,
+      "ground_truth_label": 1,
+      "evidence_record_count": 0,
+      "observations_built": 0,
+      "observations_excluded": 1,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 0 causal observation(s) available; minimum required is 10. Minimum technical guard: N >= 10 required to prevent rank-deficient regression matrices. Does not imply statistical power or identifiability.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260905T231139Z_solarwinds-001_rep1",
+          "reason_code": "failed_injection",
+          "explanation": "Run '20260905T231139Z_solarwinds-001_rep1': The inject phase reported inject_ok=False. The intervention was attempted but did not succeed. This run cannot be treated as a completed attack outcome.",
+          "missing_fields": [
+            "inject_ok"
+          ]
+        }
+      ],
+      "provenance_records": [],
+      "missing_data_summary": [
+        "inject_ok"
+      ],
+      "exclusion_reasons": [
+        "Run '20260905T231139Z_solarwinds-001_rep1': The inject phase reported inject_ok=False. The intervention was attempted but did not succeed. This run cannot be treated as a completed attack outcome."
+      ]
+    },
+    {
+      "report_id": "d02c3c52-917a-4ebe-9215-f7e3da32c0c6",
+      "run_id": "20260905T231616Z_solarwinds-001_rep2",
+      "scenario_id": "solarwinds-001",
+      "run_completed": false,
+      "injection_succeeded": false,
+      "ground_truth_label": 1,
+      "evidence_record_count": 0,
+      "observations_built": 0,
+      "observations_excluded": 1,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 0 causal observation(s) available; minimum required is 10. Minimum technical guard: N >= 10 required to prevent rank-deficient regression matrices. Does not imply statistical power or identifiability.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260905T231616Z_solarwinds-001_rep2",
+          "reason_code": "failed_injection",
+          "explanation": "Run '20260905T231616Z_solarwinds-001_rep2': The inject phase reported inject_ok=False. The intervention was attempted but did not succeed. This run cannot be treated as a completed attack outcome.",
+          "missing_fields": [
+            "inject_ok"
+          ]
+        }
+      ],
+      "provenance_records": [],
+      "missing_data_summary": [
+        "inject_ok"
+      ],
+      "exclusion_reasons": [
+        "Run '20260905T231616Z_solarwinds-001_rep2': The inject phase reported inject_ok=False. The intervention was attempted but did not succeed. This run cannot be treated as a completed attack outcome."
+      ]
+    },
+    {
+      "report_id": "a84738fe-e999-4f3b-90b4-a8f483a801d2",
+      "run_id": "20260905T232054Z_solarwinds-001_rep3",
+      "scenario_id": "solarwinds-001",
+      "run_completed": false,
+      "injection_succeeded": false,
+      "ground_truth_label": 1,
+      "evidence_record_count": 0,
+      "observations_built": 0,
+      "observations_excluded": 1,
+      "mapping_status_counts": {},
+      "treatment_evidence_ids": [],
+      "drift_outcome": "",
+      "drift_score": null,
+      "preflight_passed": false,
+      "preflight_first_blocker_gate": "G1_minimum_observations",
+      "preflight_first_blocker_reason": "too_few_observations",
+      "estimation_attempted": false,
+      "estimation_status": "insufficient_evidence",
+      "estimation_reason": "too_few_observations",
+      "estimation_explanation": "Only 0 causal observation(s) available; minimum required is 10. Minimum technical guard: N >= 10 required to prevent rank-deficient regression matrices. Does not imply statistical power or identifiability.",
+      "ate": null,
+      "causal_assumptions": [],
+      "insufficiencies": [
+        {
+          "run_id": "20260905T232054Z_solarwinds-001_rep3",
+          "reason_code": "failed_injection",
+          "explanation": "Run '20260905T232054Z_solarwinds-001_rep3': The inject phase reported inject_ok=False. The intervention was attempted but did not succeed. This run cannot be treated as a completed attack outcome.",
+          "missing_fields": [
+            "inject_ok"
+          ]
+        }
+      ],
+      "provenance_records": [],
+      "missing_data_summary": [
+        "inject_ok"
+      ],
+      "exclusion_reasons": [
+        "Run '20260905T232054Z_solarwinds-001_rep3': The inject phase reported inject_ok=False. The intervention was attempted but did not succeed. This run cannot be treated as a completed attack outcome."
+      ]
+    }
+  ],
+  "summary": {
+    "total_runs": 9,
+    "attack_runs": 9,
+    "benign_runs": 0,
+    "completed_runs": 6,
+    "failed_injection_runs": 3,
+    "observation_batches_sufficient_for_estimation": 0,
+    "preflight_passed_count": 0,
+    "estimation_attempted_count": 0,
+    "estimation_completed_count": 0,
+    "real_estimates_produced": 0,
+    "completed_attacks": 6,
+    "failed_injections": 3,
+    "collection_dropouts": 0,
+    "benign_count": 0,
+    "mapping_status_totals": {},
+    "abstention_reason_counts": {
+      "too_few_observations": 9
+    },
+    "missing_data_fields": [
+      "inject_ok",
+      "per_window_drift_labels"
+    ]
+  },
+  "data_quality": {
+    "total_runs": 9,
+    "completed_attacks": 6,
+    "failed_injections": 3,
+    "collection_dropouts": 0,
+    "benign_count": 0
+  },
+  "exclusions": [
+    {
+      "run_id": "20260905T231139Z_solarwinds-001_rep1",
+      "scenario_id": "solarwinds-001_rep1",
+      "reason": "failed_injection",
+      "error": "inject() returned False",
+      "notes": "Phase 2 injection failed (rollout status timeout / inject_ok=False); excluded from detection sensitivity (TPR) denominators per EXPERIMENT_PROTOCOL.md \u00a73.1."
+    },
+    {
+      "run_id": "20260905T231616Z_solarwinds-001_rep2",
+      "scenario_id": "solarwinds-001_rep2",
+      "reason": "failed_injection",
+      "error": "inject() returned False",
+      "notes": "Phase 2 injection failed (rollout status timeout / inject_ok=False); excluded from detection sensitivity (TPR) denominators per EXPERIMENT_PROTOCOL.md \u00a73.1."
+    },
+    {
+      "run_id": "20260905T232054Z_solarwinds-001_rep3",
+      "scenario_id": "solarwinds-001_rep3",
+      "reason": "failed_injection",
+      "error": "inject() returned False",
+      "notes": "Phase 2 injection failed (rollout status timeout / inject_ok=False); excluded from detection sensitivity (TPR) denominators per EXPERIMENT_PROTOCOL.md \u00a73.1."
+    }
+  ],
+  "metrics": {
+    "detector_name": "phantom",
+    "status": "evaluated",
+    "tpr": 1.0,
+    "tpr_ci_wilson": [
+      0.6097,
+      1.0
+    ],
+    "fpr": null,
+    "precision": null,
+    "recall": 1.0,
+    "f1": null,
+    "mttd_mean": 15.74,
+    "mttd_median": 5.52,
+    "mttd_iqr": 4.37,
+    "mttd_p95": 54.72,
+    "mttd_ci_bootstrap": [
+      3.57,
+      38.04
+    ],
+    "tp": 6,
+    "fp": null,
+    "fn": 0,
+    "tn": null,
+    "n_attack_scenarios": 6,
+    "n_benign_scenarios": 0,
+    "excluded_failed_injections": 3
+  },
+  "detection_metrics": {
+    "detector_name": "phantom",
+    "status": "evaluated",
+    "tpr": 1.0,
+    "tpr_ci_wilson": [
+      0.6097,
+      1.0
+    ],
+    "fpr": null,
+    "precision": null,
+    "recall": 1.0,
+    "f1": null,
+    "mttd_mean": 15.74,
+    "mttd_median": 5.52,
+    "mttd_iqr": 4.37,
+    "mttd_p95": 54.72,
+    "mttd_ci_bootstrap": [
+      3.57,
+      38.04
+    ],
+    "tp": 6,
+    "fp": null,
+    "fn": 0,
+    "tn": null,
+    "n_attack_scenarios": 6,
+    "n_benign_scenarios": 0,
+    "excluded_failed_injections": 3
+  },
+  "overhead": {
+    "status": "unmeasured",
+    "cpu_overhead_pct": null,
+    "memory_overhead_mb": null,
+    "event_lag_p95_ms": null
+  },
+  "baselines": {
+    "falco-default-rules": {
+      "status": "telemetry_unavailable",
+      "tpr": null,
+      "tpr_ci_wilson": null,
+      "fpr": null,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "mttd_mean_s": null,
+      "notes": "telemetry_unavailable"
+    },
+    "trivy-sbom-static": {
+      "status": "task_mismatch_and_telemetry_unavailable",
+      "tpr": null,
+      "tpr_ci_wilson": null,
+      "fpr": null,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "mttd_mean_s": null,
+      "notes": "task_mismatch_and_telemetry_unavailable"
+    },
+    "isolation-forest-syscall-frequency": {
+      "status": "telemetry_unavailable",
+      "tpr": null,
+      "tpr_ci_wilson": null,
+      "fpr": null,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "mttd_mean_s": null,
+      "notes": "telemetry_unavailable"
+    }
+  },
+  "detector_reports": [
+    {
+      "detector_name": "phantom",
+      "status": "evaluated",
+      "n_attack_scenarios": 6,
+      "n_benign_scenarios": 0,
+      "excluded_failed_injections": 3,
+      "tp": 6,
+      "fp": null,
+      "fn": 0,
+      "tn": null,
+      "tpr": 1.0,
+      "tpr_ci_wilson": [
+        0.6097,
+        1.0
+      ],
+      "tpr_wilson_ci": [
+        0.6097,
+        1.0
+      ],
+      "fpr": null,
+      "precision": null,
+      "recall": 1.0,
+      "f1": null,
+      "false_positives_per_hour": null,
+      "mttd_mean_s": 15.74,
+      "mttd_p50_s": 5.52,
+      "mttd_median_s": 5.52,
+      "mttd_iqr_s": 4.37,
+      "mttd_p95_s": 54.72,
+      "mttd_ci_bootstrap": [
+        3.57,
+        38.04
+      ],
+      "mttd_values_s": [
+        70.331969,
+        6.349775,
+        4.681537,
+        2.607243,
+        7.87591,
+        2.578247
+      ],
+      "overhead_status": "unmeasured",
+      "cpu_overhead_pct": null,
+      "memory_overhead_mb": null,
+      "event_lag_p95_ms": null,
+      "attribution_accuracy": 0.0,
+      "attribution_exact": 0.0,
+      "attribution_partial": 0.0,
+      "brier_score": null,
+      "notes": ""
+    },
+    {
+      "detector_name": "falco-default-rules",
+      "status": "telemetry_unavailable",
+      "n_attack_scenarios": 6,
+      "n_benign_scenarios": 0,
+      "excluded_failed_injections": 3,
+      "tp": null,
+      "fp": null,
+      "fn": null,
+      "tn": null,
+      "tpr": null,
+      "tpr_ci_wilson": null,
+      "tpr_wilson_ci": null,
+      "fpr": null,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "false_positives_per_hour": null,
+      "mttd_mean_s": null,
+      "mttd_p50_s": null,
+      "mttd_median_s": null,
+      "mttd_iqr_s": null,
+      "mttd_p95_s": null,
+      "mttd_ci_bootstrap": null,
+      "mttd_values_s": [],
+      "overhead_status": "unmeasured",
+      "cpu_overhead_pct": null,
+      "memory_overhead_mb": null,
+      "event_lag_p95_ms": null,
+      "attribution_accuracy": null,
+      "attribution_exact": null,
+      "attribution_partial": null,
+      "brier_score": null,
+      "notes": "telemetry_unavailable"
+    },
+    {
+      "detector_name": "trivy-sbom-static",
+      "status": "task_mismatch_and_telemetry_unavailable",
+      "n_attack_scenarios": 6,
+      "n_benign_scenarios": 0,
+      "excluded_failed_injections": 3,
+      "tp": null,
+      "fp": null,
+      "fn": null,
+      "tn": null,
+      "tpr": null,
+      "tpr_ci_wilson": null,
+      "tpr_wilson_ci": null,
+      "fpr": null,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "false_positives_per_hour": null,
+      "mttd_mean_s": null,
+      "mttd_p50_s": null,
+      "mttd_median_s": null,
+      "mttd_iqr_s": null,
+      "mttd_p95_s": null,
+      "mttd_ci_bootstrap": null,
+      "mttd_values_s": [],
+      "overhead_status": "unmeasured",
+      "cpu_overhead_pct": null,
+      "memory_overhead_mb": null,
+      "event_lag_p95_ms": null,
+      "attribution_accuracy": null,
+      "attribution_exact": null,
+      "attribution_partial": null,
+      "brier_score": null,
+      "notes": "task_mismatch_and_telemetry_unavailable"
+    },
+    {
+      "detector_name": "isolation-forest-syscall-frequency",
+      "status": "telemetry_unavailable",
+      "n_attack_scenarios": 6,
+      "n_benign_scenarios": 0,
+      "excluded_failed_injections": 3,
+      "tp": null,
+      "fp": null,
+      "fn": null,
+      "tn": null,
+      "tpr": null,
+      "tpr_ci_wilson": null,
+      "tpr_wilson_ci": null,
+      "fpr": null,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "false_positives_per_hour": null,
+      "mttd_mean_s": null,
+      "mttd_p50_s": null,
+      "mttd_median_s": null,
+      "mttd_iqr_s": null,
+      "mttd_p95_s": null,
+      "mttd_ci_bootstrap": null,
+      "mttd_values_s": [],
+      "overhead_status": "unmeasured",
+      "cpu_overhead_pct": null,
+      "memory_overhead_mb": null,
+      "event_lag_p95_ms": null,
+      "attribution_accuracy": null,
+      "attribution_exact": null,
+      "attribution_partial": null,
+      "brier_score": null,
+      "notes": "telemetry_unavailable"
+    }
+  ],
+  "limitations": [
+    "DoWhy causal estimator is functional in this environment (3.12.0). However, no real-data causal estimates were produced because real experiment runs lack per-window drift labels and have too few observations (preflight gate G1 failed).",
+    "Total telemetry collection dropout in raw/ (2026-08-23): All 6 indexed runs in raw/ contain zero detections due to collector API client port-forward disconnection; lack of detections represents a telemetry collection dropout, NOT evidence of negative drift or true negative detector silence.",
+    "Zero benign controls in raw3 (N_benign = 0): False Positive Rate (FPR), Precision, and F1 score are mathematically undefined without negative-class controls and cannot be fabricated as zero.",
+    "Upstream identity resolution failure: 100% of recorded drift detections in raw3 (3,701/3,701) have pod_name='unknown', container_name='unknown', null sbom_id, null purl, and dummy sha256:000... image digests. Component-level causal attribution cannot be empirically established from raw telemetry.",
+    "Unmeasured Prometheus overhead: Resource metrics (cpu_usage_cores, memory_rss_mb, event_lag_p95_ms) all defaulted to 0.0 due to unhandled collection errors on query failure. True monitoring overhead is unmeasured, not zero.",
+    "Failed injection exclusions: 3 out of 9 runs in raw3 (all 3 repetitions of solarwinds-001) failed injection rollout (inject_ok=False) and were excluded from detection sensitivity (TPR) denominators per protocol.",
+    "Preflight Gate G1 software sanity guard: Sample size N < 10 failed preflight sanity check; causal estimation cleanly abstained with 'insufficient_evidence: too_few_observations' without bypassing technical software gates.",
+    "Per-window runtime_sbom_drift outcome labels do not exist. CausalObservation rows cannot be built with valid outcome values from the current dataset.",
+    "Baseline telemetry absence: Falco alert logs are empty, Trivy static scans represent point-in-time image vulnerability scans unlinked to runtime drift windows, and IsolationForest runtime anomaly streams were uncollected. Baseline metrics are recorded as telemetry_unavailable / NR."
+  ],
+  "claims_NOT_supported_by_this_data": [
+    "Detection rate (TPR / recall)",
+    "False positive rate (FPR)",
+    "Precision",
+    "F1 score",
+    "Mean time to detection (MTTD)",
+    "Causal attribution accuracy (CAA)",
+    "PCEPS Brier score",
+    "CPU/memory overhead (all metrics are zero in the dataset)",
+    "Real-data average treatment effect (ATE)",
+    "Any comparison to baseline detectors from this run batch"
+  ]
+}

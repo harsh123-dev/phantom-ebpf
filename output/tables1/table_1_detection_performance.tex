@@ -1,0 +1,17 @@
+\begin{table}[h]
+\centering
+\caption{Detection performance comparison across detectors and scenarios.}
+\label{tab:detection_performance}
+\begin{tabular}{lrrrrrr}
+\hline
+Detector & TPR & FPR & F1 & MTTD(s) & CPU\% & FP/hr \\
+\hline
+\textbf{PHANTOM (ours)} & \textbf{1.000} & \text{---} & \text{---} & \textbf{15.740} & \text{---} & \text{---} \\
+Falco (default rules) & \text{---} & \text{---} & \text{---} & \text{---} & \text{---} & \text{---} \\
+Trivy (static scan) & \text{---} & \text{---} & \text{---} & \text{---} & \text{---} & \text{---} \\
+IsoForest (na\"{i}ve) & \text{---} & \text{---} & \text{---} & \text{---} & \text{---} & \text{---} \\
+\hline
+\end{tabular}
+\vspace{0.5em}
+\footnotesize{$\dagger$ MTTD is undefined for Trivy (point-in-time scanner). PHANTOM (ours) is the proposed system; all others are baselines.}
+\end{table}

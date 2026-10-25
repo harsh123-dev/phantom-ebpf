@@ -203,17 +203,18 @@ spec:
               def handle(c):
                   try: c.recv(1024)
                   finally: c.close()
-              for port in [8443, 4446, 8080]:
+              for port in [8443, 4445, 4446, 8080]:
                   s = socket.socket()
                   s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                   s.bind(('0.0.0.0', port))
                   s.listen(50)
                   threading.Thread(target=lambda srv=s: [handle(srv.accept()[0]) for _ in iter(int, 1)], daemon=True).start()
-              print("phantom-sink listening on 8443, 4446, 8080")
+              print("phantom-sink listening on 8443, 4445, 4446, 8080")
               import time
               while True: time.sleep(60)
           ports:
             - containerPort: 8443
+            - containerPort: 4445
             - containerPort: 4446
             - containerPort: 8080
           resources:
@@ -236,6 +237,9 @@ spec:
     - name: https-beacon
       port: 8443
       targetPort: 8443
+    - name: dep-beacon
+      port: 4445
+      targetPort: 4445
     - name: http-beacon
       port: 4446
       targetPort: 4446

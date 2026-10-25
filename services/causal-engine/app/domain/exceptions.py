@@ -117,3 +117,55 @@ class CausalModelConstructionError(Exception):
         """
         self.reason = reason
         super().__init__(f"CausalModel construction failed: {reason}")
+
+
+class InsufficientObservationsError(Exception):
+    """Raised when the observation count is below the minimum required.
+
+    Per audit C-5: small N can cause numerically unstable DoWhy estimates.
+    The guard allows the caller to return INSUFFICIENT_EVIDENCE before
+    any identification or estimation attempt.
+
+    Attributes:
+        count: Actual number of observations.
+        minimum: Required minimum.
+    """
+
+    def __init__(self, count: int, minimum: int) -> None:
+        """Initialise with the observation count.
+
+        Args:
+            count: Actual observation count.
+            minimum: Required minimum observation count.
+        """
+        self.count = count
+        self.minimum = minimum
+        super().__init__(
+            f"Insufficient observations: {count} < minimum {minimum}"
+        )
+
+
+class TemporalOrderViolationError(Exception):
+    """Raised when a covariate is observed after the outcome.
+
+    Per audit C-2: post-outcome covariates must be rejected to prevent
+    outcome leakage into the exposure model.
+
+    Attributes:
+        covariate_name: Name of the offending covariate.
+        detail: Human-readable description.
+    """
+
+    def __init__(self, covariate_name: str, detail: str = "") -> None:
+        """Initialise with the covariate name.
+
+        Args:
+            covariate_name: The covariate whose timing is invalid.
+            detail: Optional additional context.
+        """
+        self.covariate_name = covariate_name
+        self.detail = detail
+        super().__init__(
+            f"Covariate '{covariate_name}' observed after outcome "
+            f"(temporal order violation). {detail}"
+        )

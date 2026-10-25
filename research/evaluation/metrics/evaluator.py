@@ -46,12 +46,15 @@ Metric definitions — exact match to handoff §4:
 from __future__ import annotations
 
 import logging
+import math
+import random
 import statistics
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from research.evaluation.baselines.base_baseline import Detection
+from research.evaluation.metrics.wilson_score import compute_ordinary_wilson_score
 from research.evaluation.scenarios.scenario_runner import MetricsSnapshot, ScenarioResult
 
 log = logging.getLogger(__name__)
@@ -67,25 +70,32 @@ class EvaluationReport:
 
     Attributes:
         detector_name: Detector identifier (e.g. 'phantom', 'falco-default-rules').
-        n_attack_scenarios: Total attack scenario runs evaluated.
+        n_attack_scenarios: Total eligible attack scenario runs evaluated.
         n_benign_scenarios: Total benign scenario runs evaluated.
-        tp: True positive count.
-        fp: False positive count.
-        fn: False negative count.
-        tn: True negative count.
-        tpr: True positive rate (recall).
-        fpr: False positive rate.
-        precision: Precision (TP / (TP + FP)).
+        tp: True positive count (or None if baseline telemetry missing).
+        fp: False positive count (or None if no benign runs).
+        fn: False negative count (or None if baseline telemetry missing).
+        tn: True negative count (or None if no benign runs).
+        tpr: True positive rate (recall), or None if denominator is zero.
+        tpr_ci_wilson: 95% Wilson score interval [lower, upper] for TPR.
+        fpr: False positive rate, or None if denominator is zero.
+        precision: Precision (TP / (TP + FP)), or None if denominator is zero.
         recall: Same as TPR.
-        f1: F1 score.
+        f1: F1 score, or None if precision/recall undefined.
         false_positives_per_hour: FP count per hour of benign monitoring.
         mttd_mean_s: Mean time to detection in seconds (TP cases only).
         mttd_p50_s: Median MTTD in seconds.
+        mttd_median_s: Median MTTD in seconds (alias for mttd_p50_s).
+        mttd_iqr_s: Interquartile range of MTTD in seconds.
         mttd_p95_s: 95th percentile MTTD in seconds.
+        mttd_ci_bootstrap: 95% non-parametric bootstrap percentile interval for MTTD.
         mttd_values_s: All individual MTTD values (for distribution reporting).
-        cpu_overhead_pct: Mean CPU overhead % (attack vs baseline phase).
-        memory_overhead_mb: Mean memory overhead MB.
-        event_lag_p95_ms: 95th-percentile collection latency in ms.
+        overhead_status: 'measured' or 'unmeasured'.
+        cpu_overhead_pct: Mean CPU overhead % (attack vs baseline phase), or None if unmeasured.
+        memory_overhead_mb: Mean memory overhead MB, or None if unmeasured.
+        event_lag_p95_ms: 95th-percentile collection latency in ms, or None if unmeasured.
+        status: Evaluation status ('evaluated', 'telemetry_unavailable', etc.).
+        excluded_failed_injections: Count of failed injection runs excluded from TPR.
         attribution_accuracy: Causal attribution accuracy (PHANTOM only; else None).
         attribution_exact: Exact-match attribution accuracy (PHANTOM only).
         attribution_partial: Partial-credit attribution accuracy (PHANTOM only).
@@ -96,28 +106,54 @@ class EvaluationReport:
     detector_name: str
     n_attack_scenarios: int = 0
     n_benign_scenarios: int = 0
-    tp: int = 0
-    fp: int = 0
-    fn: int = 0
-    tn: int = 0
-    tpr: float = 0.0
-    fpr: float = 0.0
-    precision: float = 0.0
-    recall: float = 0.0
-    f1: float = 0.0
-    false_positives_per_hour: float = 0.0
+    tp: int | None = 0
+    fp: int | None = 0
+    fn: int | None = 0
+    tn: int | None = 0
+    tpr: float | None = None
+    tpr_ci_wilson: tuple[float, float] | None = None
+    fpr: float | None = None
+    precision: float | None = None
+    recall: float | None = None
+    f1: float | None = None
+    false_positives_per_hour: float | None = None
     mttd_mean_s: float | None = None
     mttd_p50_s: float | None = None
+    mttd_median_s: float | None = None
+    mttd_iqr_s: float | None = None
     mttd_p95_s: float | None = None
+    mttd_ci_bootstrap: tuple[float, float] | None = None
     mttd_values_s: list[float] = field(default_factory=list)
-    cpu_overhead_pct: float = 0.0
-    memory_overhead_mb: float = 0.0
-    event_lag_p95_ms: float = 0.0
+    overhead_status: str = "measured"
+    cpu_overhead_pct: float | None = None
+    memory_overhead_mb: float | None = None
+    event_lag_p95_ms: float | None = None
+    status: str = "evaluated"
+    excluded_failed_injections: int = 0
     attribution_accuracy: float | None = None     # PHANTOM only
     attribution_exact: float | None = None        # PHANTOM only
     attribution_partial: float | None = None      # PHANTOM only
     brier_score: float | None = None              # PHANTOM only
     notes: str = ""
+
+    @property
+    def tpr_wilson_ci(self) -> tuple[float, float] | None:
+        """Alias for tpr_ci_wilson."""
+        return self.tpr_ci_wilson
+
+    @tpr_wilson_ci.setter
+    def tpr_wilson_ci(self, value: tuple[float, float] | None) -> None:
+        self.tpr_ci_wilson = value
+
+    @property
+    def mttd_median(self) -> float | None:
+        """Alias for mttd_median_s."""
+        return self.mttd_median_s
+
+    @property
+    def mttd_iqr(self) -> float | None:
+        """Alias for mttd_iqr_s."""
+        return self.mttd_iqr_s
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize to a JSON-serializable dict.
@@ -127,13 +163,17 @@ class EvaluationReport:
         """
         return {
             "detector_name": self.detector_name,
+            "status": self.status,
             "n_attack_scenarios": self.n_attack_scenarios,
             "n_benign_scenarios": self.n_benign_scenarios,
+            "excluded_failed_injections": self.excluded_failed_injections,
             "tp": self.tp,
             "fp": self.fp,
             "fn": self.fn,
             "tn": self.tn,
             "tpr": self.tpr,
+            "tpr_ci_wilson": list(self.tpr_ci_wilson) if self.tpr_ci_wilson is not None else None,
+            "tpr_wilson_ci": list(self.tpr_wilson_ci) if self.tpr_wilson_ci is not None else None,
             "fpr": self.fpr,
             "precision": self.precision,
             "recall": self.recall,
@@ -141,8 +181,12 @@ class EvaluationReport:
             "false_positives_per_hour": self.false_positives_per_hour,
             "mttd_mean_s": self.mttd_mean_s,
             "mttd_p50_s": self.mttd_p50_s,
+            "mttd_median_s": self.mttd_median_s,
+            "mttd_iqr_s": self.mttd_iqr_s,
             "mttd_p95_s": self.mttd_p95_s,
+            "mttd_ci_bootstrap": list(self.mttd_ci_bootstrap) if self.mttd_ci_bootstrap is not None else None,
             "mttd_values_s": self.mttd_values_s,
+            "overhead_status": self.overhead_status,
             "cpu_overhead_pct": self.cpu_overhead_pct,
             "memory_overhead_mb": self.memory_overhead_mb,
             "event_lag_p95_ms": self.event_lag_p95_ms,
@@ -152,6 +196,32 @@ class EvaluationReport:
             "brier_score": self.brier_score,
             "notes": self.notes,
         }
+
+
+# ---------------------------------------------------------------------------
+# Injection Failure Helper
+# ---------------------------------------------------------------------------
+
+
+def is_failed_injection(r: ScenarioResult) -> bool:
+    """Return True if this run represents a failed injection (inject_ok=False).
+
+    Per EXPERIMENT_PROTOCOL.md §3.1:
+    Failed injection runs must be excluded from detection sensitivity (TPR)
+    denominators as the intervention was never delivered.
+    """
+    if getattr(r, "inject_ok", None) is False:
+        return True
+    error_str = getattr(r, "error", "") or ""
+    if "inject() returned False" in error_str or "inject() raised" in error_str or "inject_ok=False" in error_str:
+        return True
+    for p in getattr(r, "phases", []):
+        if getattr(p, "name", "") == "inject" and "inject_ok=False" in getattr(p, "notes", ""):
+            return True
+    label = getattr(r, "scenario_label", {}) or {}
+    if label.get("inject_ok") is False:
+        return True
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -250,15 +320,22 @@ class ScenarioEvaluator:
         attack_results = [r for r in scenario_results if r.ground_truth_label == 1]
         benign_results = [r for r in scenario_results if r.ground_truth_label == 0]
 
-        tp = sum(1 for r in attack_results if r.is_true_positive)
-        fn = sum(1 for r in attack_results if not r.is_true_positive)
-        fp = sum(
-            1 for r in benign_results
-            if r.phantom_detections  # any detection in a benign scenario = FP
-        )
-        tn = len(benign_results) - fp
+        valid_attack_results = [r for r in attack_results if not is_failed_injection(r)]
+        failed_attack_results = [r for r in attack_results if is_failed_injection(r)]
 
-        mttd_values = [r.mttd_s for r in attack_results if r.mttd_s is not None]
+        tp = sum(1 for r in valid_attack_results if r.is_true_positive)
+        fn = sum(1 for r in valid_attack_results if not r.is_true_positive)
+        if benign_results:
+            fp: int | None = sum(
+                1 for r in benign_results
+                if r.phantom_detections  # any detection in a benign scenario = FP
+            )
+            tn: int | None = len(benign_results) - fp
+        else:
+            fp = None
+            tn = None
+
+        mttd_values = [r.mttd_s for r in valid_attack_results if r.mttd_s is not None]
 
         # Overhead metrics.
         baseline_snaps = [
@@ -272,24 +349,35 @@ class ScenarioEvaluator:
             if s.phase == "attack"
         ]
 
-        cpu_base = _safe_mean([s.cpu_usage_cores for s in baseline_snaps])
-        cpu_attack = _safe_mean([s.cpu_usage_cores for s in attack_snaps])
-        cpu_overhead_pct = (
-            100.0 * (cpu_attack - cpu_base) / max(cpu_base, 1e-9)
-            if cpu_base > 0
-            else 0.0
+        has_live_overhead = any(
+            s.cpu_usage_cores > 0.0 or s.memory_rss_mb > 0.0 or s.event_lag_p95_ms > 0.0
+            for s in (baseline_snaps + attack_snaps)
         )
-        mem_base = _safe_mean([s.memory_rss_mb for s in baseline_snaps])
-        mem_attack = _safe_mean([s.memory_rss_mb for s in attack_snaps])
-        memory_overhead_mb = mem_attack - mem_base
 
-        event_lag_p95 = _safe_percentile(
-            [s.event_lag_p95_ms for s in attack_snaps], 95
-        )
+        if not has_live_overhead or not baseline_snaps or not attack_snaps:
+            cpu_overhead_pct = None
+            memory_overhead_mb = None
+            event_lag_p95 = None
+            overhead_status = "unmeasured"
+        else:
+            cpu_base = _safe_mean([s.cpu_usage_cores for s in baseline_snaps])
+            cpu_attack = _safe_mean([s.cpu_usage_cores for s in attack_snaps])
+            cpu_overhead_pct = (
+                100.0 * (cpu_attack - cpu_base) / cpu_base
+                if cpu_base > 0
+                else None
+            )
+            mem_base = _safe_mean([s.memory_rss_mb for s in baseline_snaps])
+            mem_attack = _safe_mean([s.memory_rss_mb for s in attack_snaps])
+            memory_overhead_mb = mem_attack - mem_base
+            event_lag_p95 = _safe_percentile(
+                [s.event_lag_p95_ms for s in attack_snaps], 95
+            )
+            overhead_status = "measured"
 
         # Attribution accuracy (from scenario_label.top_attributed_purl if present).
         attribution_accuracy, attribution_exact, attribution_partial = (
-            self._compute_attribution_accuracy(attack_results)
+            self._compute_attribution_accuracy(valid_attack_results)
         )
 
         # PCEPS Brier score (from scenario_label.pceps_probability if present).
@@ -305,14 +393,20 @@ class ScenarioEvaluator:
 
         report = _build_report(
             detector_name=self._phantom_name,
-            tp=tp, fp=fp, fn=fn, tn=tn,
-            n_attack=len(attack_results),
+            tp=tp,
+            fp=fp,
+            fn=fn,
+            tn=tn,
+            n_attack=len(valid_attack_results),
             n_benign=len(benign_results),
             mttd_values=mttd_values,
             total_benign_s=total_benign_s,
             cpu_overhead_pct=cpu_overhead_pct,
             memory_overhead_mb=memory_overhead_mb,
             event_lag_p95_ms=event_lag_p95,
+            overhead_status=overhead_status,
+            status="evaluated",
+            excluded_failed_injections=len(failed_attack_results),
         )
         report.attribution_accuracy = attribution_accuracy
         report.attribution_exact = attribution_exact
@@ -337,6 +431,9 @@ class ScenarioEvaluator:
         then checking whether the oracle injection_timestamp is before
         detected_at and within the detection window.
 
+        If baseline telemetry is absent (detections is empty), classifies as
+        'telemetry_unavailable' rather than fabricating False Negatives (FN=N, TPR=0.0).
+
         Args:
             detector_name: Detector name string.
             detections: All detections from this baseline.
@@ -348,11 +445,46 @@ class ScenarioEvaluator:
         attack_results = [r for r in scenario_results if r.ground_truth_label == 1]
         benign_results = [r for r in scenario_results if r.ground_truth_label == 0]
 
-        # Build a lookup from scenario attack phase windows.
-        # For each attack scenario: (phase_start, phase_end, detection_window_s).
-        ScenarioWindow = tuple  # (result, phase_start, phase_end, detection_window_s)
+        valid_attack_results = [r for r in attack_results if not is_failed_injection(r)]
+        failed_attack_results = [r for r in attack_results if is_failed_injection(r)]
+
+        is_trivy = "trivy" in detector_name.lower()
+        if not detections:
+            status = "task_mismatch_and_telemetry_unavailable" if is_trivy else "telemetry_unavailable"
+            return EvaluationReport(
+                detector_name=detector_name,
+                n_attack_scenarios=len(valid_attack_results),
+                n_benign_scenarios=len(benign_results),
+                excluded_failed_injections=len(failed_attack_results),
+                tp=None,
+                fp=None,
+                fn=None,
+                tn=None,
+                tpr=None,
+                tpr_ci_wilson=None,
+                fpr=None,
+                precision=None,
+                recall=None,
+                f1=None,
+                false_positives_per_hour=None,
+                mttd_mean_s=None,
+                mttd_p50_s=None,
+                mttd_median_s=None,
+                mttd_iqr_s=None,
+                mttd_p95_s=None,
+                mttd_ci_bootstrap=None,
+                mttd_values_s=[],
+                overhead_status="unmeasured",
+                cpu_overhead_pct=None,
+                memory_overhead_mb=None,
+                event_lag_p95_ms=None,
+                status=status,
+                notes=status,
+            )
+
+        # Build a lookup from scenario attack phase windows for valid attacks.
         attack_windows: list[tuple[ScenarioResult, datetime, datetime, float]] = []
-        for r in attack_results:
+        for r in valid_attack_results:
             attack_phase = next(
                 (p for p in r.phases if p.name == "attack"), None
             )
@@ -374,7 +506,6 @@ class ScenarioEvaluator:
         # Classify detections.
         tp_runs: set[str] = set()   # run_id of attack scenarios with TP
         fp_count = 0
-        mttd_values: list[float] = []
 
         for det in detections:
             classified = False
@@ -388,10 +519,6 @@ class ScenarioEvaluator:
                 delta = (det.detected_at - r.injection_timestamp).total_seconds()
                 if 0 <= delta <= window_s:
                     tp_runs.add(r.run_id)
-                    # MTTD is computed below via mttd_values_final
-                    # (earliest detection per TP run). The previous
-                    # guard here was always False after set.add(),
-                    # so this branch never populated mttd_values.
                     classified = True
                     break
 
@@ -423,8 +550,9 @@ class ScenarioEvaluator:
                 mttd_values_final.append(delta)
 
         tp = len(tp_runs)
-        fn = len(attack_results) - tp
-        tn = max(0, len(benign_results) - fp_count)
+        fn = len(valid_attack_results) - tp
+        fp = fp_count if benign_results else None
+        tn = max(0, len(benign_results) - fp_count) if benign_results else None
 
         total_benign_s = sum(
             (p.end_time - p.start_time).total_seconds()
@@ -436,14 +564,20 @@ class ScenarioEvaluator:
 
         return _build_report(
             detector_name=detector_name,
-            tp=tp, fp=fp_count, fn=fn, tn=tn,
-            n_attack=len(attack_results),
+            tp=tp,
+            fp=fp,
+            fn=fn,
+            tn=tn,
+            n_attack=len(valid_attack_results),
             n_benign=len(benign_results),
             mttd_values=mttd_values_final,
             total_benign_s=total_benign_s,
-            cpu_overhead_pct=0.0,    # baselines don't track their own overhead here
-            memory_overhead_mb=0.0,
-            event_lag_p95_ms=0.0,
+            cpu_overhead_pct=None,
+            memory_overhead_mb=None,
+            event_lag_p95_ms=None,
+            overhead_status="unmeasured",
+            status="evaluated",
+            excluded_failed_injections=len(failed_attack_results),
         )
 
     # ------------------------------------------------------------------ #
@@ -581,76 +715,150 @@ def _safe_percentile(values: list[float], percentile: float) -> float:
     return sorted_vals[lower] + frac * (sorted_vals[upper] - sorted_vals[lower])
 
 
+def _compute_mttd_stats(
+    mttd_values: list[float],
+    n_bootstrap: int = 2000,
+    seed: int = 42,
+) -> tuple[float | None, float | None, float | None, float | None, tuple[float, float] | None]:
+    """Compute mean, median (p50), IQR, p95, and non-parametric bootstrap 95% CI for MTTD.
+
+    Returns:
+        (mean, median, iqr, p95, bootstrap_ci_95)
+    """
+    if not mttd_values:
+        return None, None, None, None, None
+
+    vals = sorted(mttd_values)
+    n = len(vals)
+    mean_val = statistics.mean(vals)
+    median_val = statistics.median(vals)
+    p95_val = _safe_percentile(vals, 95.0)
+
+    q1 = _safe_percentile(vals, 25.0)
+    q3 = _safe_percentile(vals, 75.0)
+    iqr_val = q3 - q1
+
+    if n < 2:
+        bootstrap_ci = None
+    else:
+        rng = random.Random(seed)
+        boot_means: list[float] = []
+        for _ in range(n_bootstrap):
+            sample = [vals[rng.randrange(n)] for _ in range(n)]
+            boot_means.append(statistics.mean(sample))
+        boot_means.sort()
+        idx_low = int(0.025 * n_bootstrap)
+        idx_high = int(0.975 * n_bootstrap)
+        bootstrap_ci = (round(boot_means[idx_low], 2), round(boot_means[idx_high], 2))
+
+    return (
+        round(mean_val, 2),
+        round(median_val, 2),
+        round(iqr_val, 2),
+        round(p95_val, 2),
+        bootstrap_ci,
+    )
+
+
 def _build_report(
     detector_name: str,
-    tp: int,
-    fp: int,
-    fn: int,
-    tn: int,
+    tp: int | None,
+    fp: int | None,
+    fn: int | None,
+    tn: int | None,
     n_attack: int,
     n_benign: int,
     mttd_values: list[float],
     total_benign_s: float,
-    cpu_overhead_pct: float,
-    memory_overhead_mb: float,
-    event_lag_p95_ms: float,
+    cpu_overhead_pct: float | None = None,
+    memory_overhead_mb: float | None = None,
+    event_lag_p95_ms: float | None = None,
+    overhead_status: str = "measured",
+    status: str = "evaluated",
+    notes: str = "",
+    excluded_failed_injections: int = 0,
 ) -> EvaluationReport:
     """Build an EvaluationReport from raw counts.
 
-    Computes derived metrics (TPR, FPR, F1, MTTD stats, FP/hr).
+    Computes derived metrics (TPR with Wilson CI, FPR, F1, MTTD stats with bootstrap CI, FP/hr).
+    Preserves None for undefined denominators (no fabrication of 0.0 or 1.0).
 
     Args:
         detector_name: Detector name.
-        tp, fp, fn, tn: Confusion matrix counts.
-        n_attack: Total attack scenario runs.
+        tp, fp, fn, tn: Confusion matrix counts (or None).
+        n_attack: Total eligible attack scenario runs.
         n_benign: Total benign scenario runs.
         mttd_values: Per-TP MTTD values in seconds.
         total_benign_s: Total benign monitoring duration in seconds.
-        cpu_overhead_pct: CPU overhead %.
-        memory_overhead_mb: Memory overhead MB.
-        event_lag_p95_ms: P95 event lag ms.
+        cpu_overhead_pct: CPU overhead % (or None if unmeasured).
+        memory_overhead_mb: Memory overhead MB (or None if unmeasured).
+        event_lag_p95_ms: P95 event lag ms (or None if unmeasured).
+        overhead_status: 'measured' or 'unmeasured'.
+        status: Evaluation status string.
+        notes: Free-text notes.
+        excluded_failed_injections: Number of failed injections excluded.
 
     Returns:
         EvaluationReport with all derived metrics filled.
     """
-    denom_tpr = tp + fn
-    tpr = tp / denom_tpr if denom_tpr > 0 else 0.0
+    denom_tpr = (tp + fn) if (tp is not None and fn is not None) else 0
+    if denom_tpr > 0 and tp is not None:
+        tpr = round(tp / denom_tpr, 4)
+        recall = tpr
+        ci = compute_ordinary_wilson_score(tp, denom_tpr, confidence=0.95)
+        tpr_ci_wilson = (round(ci[0], 4), round(ci[1], 4)) if ci[0] is not None else None
+    else:
+        tpr = None
+        recall = None
+        tpr_ci_wilson = None
 
-    denom_fpr = fp + tn
-    fpr = fp / denom_fpr if denom_fpr > 0 else 0.0
+    denom_fpr = (fp + tn) if (fp is not None and tn is not None) else 0
+    fpr = round(fp / denom_fpr, 4) if (denom_fpr > 0 and fp is not None) else None
 
-    denom_prec = tp + fp
-    precision = tp / denom_prec if denom_prec > 0 else 0.0
+    denom_prec = (tp + fp) if (tp is not None and fp is not None) else 0
+    precision = round(tp / denom_prec, 4) if (denom_prec > 0 and tp is not None) else None
 
-    recall = tpr
+    if precision is not None and recall is not None and (precision + recall) > 0:
+        f1 = round(2.0 * precision * recall / (precision + recall), 4)
+    else:
+        f1 = None
 
-    denom_f1 = precision + recall
-    f1 = 2 * precision * recall / denom_f1 if denom_f1 > 0 else 0.0
+    if fp is not None and total_benign_s > 0:
+        fp_per_hour = round(fp / (total_benign_s / 3600.0), 4)
+    else:
+        fp_per_hour = None
 
-    fp_per_hour = fp / max(total_benign_s / 3600.0, 1e-9)
-
-    mttd_mean = _safe_mean(mttd_values) if mttd_values else None
-    mttd_p50 = _safe_percentile(mttd_values, 50) if mttd_values else None
-    mttd_p95 = _safe_percentile(mttd_values, 95) if mttd_values else None
+    mttd_mean, mttd_median, mttd_iqr, mttd_p95, mttd_boot_ci = _compute_mttd_stats(mttd_values)
 
     return EvaluationReport(
         detector_name=detector_name,
         n_attack_scenarios=n_attack,
         n_benign_scenarios=n_benign,
-        tp=tp, fp=fp, fn=fn, tn=tn,
-        tpr=round(tpr, 4),
-        fpr=round(fpr, 4),
-        precision=round(precision, 4),
-        recall=round(recall, 4),
-        f1=round(f1, 4),
-        false_positives_per_hour=round(fp_per_hour, 4),
-        mttd_mean_s=round(mttd_mean, 2) if mttd_mean is not None else None,
-        mttd_p50_s=round(mttd_p50, 2) if mttd_p50 is not None else None,
-        mttd_p95_s=round(mttd_p95, 2) if mttd_p95 is not None else None,
+        tp=tp,
+        fp=fp,
+        fn=fn,
+        tn=tn,
+        tpr=tpr,
+        tpr_ci_wilson=tpr_ci_wilson,
+        fpr=fpr,
+        precision=precision,
+        recall=recall,
+        f1=f1,
+        false_positives_per_hour=fp_per_hour,
+        mttd_mean_s=mttd_mean,
+        mttd_p50_s=mttd_median,
+        mttd_median_s=mttd_median,
+        mttd_iqr_s=mttd_iqr,
+        mttd_p95_s=mttd_p95,
+        mttd_ci_bootstrap=mttd_boot_ci,
         mttd_values_s=mttd_values,
-        cpu_overhead_pct=round(cpu_overhead_pct, 2),
-        memory_overhead_mb=round(memory_overhead_mb, 2),
-        event_lag_p95_ms=round(event_lag_p95_ms, 2),
+        overhead_status=overhead_status,
+        cpu_overhead_pct=round(cpu_overhead_pct, 2) if cpu_overhead_pct is not None else None,
+        memory_overhead_mb=round(memory_overhead_mb, 2) if memory_overhead_mb is not None else None,
+        event_lag_p95_ms=round(event_lag_p95_ms, 2) if event_lag_p95_ms is not None else None,
+        status=status,
+        excluded_failed_injections=excluded_failed_injections,
+        notes=notes,
     )
 
 

