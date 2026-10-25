@@ -252,12 +252,12 @@ resource "aws_instance" "k3s_lab" {
               docker pull postgres:15-alpine || true
               docker pull prom/prometheus:v2.45.0 || true
 
-              # Import images into k3s containerd namespace
-              docker save tiangolo/uwsgi-nginx-flask:python3.11 | k3s ctr images import - || true
-              docker save python:3.11-slim | k3s ctr images import - || true
-              docker save redis:7-alpine | k3s ctr images import - || true
-              docker save postgres:15-alpine | k3s ctr images import - || true
-              docker save prom/prometheus:v2.45.0 | k3s ctr images import - || true
+              # Import images into k3s containerd namespace (k8s.io)
+              docker save tiangolo/uwsgi-nginx-flask:python3.11 | k3s ctr -n k8s.io images import - || true
+              docker save python:3.11-slim | k3s ctr -n k8s.io images import - || true
+              docker save redis:7-alpine | k3s ctr -n k8s.io images import - || true
+              docker save postgres:15-alpine | k3s ctr -n k8s.io images import - || true
+              docker save prom/prometheus:v2.45.0 | k3s ctr -n k8s.io images import - || true
 
               echo ">>> [7/7] Bootstrap complete. Lab is ready for PHANTOM deployment."
               touch /var/log/phantom-bootstrap.done

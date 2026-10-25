@@ -10,20 +10,20 @@ cd "${REPO_ROOT}"
 
 echo "=== [1/4] Building API Gateway ==="
 docker build -f services/api-gateway/Dockerfile -t phantom/api-gateway:latest .
-docker save phantom/api-gateway:latest | k3s ctr images import -
+docker save phantom/api-gateway:latest | k3s ctr -n k8s.io images import -
 
 echo "=== [2/4] Building Causal Engine ==="
 docker build -f services/causal-engine/Dockerfile -t phantom/causal-engine:latest .
-docker save phantom/causal-engine:latest | k3s ctr images import -
+docker save phantom/causal-engine:latest | k3s ctr -n k8s.io images import -
 
 echo "=== [3/4] Building SBOM Service ==="
 docker build -f services/sbom-service/Dockerfile -t phantom/sbom-service:latest .
-docker save phantom/sbom-service:latest | k3s ctr images import -
+docker save phantom/sbom-service:latest | k3s ctr -n k8s.io images import -
 
 echo "=== [4/4] Building eBPF Agent ==="
 docker build -f services/ebpf-agent/Dockerfile -t phantom/ebpf-agent:latest services/ebpf-agent
-docker save phantom/ebpf-agent:latest | k3s ctr images import -
+docker save phantom/ebpf-agent:latest | k3s ctr -n k8s.io images import -
 
 echo ""
-echo "=== All PHANTOM service images built and imported into k3s containerd! ==="
-k3s ctr images list | grep phantom/
+echo "=== All PHANTOM service images built and imported into k3s containerd (k8s.io namespace)! ==="
+k3s ctr -n k8s.io images list | grep phantom/

@@ -14,8 +14,8 @@ spec:
     spec:
       serviceAccountName: phantom-node-agent
       hostPID: true
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
+      # hostNetwork is intentionally false to prevent host port 8080 collision with API Gateway.
+      # eBPF kernel tracing and cgroup tracking operate via hostPID, privileged mode, and host mounts.
       tolerations:
         - operator: Exists
       volumes:
@@ -32,7 +32,8 @@ spec:
             path: /sys/kernel/debug
             type: Directory
       containers:
-        - name: ebpf-agent
+        # Container named 'phantom-agent' to match Prometheus PromQL cAdvisor queries
+        - name: phantom-agent
           image: phantom/ebpf-agent:latest
           imagePullPolicy: IfNotPresent
           ports:
