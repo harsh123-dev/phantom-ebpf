@@ -1,0 +1,2 @@
+
+aws: [ERROR]: An error occurred (InvalidVpcEndpointId.NotFound) when calling the DescribeVpcEndpoints operation: The Vpc Endpoint Id 'vpce-06b26a4c99933f440' does not exist

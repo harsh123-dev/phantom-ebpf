@@ -1,0 +1,641 @@
+{
+  "sts": {
+    "UserId": "AIDATWBJ2GZALCZN3IVBL",
+    "Account": "253490771520",
+    "Arn": "arn:aws:iam::253490771520:user/harsh2"
+  },
+  "instance": {
+    "Reservations": [
+      {
+        "ReservationId": "r-01299cc6c9ed221f2",
+        "OwnerId": "253490771520",
+        "Groups": [],
+        "Instances": [
+          {
+            "Architecture": "x86_64",
+            "BlockDeviceMappings": [
+              {
+                "DeviceName": "/dev/sda1",
+                "Ebs": {
+                  "AttachTime": "2026-10-25T19:01:16+00:00",
+                  "DeleteOnTermination": true,
+                  "Status": "attached",
+                  "VolumeId": "vol-059e997e6d7909b5f",
+                  "EbsCardIndex": 0
+                }
+              }
+            ],
+            "ClientToken": "terraform-20261025190114758300000004",
+            "EbsOptimized": false,
+            "EnaSupport": true,
+            "Hypervisor": "xen",
+            "IamInstanceProfile": {
+              "Arn": "arn:aws:iam::253490771520:instance-profile/phantom-k3s-lab-instance-profile",
+              "Id": "AIPATWBJ2GZAENCRH3VTE"
+            },
+            "NetworkInterfaces": [
+              {
+                "Attachment": {
+                  "AttachTime": "2026-10-25T19:01:15+00:00",
+                  "AttachmentId": "eni-attach-0f7873e0bc93756e2",
+                  "DeleteOnTermination": true,
+                  "DeviceIndex": 0,
+                  "Status": "attached",
+                  "NetworkCardIndex": 0
+                },
+                "Description": "",
+                "Groups": [
+                  {
+                    "GroupId": "sg-0dd69eccac1594f6f",
+                    "GroupName": "phantom-k3s-lab-sg"
+                  }
+                ],
+                "Ipv6Addresses": [],
+                "MacAddress": "02:ff:fb:4a:f9:a7",
+                "NetworkInterfaceId": "eni-00575fc7d1331f7e3",
+                "OwnerId": "253490771520",
+                "PrivateDnsName": "ip-10-89-2-125.ap-south-1.compute.internal",
+                "PrivateIpAddress": "10.89.2.125",
+                "PrivateIpAddresses": [
+                  {
+                    "Primary": true,
+                    "PrivateDnsName": "ip-10-89-2-125.ap-south-1.compute.internal",
+                    "PrivateIpAddress": "10.89.2.125"
+                  }
+                ],
+                "SourceDestCheck": true,
+                "Status": "in-use",
+                "SubnetId": "subnet-0278abcd9a6702a4a",
+                "VpcId": "vpc-08127443fa071e39a",
+                "InterfaceType": "interface",
+                "Operator": {
+                  "Managed": false
+                }
+              }
+            ],
+            "RootDeviceName": "/dev/sda1",
+            "RootDeviceType": "ebs",
+            "SecurityGroups": [
+              {
+                "GroupId": "sg-0dd69eccac1594f6f",
+                "GroupName": "phantom-k3s-lab-sg"
+              }
+            ],
+            "SourceDestCheck": true,
+            "Tags": [
+              {
+                "Key": "Environment",
+                "Value": "disposable-lab"
+              },
+              {
+                "Key": "Project",
+                "Value": "PHANTOM"
+              },
+              {
+                "Key": "Name",
+                "Value": "phantom-k3s-lab"
+              },
+              {
+                "Key": "AutoTeardown",
+                "Value": "true"
+              }
+            ],
+            "VirtualizationType": "hvm",
+            "CpuOptions": {
+              "CoreCount": 2,
+              "ThreadsPerCore": 2
+            },
+            "CapacityReservationSpecification": {
+              "CapacityReservationPreference": "open"
+            },
+            "HibernationOptions": {
+              "Configured": false
+            },
+            "MetadataOptions": {
+              "State": "applied",
+              "HttpTokens": "required",
+              "HttpPutResponseHopLimit": 1,
+              "HttpEndpoint": "enabled",
+              "HttpProtocolIpv6": "disabled",
+              "InstanceMetadataTags": "disabled"
+            },
+            "EnclaveOptions": {
+              "Enabled": false
+            },
+            "BootMode": "uefi-preferred",
+            "PlatformDetails": "Linux/UNIX",
+            "UsageOperation": "RunInstances",
+            "UsageOperationUpdateTime": "2026-10-25T19:01:15+00:00",
+            "PrivateDnsNameOptions": {
+              "HostnameType": "ip-name",
+              "EnableResourceNameDnsARecord": false,
+              "EnableResourceNameDnsAAAARecord": false
+            },
+            "MaintenanceOptions": {
+              "AutoRecovery": "default",
+              "RebootMigration": "default"
+            },
+            "CurrentInstanceBootMode": "uefi",
+            "NetworkPerformanceOptions": {
+              "BandwidthWeighting": "default"
+            },
+            "Operator": {
+              "Managed": false,
+              "HiddenByDefault": false
+            },
+            "SecondaryInterfaces": [],
+            "InstanceId": "i-06bb29d253668fa5f",
+            "ImageId": "ami-082a1ff88c78c6290",
+            "State": {
+              "Code": 16,
+              "Name": "running"
+            },
+            "PrivateDnsName": "ip-10-89-2-125.ap-south-1.compute.internal",
+            "PublicDnsName": "",
+            "StateTransitionReason": "",
+            "AmiLaunchIndex": 0,
+            "ProductCodes": [],
+            "InstanceType": "t3.xlarge",
+            "LaunchTime": "2026-10-25T19:01:15+00:00",
+            "Placement": {
+              "AvailabilityZoneId": "aps1-az1",
+              "GroupName": "",
+              "Tenancy": "default",
+              "AvailabilityZone": "ap-south-1a"
+            },
+            "Monitoring": {
+              "State": "disabled"
+            },
+            "SubnetId": "subnet-0278abcd9a6702a4a",
+            "VpcId": "vpc-08127443fa071e39a",
+            "PrivateIpAddress": "10.89.2.125"
+          }
+        ]
+      }
+    ]
+  },
+  "security_group": {
+    "SecurityGroups": [
+      {
+        "GroupId": "sg-0dd69eccac1594f6f",
+        "IpPermissionsEgress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "UserIdGroupPairs": [],
+            "IpRanges": [
+              {
+                "Description": "Ubuntu package mirror access (APT repository signatures remain verified)",
+                "CidrIp": "0.0.0.0/0"
+              }
+            ],
+            "Ipv6Ranges": [],
+            "PrefixListIds": []
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 53,
+            "ToPort": 53,
+            "UserIdGroupPairs": [],
+            "IpRanges": [
+              {
+                "Description": "VPC DNS over TCP",
+                "CidrIp": "10.89.0.0/16"
+              }
+            ],
+            "Ipv6Ranges": [],
+            "PrefixListIds": []
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": 53,
+            "ToPort": 53,
+            "UserIdGroupPairs": [],
+            "IpRanges": [
+              {
+                "Description": "VPC DNS resolution",
+                "CidrIp": "10.89.0.0/16"
+              }
+            ],
+            "Ipv6Ranges": [],
+            "PrefixListIds": []
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "UserIdGroupPairs": [],
+            "IpRanges": [
+              {
+                "Description": "HTTPS package and image retrieval through NAT",
+                "CidrIp": "0.0.0.0/0"
+              }
+            ],
+            "Ipv6Ranges": [],
+            "PrefixListIds": []
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": 123,
+            "ToPort": 123,
+            "UserIdGroupPairs": [],
+            "IpRanges": [
+              {
+                "Description": "Amazon Time Sync Service",
+                "CidrIp": "169.254.169.123/32"
+              }
+            ],
+            "Ipv6Ranges": [],
+            "PrefixListIds": []
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": "disposable-lab"
+          },
+          {
+            "Key": "Project",
+            "Value": "PHANTOM"
+          },
+          {
+            "Key": "Name",
+            "Value": "phantom-k3s-lab-sg"
+          }
+        ],
+        "VpcId": "vpc-08127443fa071e39a",
+        "SecurityGroupArn": "arn:aws:ec2:ap-south-1:253490771520:security-group/sg-0dd69eccac1594f6f",
+        "OwnerId": "253490771520",
+        "GroupName": "phantom-k3s-lab-sg",
+        "Description": "Strict security group for disposable PHANTOM k3s lab",
+        "IpPermissions": []
+      }
+    ]
+  },
+  "volume": {
+    "Volumes": [
+      {
+        "AvailabilityZoneId": "aps1-az1",
+        "Iops": 3000,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "PHANTOM"
+          },
+          {
+            "Key": "Environment",
+            "Value": "disposable-lab"
+          },
+          {
+            "Key": "Name",
+            "Value": "phantom-k3s-lab-root-vol"
+          }
+        ],
+        "VolumeType": "gp3",
+        "MultiAttachEnabled": false,
+        "Throughput": 125,
+        "Operator": {
+          "Managed": false,
+          "HiddenByDefault": false
+        },
+        "VolumeArn": "arn:aws:ec2:ap-south-1:253490771520:volume/vol-059e997e6d7909b5f",
+        "OwnerId": "253490771520",
+        "VolumeId": "vol-059e997e6d7909b5f",
+        "Size": 50,
+        "SnapshotId": "snap-09eeb6885e00b8443",
+        "AvailabilityZone": "ap-south-1a",
+        "State": "in-use",
+        "CreateTime": "2026-10-25T19:01:16.859000+00:00",
+        "Attachments": [
+          {
+            "DeleteOnTermination": true,
+            "EbsCardIndex": 0,
+            "VolumeId": "vol-059e997e6d7909b5f",
+            "InstanceId": "i-06bb29d253668fa5f",
+            "Device": "/dev/sda1",
+            "State": "attached",
+            "AttachTime": "2026-10-25T19:01:16+00:00"
+          }
+        ],
+        "Encrypted": true,
+        "KmsKeyId": "arn:aws:kms:ap-south-1:253490771520:key/fa98022e-a0b7-4647-a7af-9793721efbf6"
+      }
+    ]
+  },
+  "nat_gateway": {
+    "NatGateways": [
+      {
+        "CreateTime": "2026-10-25T19:01:14+00:00",
+        "NatGatewayAddresses": [
+          {
+            "AllocationId": "eipalloc-02168c185217b1cf9",
+            "NetworkInterfaceId": "eni-0278c42abb2997910",
+            "PrivateIp": "10.89.1.82",
+            "PublicIp": "13.206.14.201",
+            "AssociationId": "eipassoc-0f25db2259e930fbf",
+            "IsPrimary": true,
+            "Status": "succeeded"
+          }
+        ],
+        "NatGatewayId": "nat-001088ed60b94cb8a",
+        "State": "available",
+        "SubnetId": "subnet-0bea99244de645fbe",
+        "VpcId": "vpc-08127443fa071e39a",
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "PHANTOM"
+          },
+          {
+            "Key": "Environment",
+            "Value": "disposable-lab"
+          },
+          {
+            "Key": "Name",
+            "Value": "phantom-k3s-lab-nat"
+          }
+        ],
+        "ConnectivityType": "public",
+        "AvailabilityMode": "zonal",
+        "AttachedAppliances": []
+      }
+    ]
+  },
+  "instance_information": {
+    "InstanceInformationList": [
+      {
+        "InstanceId": "i-06bb29d253668fa5f",
+        "PingStatus": "Online",
+        "LastPingDateTime": "2026-10-25T19:32:32.254000+00:00",
+        "AgentVersion": "3.3.4793.0",
+        "IsLatestVersion": false,
+        "PlatformType": "Linux",
+        "PlatformName": "Ubuntu",
+        "PlatformVersion": "22.04",
+        "ResourceType": "EC2Instance",
+        "IPAddress": "10.89.2.125",
+        "ComputerName": "ip-10-89-2-125.ap-south-1.compute.internal",
+        "SourceId": "i-06bb29d253668fa5f",
+        "SourceType": "AWS::EC2::Instance"
+      }
+    ]
+  },
+  "ssm_endpoints": {
+    "VpcEndpoints": [
+      {
+        "VpcEndpointId": "vpce-082f0c70b7a618732",
+        "VpcEndpointType": "Interface",
+        "VpcId": "vpc-08127443fa071e39a",
+        "ServiceName": "com.amazonaws.ap-south-1.ec2messages",
+        "State": "available",
+        "PolicyDocument": "{\n  \"Statement\": [\n    {\n      \"Action\": \"*\",\n      \"Effect\": \"Allow\",\n      \"Principal\": \"*\",\n      \"Resource\": \"*\"\n    }\n  ]\n}",
+        "RouteTableIds": [],
+        "SubnetIds": [
+          "subnet-0278abcd9a6702a4a"
+        ],
+        "Groups": [
+          {
+            "GroupId": "sg-025807cd0beca7d5c",
+            "GroupName": "phantom-k3s-lab-ssm-endpoints-sg"
+          }
+        ],
+        "IpAddressType": "ipv4",
+        "DnsOptions": {
+          "DnsRecordIpType": "ipv4"
+        },
+        "PrivateDnsEnabled": true,
+        "RequesterManaged": false,
+        "NetworkInterfaceIds": [
+          "eni-022e501a83f3f497c"
+        ],
+        "DnsEntries": [
+          {
+            "DnsName": "vpce-082f0c70b7a618732-zz45aa3g.ec2messages.ap-south-1.vpce.amazonaws.com",
+            "HostedZoneId": "Z2KVTB3ZLFM7JR"
+          },
+          {
+            "DnsName": "vpce-082f0c70b7a618732-zz45aa3g-ap-south-1a.ec2messages.ap-south-1.vpce.amazonaws.com",
+            "HostedZoneId": "Z2KVTB3ZLFM7JR"
+          },
+          {
+            "DnsName": "ec2messages.ap-south-1.amazonaws.com",
+            "HostedZoneId": "Z0392968V9YVKV8PRR81"
+          }
+        ],
+        "CreationTimestamp": "2026-10-25T19:01:18.973000+00:00",
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "PHANTOM"
+          },
+          {
+            "Key": "Environment",
+            "Value": "disposable-lab"
+          },
+          {
+            "Key": "Name",
+            "Value": "phantom-k3s-lab-ec2messages"
+          }
+        ],
+        "OwnerId": "253490771520",
+        "ServiceRegion": "ap-south-1"
+      },
+      {
+        "VpcEndpointId": "vpce-05ca745ed41b2bb43",
+        "VpcEndpointType": "Interface",
+        "VpcId": "vpc-08127443fa071e39a",
+        "ServiceName": "com.amazonaws.ap-south-1.ssm",
+        "State": "available",
+        "PolicyDocument": "{\n  \"Statement\": [\n    {\n      \"Action\": \"*\",\n      \"Effect\": \"Allow\",\n      \"Principal\": \"*\",\n      \"Resource\": \"*\"\n    }\n  ]\n}",
+        "RouteTableIds": [],
+        "SubnetIds": [
+          "subnet-0278abcd9a6702a4a"
+        ],
+        "Groups": [
+          {
+            "GroupId": "sg-025807cd0beca7d5c",
+            "GroupName": "phantom-k3s-lab-ssm-endpoints-sg"
+          }
+        ],
+        "IpAddressType": "ipv4",
+        "DnsOptions": {
+          "DnsRecordIpType": "ipv4"
+        },
+        "PrivateDnsEnabled": true,
+        "RequesterManaged": false,
+        "NetworkInterfaceIds": [
+          "eni-0e588c59022f1bac7"
+        ],
+        "DnsEntries": [
+          {
+            "DnsName": "vpce-05ca745ed41b2bb43-cjh69mec.ssm.ap-south-1.vpce.amazonaws.com",
+            "HostedZoneId": "Z2KVTB3ZLFM7JR"
+          },
+          {
+            "DnsName": "vpce-05ca745ed41b2bb43-cjh69mec-ap-south-1a.ssm.ap-south-1.vpce.amazonaws.com",
+            "HostedZoneId": "Z2KVTB3ZLFM7JR"
+          },
+          {
+            "DnsName": "ssm.ap-south-1.amazonaws.com",
+            "HostedZoneId": "Z03884801DRTRV8K3DU4T"
+          },
+          {
+            "DnsName": "ssm.ap-south-1.api.aws",
+            "HostedZoneId": "Z0387098C1QGNQDEBJGK"
+          }
+        ],
+        "CreationTimestamp": "2026-10-25T19:01:18.974000+00:00",
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "PHANTOM"
+          },
+          {
+            "Key": "Environment",
+            "Value": "disposable-lab"
+          },
+          {
+            "Key": "Name",
+            "Value": "phantom-k3s-lab-ssm"
+          }
+        ],
+        "OwnerId": "253490771520",
+        "ServiceRegion": "ap-south-1"
+      },
+      {
+        "VpcEndpointId": "vpce-06b26a4c99933f440",
+        "VpcEndpointType": "Interface",
+        "VpcId": "vpc-08127443fa071e39a",
+        "ServiceName": "com.amazonaws.ap-south-1.ssmmessages",
+        "State": "available",
+        "PolicyDocument": "{\n  \"Statement\": [\n    {\n      \"Action\": \"*\",\n      \"Effect\": \"Allow\",\n      \"Principal\": \"*\",\n      \"Resource\": \"*\"\n    }\n  ]\n}",
+        "RouteTableIds": [],
+        "SubnetIds": [
+          "subnet-0278abcd9a6702a4a"
+        ],
+        "Groups": [
+          {
+            "GroupId": "sg-025807cd0beca7d5c",
+            "GroupName": "phantom-k3s-lab-ssm-endpoints-sg"
+          }
+        ],
+        "IpAddressType": "ipv4",
+        "DnsOptions": {
+          "DnsRecordIpType": "ipv4"
+        },
+        "PrivateDnsEnabled": true,
+        "RequesterManaged": false,
+        "NetworkInterfaceIds": [
+          "eni-021effa003ebc618e"
+        ],
+        "DnsEntries": [
+          {
+            "DnsName": "vpce-06b26a4c99933f440-e2ueah55.ssmmessages.ap-south-1.vpce.amazonaws.com",
+            "HostedZoneId": "Z2KVTB3ZLFM7JR"
+          },
+          {
+            "DnsName": "vpce-06b26a4c99933f440-e2ueah55-ap-south-1a.ssmmessages.ap-south-1.vpce.amazonaws.com",
+            "HostedZoneId": "Z2KVTB3ZLFM7JR"
+          },
+          {
+            "DnsName": "ssmmessages.ap-south-1.amazonaws.com",
+            "HostedZoneId": "Z068482423SLYJ56J0IDO"
+          },
+          {
+            "DnsName": "ssmmessages.ap-south-1.api.aws",
+            "HostedZoneId": "Z0385911YCTKFBBWDFAU"
+          }
+        ],
+        "CreationTimestamp": "2026-10-25T19:01:19.028000+00:00",
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "PHANTOM"
+          },
+          {
+            "Key": "Environment",
+            "Value": "disposable-lab"
+          },
+          {
+            "Key": "Name",
+            "Value": "phantom-k3s-lab-ssmmessages"
+          }
+        ],
+        "OwnerId": "253490771520",
+        "ServiceRegion": "ap-south-1"
+      },
+      {
+        "VpcEndpointId": "vpce-048c299d62a1d84fd",
+        "VpcEndpointType": "Gateway",
+        "VpcId": "vpc-08127443fa071e39a",
+        "ServiceName": "com.amazonaws.ap-south-1.s3",
+        "State": "available",
+        "PolicyDocument": "{\"Version\":\"2008-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"*\",\"Resource\":\"*\"}]}",
+        "RouteTableIds": [
+          "rtb-01bc55d51575705a3"
+        ],
+        "SubnetIds": [],
+        "Groups": [],
+        "IpAddressType": "ipv4",
+        "DnsOptions": {
+          "DnsRecordIpType": "service-defined"
+        },
+        "PrivateDnsEnabled": false,
+        "RequesterManaged": false,
+        "NetworkInterfaceIds": [],
+        "DnsEntries": [],
+        "CreationTimestamp": "2026-10-25T19:03:00+00:00",
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "PHANTOM"
+          },
+          {
+            "Key": "Environment",
+            "Value": "disposable-lab"
+          },
+          {
+            "Key": "Name",
+            "Value": "phantom-k3s-lab-s3"
+          }
+        ],
+        "OwnerId": "253490771520",
+        "ServiceRegion": "ap-south-1"
+      }
+    ]
+  },
+  "backup_bucket_versioning": {
+    "Status": "Enabled"
+  },
+  "backup_bucket_encryption": {
+    "ServerSideEncryptionConfiguration": {
+      "Rules": [
+        {
+          "ApplyServerSideEncryptionByDefault": {
+            "SSEAlgorithm": "AES256"
+          },
+          "BucketKeyEnabled": false,
+          "BlockedEncryptionTypes": {
+            "EncryptionType": [
+              "SSE-C"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "source_archive_head": {
+    "AcceptRanges": "bytes",
+    "LastModified": "2026-10-25T19:30:17+00:00",
+    "ContentLength": 1252956,
+    "ETag": "\"ad0cf224422a04cd13426d62a0c1c472\"",
+    "VersionId": "y5L8TMpfMXvmZK5eeGU2lZWUhU4R6xOe",
+    "ContentType": "application/x-tar",
+    "ServerSideEncryption": "AES256",
+    "Metadata": {
+      "sha256": "a0ac7c02b31f2339c4c350db55a56777d249238839d358d891b52fa4d29f4c1a",
+      "purpose": "DeploymentSource"
+    }
+  }
+}

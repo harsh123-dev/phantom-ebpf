@@ -1,0 +1,22 @@
+{
+    "CommandId": "c2f451f8-fce0-4dfa-b4a3-5375ee63b76d",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T21:39:03.474Z",
+    "ExecutionElapsedTime": "PT5.796S",
+    "ExecutionEndDateTime": "2026-10-25T21:39:08.474Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "2026-10-25T21:39:03Z\nPHANTOM_HARMLESS_PROCESS_PID=124\nf344d15a-5260-478c-9025-022ebe955f56|2026-10-25 21:39:03.773059+00|privilege_transition|runc:[2:INIT]|unknown|sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7|missing\n2026-10-25 21:39:04 [info     ] dispatcher.success             event_id=f344d15a-5260-478c-9025-022ebe955f56\nsha256:ed11590fd94fe783b0a62b24a113d4475850b364f928ad170e5633f08d4b4cc6\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

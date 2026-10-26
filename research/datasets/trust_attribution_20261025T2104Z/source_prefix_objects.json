@@ -1,0 +1,10 @@
+[
+    {
+        "Key": "phantom/evidence/live_attribution_20261025T194226Z/evaluation-image.cdx.json",
+        "Size": 7887054
+    },
+    {
+        "Key": "phantom/evidence/live_attribution_20261025T194226Z/sink-receipts-20261025T194226Z.sqlite3",
+        "Size": 36864
+    }
+]

@@ -1,0 +1,22 @@
+{
+    "CommandId": "30398dee-e4d2-44a0-8cfa-044c97bfd65d",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T20:46:16.911Z",
+    "ExecutionElapsedTime": "PT1.162S",
+    "ExecutionEndDateTime": "2026-10-25T20:46:17.911Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "EC2_HOST\nip-10-89-2-125\nLinux ip-10-89-2-125 6.8.0-1066-aws #69~22.04.1-Ubuntu SMP Mon Sep 21 16:20:15 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux\nNODE\nNAME             STATUS   ROLES           AGE    VERSION        INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION           CONTAINER-RUNTIME\nip-10-89-2-125   Ready    control-plane   100m   v1.36.5+k3s1   10.89.2.125   <none>        Ubuntu 22.04.5 LTS   6.8.0-1066-aws (amd64)   containerd://2.3.4-k3s1.36\nSBOM_DEPLOYMENT\nphantom/sbom-service:sbomfix-idempotent-20261025T2045Z\nNAME                                    READY   STATUS    RESTARTS   AGE   IP           NODE             NOMINATED NODE   READINESS GATES\nphantom-sbom-service-5fc85c7d94-hbrtz   1/1     Running   0          69s   10.42.0.27   ip-10-89-2-125   <none>           <none>\nSBOM_COUNTS\n1|22823\nTRUST\n{\"trusted_key_count\": 0, \"revoked_key_count\": 0}\nAGENT_AND_CAUSAL_PODS\nphantom-causal-engine-57576cd69c-b2mn9   1/1     Running   0          86m   10.42.0.17   ip-10-89-2-125   <none>           <none>\nphantom-ebpf-agent-4r68v                 1/1     Running   0          80m   10.42.0.20   ip-10-89-2-125   <none>           <none>\nS3_EGRESS_PROBES\n{\"imds\": \"blocked:ConnectionRefusedError\", \"reserved-test-net\": \"blocked:ConnectionRefusedError\"}\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

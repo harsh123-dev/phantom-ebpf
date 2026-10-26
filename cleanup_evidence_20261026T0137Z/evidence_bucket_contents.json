@@ -1,0 +1,152 @@
+[
+    {
+        "Key": "phantom/evidence/agent_cgroup_attribution_20261025T2306Z/build-agent.sh",
+        "Size": 494098,
+        "LastModified": "2026-10-25T23:06:10+00:00",
+        "ETag": "\"a3bd1077a746e56af766e96f34334874\""
+    },
+    {
+        "Key": "phantom/evidence/attribution_probe_20261025T2132Z/agent-racefix-source.tar.gz",
+        "Size": 79424,
+        "LastModified": "2026-10-25T21:37:41+00:00",
+        "ETag": "\"bb85425272b3640920f0f1a45e56bbca\""
+    },
+    {
+        "Key": "phantom/evidence/attribution_probe_20261025T2132Z/agent-source.tar.gz",
+        "Size": 79101,
+        "LastModified": "2026-10-25T21:34:28+00:00",
+        "ETag": "\"692a7c931852908f789d4b660b4fe2ad\""
+    },
+    {
+        "Key": "phantom/evidence/bootstrap/20261025-agent-cachefix-source-v2.tar.gz",
+        "Size": 1251452,
+        "LastModified": "2026-10-25T19:23:39+00:00",
+        "ETag": "\"4ef559944dd18702912bcb4ac33c06ee\""
+    },
+    {
+        "Key": "phantom/evidence/bootstrap/20261025-agent-cachefix-source.tar.gz",
+        "Size": 1251452,
+        "LastModified": "2026-10-25T19:23:35+00:00",
+        "ETag": "\"4ef559944dd18702912bcb4ac33c06ee\""
+    },
+    {
+        "Key": "phantom/evidence/bootstrap/20261025-causal-fix-source.tar.gz",
+        "Size": 1251683,
+        "LastModified": "2026-10-25T19:18:14+00:00",
+        "ETag": "\"8304cc2428a690a2669679f0bd1db776\""
+    },
+    {
+        "Key": "phantom/evidence/bootstrap/20261025-runtime-fixes-source.tar.gz",
+        "Size": 1251713,
+        "LastModified": "2026-10-25T19:25:35+00:00",
+        "ETag": "\"67646321cab2deeee63c6f163f3bc63a\""
+    },
+    {
+        "Key": "phantom/evidence/bootstrap/20261025-sbom-migrations-source-v2.tar.gz",
+        "Size": 1252956,
+        "LastModified": "2026-10-25T19:30:17+00:00",
+        "ETag": "\"ad0cf224422a04cd13426d62a0c1c472\""
+    },
+    {
+        "Key": "phantom/evidence/bootstrap/20261025-sbom-migrations-source.tar.gz",
+        "Size": 1252926,
+        "LastModified": "2026-10-25T19:27:26+00:00",
+        "ETag": "\"45f52854c0f9cff1095bc6cfc04fee15\""
+    },
+    {
+        "Key": "phantom/evidence/bootstrap/20261025-source.tar.gz",
+        "Size": 1251538,
+        "LastModified": "2026-10-25T19:05:33+00:00",
+        "ETag": "\"ca3d424d74818b7beeb2c8d768fc8fd9\""
+    },
+    {
+        "Key": "phantom/evidence/exec_loader_fix_20261025T2245Z/agent-source.tar.gz",
+        "Size": 80443,
+        "LastModified": "2026-10-25T22:46:00+00:00",
+        "ETag": "\"64cda9d2dbdaf2770f08aea1fb872d17\""
+    },
+    {
+        "Key": "phantom/evidence/exec_loader_fix_20261025T2245Z/build-and-rollout.sh",
+        "Size": 111033,
+        "LastModified": "2026-10-25T22:46:43+00:00",
+        "ETag": "\"3825d78aa1956dd39cf8f064e26ac477\""
+    },
+    {
+        "Key": "phantom/evidence/exec_loader_fix_20261025T2255Z/agent-source.tar.gz",
+        "Size": 80650,
+        "LastModified": "2026-10-25T22:51:00+00:00",
+        "ETag": "\"818a7b84298c2e07b16171db3765c418\""
+    },
+    {
+        "Key": "phantom/evidence/exec_loader_fix_20261025T2255Z/build-and-rollout.sh",
+        "Size": 111332,
+        "LastModified": "2026-10-25T22:51:01+00:00",
+        "ETag": "\"a77f0f982180f994c92d038c81c1660c\""
+    },
+    {
+        "Key": "phantom/evidence/exec_loader_fix_20261025T2305Z/agent-source.tar.gz",
+        "Size": 80820,
+        "LastModified": "2026-10-25T22:53:00+00:00",
+        "ETag": "\"9a13199f7b602d419383c131589cf092\""
+    },
+    {
+        "Key": "phantom/evidence/exec_loader_fix_20261025T2305Z/build-and-rollout.sh",
+        "Size": 111471,
+        "LastModified": "2026-10-25T22:53:01+00:00",
+        "ETag": "\"c18ee379bd060ac19cbe8312036fe114\""
+    },
+    {
+        "Key": "phantom/evidence/exec_loader_fix_20261025T2320Z/agent-source.tar.gz",
+        "Size": 80853,
+        "LastModified": "2026-10-25T22:56:29+00:00",
+        "ETag": "\"5323440f3d57dc0f48a06dbe81728149\""
+    },
+    {
+        "Key": "phantom/evidence/exec_loader_fix_20261025T2320Z/build-and-rollout.sh",
+        "Size": 111523,
+        "LastModified": "2026-10-25T22:56:30+00:00",
+        "ETag": "\"99973da92c0b2e48daa0ebf1bf51c309\""
+    },
+    {
+        "Key": "phantom/evidence/exec_telemetry_20261025T2209Z/agent-source.tar.gz",
+        "Size": 79578,
+        "LastModified": "2026-10-25T22:25:55+00:00",
+        "ETag": "\"b3ebfab13fafa3b804223dbc26f9eaef\""
+    },
+    {
+        "Key": "phantom/evidence/live_attribution_20261025T194226Z/evaluation-image.cdx.json",
+        "Size": 7887054,
+        "LastModified": "2026-10-25T19:52:10+00:00",
+        "ETag": "\"198d34942b8c034f362cb69515f8cb2f\""
+    },
+    {
+        "Key": "phantom/evidence/live_attribution_20261025T194226Z/sink-receipts-20261025T194226Z.sqlite3",
+        "Size": 36864,
+        "LastModified": "2026-10-25T19:47:40+00:00",
+        "ETag": "\"bcf5561dd2ff33299c8a4a745fd4ee91\""
+    },
+    {
+        "Key": "phantom/evidence/sbom-ingestion-20261025T202953Z/build-context-idempotent.tar.gz",
+        "Size": 106063,
+        "LastModified": "2026-10-25T20:44:56+00:00",
+        "ETag": "\"00f1ac268337703360834596ae68b9b9\""
+    },
+    {
+        "Key": "phantom/evidence/sbom-ingestion-20261025T202953Z/build-context.tar.gz",
+        "Size": 106190,
+        "LastModified": "2026-10-25T20:30:10+00:00",
+        "ETag": "\"90e07fc0423fc5f3d52425686c25fec8\""
+    },
+    {
+        "Key": "phantom/evidence/sbom-ingestion-20261025T202953Z/sbom-restricted-egress.yaml",
+        "Size": 1182,
+        "LastModified": "2026-10-25T20:30:10+00:00",
+        "ETag": "\"d825c038d3664c677f8d7ea226e6628d\""
+    },
+    {
+        "Key": "phantom/evidence/trust_integration_20261025T2150Z/sbom-source.tar.gz",
+        "Size": 110437,
+        "LastModified": "2026-10-25T21:42:20+00:00",
+        "ETag": "\"887370f1982d5c9ee5a1c24ebb2b61e1\""
+    }
+]

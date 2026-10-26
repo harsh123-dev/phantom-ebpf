@@ -1,0 +1,9 @@
+{
+    "CommandId": "5c97cd54-1424-4095-bfe1-f049778e5f24",
+    "Status": "Success",
+    "ExitCode": 0,
+    "Start": "2026-10-26T09:54:57.416Z",
+    "End": "2026-10-26T09:54:58.416Z",
+    "Stdout": "SMOKE_EVENT_ROW\n0000012e-1404-2112-0000-000000000001|exec|ls|phantom-eval|recommendationservice-5dc98bbcb9-4mml4|server|containerd://8a4183c3080e4f2e5c8d57163781531e1cbbcbac99e4038b2e85975443c6306b|sha256:50a337a6c7f43a609feaa56e826e4b5085db9f95447f3232edbe47302c7b0ad7|||missing|2026-10-26 09:48:52.283241+00\nSBOM_RECORDS_FOR_TARGET_DIGEST\n0\nSAME_EVENT_IN_CANONICAL_STREAM\nmatches=1\nstream_id=1793008132290-0 schema=1.0 event_id=0000012e-1404-2112-0000-000000000001 event_type=exec workload=phantom-eval/recommendationservice-5dc98bbcb9-4mml4 image_digest=sha256:50a337a6c7f43a609feaa56e826e4b5085db9f95447f3232edbe47302c7b0ad7 sbom_binding={'binding_status': 'unbound', 'image_digest': 'sha256:50a337a6c7f43a609feaa56e826e4b5085db9f95447f3232edbe47302c7b0ad7', 'sbom_id': None, 'purl': None, 'confidence': None, 'resolver_version': 'v1', 'method': 'unresolved', 'evidence': [], 'candidate_purls': [], 'reason': 'No SBOM indexed for image_digest=sha256:50a337a6c7f43a609feaa56e826e4b5085db9f95447f3232edbe47302c7b0ad7'}\nCONSUMER_METRIC\n{'__name__': 'phantom_redis_stream_messages_total', 'instance': 'phantom-causal-engine.phantom.svc.cluster.local:9090', 'job': 'phantom-causal-engine', 'result': 'success', 'service': 'causal-engine', 'stream': 'phantom:drift-events'} 22\n",
+    "Stderr": ""
+}

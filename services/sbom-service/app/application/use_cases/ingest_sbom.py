@@ -41,7 +41,7 @@ from app.domain.entities import (
     extract_spec_version,
     validate_cyclonedx_document,
 )
-from app.domain.exceptions import DigestMismatchError, InvalidSbomError
+from app.domain.exceptions import DigestMismatchError, InvalidSbomError, SbomStorageError
 
 log: structlog.BoundLogger = structlog.get_logger(__name__)
 
@@ -69,6 +69,11 @@ class IngestSbomCommand:
     source: str
     generated_at: datetime
     signature_bundle_uri: str | None = None
+    artifact_download_url: str | None = None
+    artifact_version_id: str | None = None
+    artifact_content_sha256: str | None = None
+    artifact_manifest_digest: str | None = None
+    image_reference: str | None = None
 
 
 @dataclass(frozen=True)
@@ -94,6 +99,7 @@ class IngestSbomResult:
     component_count: int
     verification_status: str
     created_at: datetime
+    image_reference: str | None = None
 
 
 class IngestSbomUseCase:
@@ -167,6 +173,7 @@ class IngestSbomUseCase:
             sbom_id=sbom_id,
             tenant_id=command.tenant_id,
             image_digest=ImageDigest(value=command.image_digest),
+            image_reference=command.image_reference,
             sbom_digest=computed_digest,
             cyclonedx_document=command.cyclonedx_document,
             spec_version=extract_spec_version(command.cyclonedx_document),
@@ -189,30 +196,87 @@ class IngestSbomUseCase:
             if isinstance(raw, dict)
         ]
 
-        # 5. Persist SBOM (raises DuplicateSbomError on conflict → 409).
-        await self._sbom_repo.save(sbom)
-        bound_log.info("sbom_ingest.sbom_persisted", sbom_id=str(sbom_id))
-
-        # 6. Persist components in bulk (best-effort; logged on failure).
-        if components:
-            await self._component_repo.save_all(components)
-            bound_log.info(
-                "sbom_ingest.components_persisted",
-                count=len(components),
-                sbom_id=str(sbom_id),
-            )
-
-        # 7. Upload the raw document bytes to object storage.
+        # 5. Validate the original object before creating DB rows. Identical
+        # requests return the existing record without adding an object/rows.
         raw_bytes = json.dumps(
             command.cyclonedx_document, sort_keys=True
         ).encode("utf-8")
-        await self._artifact_store.upload_sbom(
-            sbom_id=sbom_id,
-            content=raw_bytes,
+        if any((
+            command.artifact_download_url,
+            command.artifact_version_id,
+            command.artifact_content_sha256,
+            command.artifact_manifest_digest,
+        )):
+            if not all((
+                command.artifact_download_url,
+                command.artifact_version_id,
+                command.artifact_content_sha256,
+                command.artifact_manifest_digest,
+            )):
+                raise SbomStorageError(
+                    "artifact URL, version, content digest, and manifest digest "
+                    "are required together"
+                )
+            await self._artifact_store.verify_external_sbom(
+                artifact_uri=command.artifact_uri,
+                download_url=command.artifact_download_url,
+                artifact_version_id=command.artifact_version_id,
+                content_sha256=command.artifact_content_sha256,
+                image_digest=command.image_digest,
+                artifact_manifest_digest=command.artifact_manifest_digest,
+                cyclonedx_document=command.cyclonedx_document,
+            )
+
+        existing = await self._sbom_repo.find_by_image_and_digest(
+            command.image_digest, computed_digest.value, command.tenant_id
         )
+        if existing is not None:
+            if command.image_reference is not None:
+                if existing.image_reference not in (None, command.image_reference):
+                    raise SbomStorageError(
+                        "existing SBOM is bound to a different immutable image reference"
+                    )
+                if existing.image_reference is None:
+                    await self._sbom_repo.bind_image_reference(
+                        existing.sbom_id, existing.tenant_id, command.image_reference
+                    )
+            bound_log.info(
+                "sbom_ingest.idempotent_retry",
+                sbom_id=str(existing.sbom_id),
+                image_digest=existing.image_digest.value,
+                sbom_digest=existing.sbom_digest.value,
+            )
+            return IngestSbomResult(
+                sbom_id=existing.sbom_id,
+                image_digest=existing.image_digest.value,
+                sbom_digest=existing.sbom_digest.value,
+                format="CycloneDX",
+                spec_version=existing.spec_version,
+                component_count=existing.component_count,
+                verification_status=existing.verification_status.value,
+                created_at=existing.created_at,
+                image_reference=existing.image_reference or command.image_reference,
+            )
+
+        if not any((
+            command.artifact_download_url,
+            command.artifact_version_id,
+            command.artifact_content_sha256,
+            command.artifact_manifest_digest,
+        )):
+            await self._artifact_store.upload_sbom(
+                sbom_id=sbom_id,
+                content=raw_bytes,
+            )
+
+        # 6. Persist the row and components atomically. If this fails after a
+        # new upload, the object is an unindexed orphan; it is never exposed
+        # as a valid SBOM record and can be reconciled by its UUID key.
+        await self._sbom_repo.save_with_components(sbom, components)
         bound_log.info(
-            "sbom_ingest.artifact_uploaded",
+            "sbom_ingest.persisted",
             sbom_id=str(sbom_id),
+            component_count=len(components),
             bytes=len(raw_bytes),
         )
 
@@ -225,4 +289,5 @@ class IngestSbomUseCase:
             component_count=sbom.component_count,
             verification_status=sbom.verification_status.value,
             created_at=now,
+            image_reference=command.image_reference,
         )

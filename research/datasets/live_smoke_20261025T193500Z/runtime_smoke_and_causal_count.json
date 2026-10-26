@@ -1,0 +1,22 @@
+{
+  "CommandId": "b287ae40-262b-423b-a3e8-1b59cd732211",
+  "InstanceId": "i-06bb29d253668fa5f",
+  "Comment": "",
+  "DocumentName": "AWS-RunShellScript",
+  "DocumentVersion": "$DEFAULT",
+  "PluginName": "aws:runShellScript",
+  "ResponseCode": 0,
+  "ExecutionStartDateTime": "2026-10-25T19:31:09.917Z",
+  "ExecutionElapsedTime": "PT9.236S",
+  "ExecutionEndDateTime": "2026-10-25T19:31:18.917Z",
+  "Status": "Success",
+  "StatusDetails": "Success",
+  "StandardOutputContent": "PHANTOM_HARMLESS_SMOKE_20261025_193200Z\ncc13c9ad-d541-4814-ae3e-9aa15e57e044|privilege_transition|phantom-eval|recommendationservice-5dc98bbcb9-xq42k|sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7|resolved|0|2e60bda1-ff81-4ec1-9f24-636586f44f0f\na6334853-5987-42c0-9871-271fc6f97374|privilege_transition|phantom-eval|recommendationservice-5dc98bbcb9-xq42k|sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7|resolved|0|249ac88b-0210-4e23-9fa9-9074231429cf\nf5b651d7-18c1-4246-8646-e58bf977774e|namespace_change|phantom-eval|recommendationservice-5dc98bbcb9-xq42k|sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7|resolved|0|dc35f5fc-defa-4dd9-baad-fcac83476e41\npublished|3\nname\ncausal-engine-bdg-updater\nconsumers\n1\npending\n0\nlast-delivered-id\n1792956670213-0\nentries-read\n3\nlag\n0\n{\"status\":\"success\",\"data\":{\"resultType\":\"vector\",\"result\":[{\"metric\":{\"__name__\":\"phantom_redis_stream_messages_total\",\"instance\":\"phantom-causal-engine.phantom.svc.cluster.local:9090\",\"job\":\"phantom-causal-engine\",\"result\":\"success\",\"service\":\"causal-engine\",\"stream\":\"phantom:drift-events\"},\"value\":[1792956678.854,\"3\"]}]}}INFO:     Started server process [1]\nINFO:     Waiting for application startup.\nsbom_migration_applying\nsbom_migration_applying\nsbom_migrations_complete\n{\"event\": \"sbom_service.startup_complete\", \"service\": \"sbom-service\", \"schema_version\": \"v1\", \"level\": \"info\", \"logger\": \"app.interface.dependencies\", \"timestamp\": \"2026-10-25T19:30:33.950330Z\"}\nINFO:     Application startup complete.\nINFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)\nINFO:     10.42.0.1:37492 - \"GET /readyz HTTP/1.1\" 200 OK\nINFO:     10.42.0.1:37508 - \"GET /readyz HTTP/1.1\" 200 OK\nINFO:     10.42.0.1:55452 - \"GET /readyz HTTP/1.1\" 200 OK\nINFO:     10.42.0.1:55460 - \"GET /readyz HTTP/1.1\" 200 OK\nINFO:     10.42.0.1:37004 - \"GET /readyz HTTP/1.1\" 200 OK\nINFO:     10.42.0.1:37014 - \"GET /readyz HTTP/1.1\" 200 OK\nINFO:     10.42.0.1:54892 - \"GET /readyz HTTP/1.1\" 200 OK\nINFO:     10.42.0.21:37656 - \"POST /internal/v1/runtime-bindings HTTP/1.1\" 200 OK\nINFO:     10.42.0.1:54896 - \"GET /readyz HTTP/1.1\" 200 OK\nINFO:     10.42.0.1:57322 - \"GET /readyz HTTP/1.1\" 200 OK\nNAME                                     READY   STATUS    RESTARTS   AGE     IP           NODE             NOMINATED NODE   READINESS GATES\nphantom-api-gateway-64d4d745df-rlqgs     1/1     Running   0          5m19s   10.42.0.21   ip-10-89-2-125   <none>           <none>\nphantom-causal-engine-57576cd69c-b2mn9   1/1     Running   0          11m     10.42.0.17   ip-10-89-2-125   <none>           <none>\nphantom-ebpf-agent-4r68v                 1/1     Running   0          5m25s   10.42.0.20   ip-10-89-2-125   <none>           <none>\nphantom-postgres-57dd79788f-8bfdx        1/1     Running   0          14m     10.42.0.6    ip-10-89-2-125   <none>           <none>\nphantom-redis-64555c745-jx4kk            1/1     Running   0          14m     10.42.0.5    ip-10-89-2-125   <none>           <none>\nphantom-sbom-service-6566454c47-54nz6    1/1     Running   0          48s     10.42.0.23   ip-10-89-2-125   <none>           <none>\n",
+  "StandardOutputUrl": "",
+  "StandardErrorContent": "",
+  "StandardErrorUrl": "",
+  "CloudWatchOutputConfig": {
+    "CloudWatchLogGroupName": "",
+    "CloudWatchOutputEnabled": false
+  }
+}

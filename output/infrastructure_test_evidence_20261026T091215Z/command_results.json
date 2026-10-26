@@ -1,0 +1,47 @@
+[
+  {
+    "name": "e2e",
+    "command": "PYTHONHOME=/root/.local/share/uv/python/cpython-3.11.13-linux-x86_64-gnu .venv-causal/bin/python -m pytest tests/e2e -q -rs",
+    "exit_code": 0
+  },
+  {
+    "name": "m4",
+    "command": "PYTHONHOME=/root/.local/share/uv/python/cpython-3.11.13-linux-x86_64-gnu .venv-causal/bin/python -m pytest tests/verify_m4_adversarial.py -q -rs",
+    "exit_code": 0
+  },
+  {
+    "name": "terraform_fmt",
+    "command": "terraform -chdir=infra/terraform/environments/k3s-lab fmt -check",
+    "exit_code": 0
+  },
+  {
+    "name": "terraform_init",
+    "command": "terraform -chdir=infra/terraform/environments/k3s-lab init -backend=false -input=false",
+    "exit_code": 0
+  },
+  {
+    "name": "terraform_validate",
+    "command": "terraform -chdir=infra/terraform/environments/k3s-lab validate",
+    "exit_code": 0
+  },
+  {
+    "name": "deploy_script_syntax",
+    "command": "bash -n infra/k8s/k3s-lab/build-images.sh infra/k8s/k3s-lab/deploy-all.sh",
+    "exit_code": 0
+  },
+  {
+    "name": "git_diff_check",
+    "command": "git diff --check",
+    "exit_code": 0
+  },
+  {
+    "name": "terraform_state_list",
+    "command": "terraform -chdir=infra/terraform/environments/k3s-lab state list",
+    "exit_code": 0
+  },
+  {
+    "name": "terraform_plan_no_nat",
+    "command": "terraform -chdir=infra/terraform/environments/k3s-lab plan -refresh=false -input=false -var-file=terraform.tfvars.example -out=/tmp/phantom-no-nat-review-final.tfplan",
+    "exit_code": 0
+  }
+]

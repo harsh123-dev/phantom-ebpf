@@ -1,0 +1,5 @@
+0
+ERROR:  column "|" does not exist
+LINE 1: ... FROM phantom_sbom.sboms; SELECT sbom_id::text || "|" || ima...
+                                                             ^
+command terminated with exit code 1

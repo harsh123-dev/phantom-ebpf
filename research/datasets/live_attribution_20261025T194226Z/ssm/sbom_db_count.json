@@ -1,0 +1,22 @@
+{
+  "CommandId": "55676900-4e2c-4678-8e4c-1c7f0e1c1aed",
+  "InstanceId": "i-06bb29d253668fa5f",
+  "Comment": "",
+  "DocumentName": "AWS-RunShellScript",
+  "DocumentVersion": "$DEFAULT",
+  "PluginName": "aws:runShellScript",
+  "ResponseCode": 1,
+  "ExecutionStartDateTime": "2026-10-25T19:52:53.155Z",
+  "ExecutionElapsedTime": "PT0.31S",
+  "ExecutionEndDateTime": "2026-10-25T19:52:53.155Z",
+  "Status": "Failed",
+  "StatusDetails": "Failed",
+  "StandardOutputContent": "0\nERROR:  column \"|\" does not exist\nLINE 1: ... FROM phantom_sbom.sboms; SELECT sbom_id::text || \"|\" || ima...\n                                                             ^\ncommand terminated with exit code 1\n",
+  "StandardOutputUrl": "",
+  "StandardErrorContent": "failed to run commands: exit status 1",
+  "StandardErrorUrl": "",
+  "CloudWatchOutputConfig": {
+    "CloudWatchLogGroupName": "",
+    "CloudWatchOutputEnabled": false
+  }
+}

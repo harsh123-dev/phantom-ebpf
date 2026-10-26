@@ -1,0 +1,10 @@
+{
+  "receipt_id": "0956698a-668c-55e8-9033-e61de20f677c",
+  "http_status": 200,
+  "integrity": "valid",
+  "sha256": "sha256:c0b61d991288437dd5407b9863eb853db2fd66229e4afe902b3a9eb74a29d6aa",
+  "authenticity": "unverified",
+  "independence": "unverified",
+  "sink_ready": true,
+  "source": "live in-cluster HTTP endpoint after sink restart"
+}

@@ -1,0 +1,22 @@
+{
+    "CommandId": "d815a0fe-314e-4767-af30-17fbf3efcd70",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T20:39:02.157Z",
+    "ExecutionElapsedTime": "PT1.289S",
+    "ExecutionEndDateTime": "2026-10-25T20:39:03.157Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "DB_COUNTS_AND_RECORD\n1|22823\nsha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7|sha256:65fc90d4219c3d53bf2ed82f365376f5433920309406d62af0f799f515daf5bb|pending|s3://phantom-k3s-lab-253490771520-ap-south-1-evidence/phantom/evidence/live_attribution_20261025T194226Z/evaluation-image.cdx.json\nLATEST_OUTBOX\nb7869afd-36ce-423a-81e9-3f17e5331a07|ad4d771e-5145-41bc-9c38-c44fa0364d73|published|1792960618952-0|1\nREDIS_GROUP\nname\ncausal-engine-bdg-updater\nconsumers\n1\npending\n0\nlast-delivered-id\n1792960618952-0\nentries-read\n49\nlag\n0\nREDIS_LAST_EVENT\n1792960618952-0\nschema_version\n1.0\nevent\n{\"schema_version\":\"1.0\",\"event_id\":\"b7869afd-36ce-423a-81e9-3f17e5331a07\",\"drift_event_id\":\"5c42b735-0d7f-43d3-9dfc-638f94315f80\",\"outbox_id\":\"ad4d771e-5145-41bc-9c38-c44fa0364d73\",\"tenant_id\":\"00000000-0000-0000-0000-000000000001\",\"observed_at\":\"2026-10-25T20:36:58.393878Z\",\"event_type\":\"privilege_transition\",\"cluster\":\"phantom-k3s-lab\",\"workload\":{\"pod_uid\":\"3b5831cc-199c-4d7a-b862-d6289acc8619\",\"pod_name\":\"recommendationservice-5dc98bbcb9-xq42k\",\"cgroup_id\":10148,\"namespace\":\"phantom-eval\",\"cluster_name\":\"phantom-k3s-lab\",\"container_id\":\"containerd://34da75370182e76d2e5cb0548a39cb530ebebbb74844d634f30ea4495c67b798\",\"image_digest\":\"sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7\",\"container_name\":\"server\",\"service_account\":null},\"process\":{\"gid\":0,\"pid\":71197,\"uid\":0,\"comm\":\"runc:[2:INIT]\",\"ppid\":71184,\"tgid\":71197,\"start_time_ns\":5736606130520,\"executable_hash\":null,\"executable_path\":\"runc:[2:INIT]\",\"executable_hash_status\":\"unavailable\"},\"runtime_evidence\":{\"cpu\":1,\"run_id\":null,\"scenario_id\":null,\"architecture\":\"x86_64\",\"resource_hash\":null,\"resource_path\":null,\"correlation_id\":null,\"raw_event_digest\":\"sha256:8f0cb5d6a2e59ff3d3c8e145acffc4d58e2e3728872ffb7dc232a3555766d4b2\",\"event_loss_observed\":false,\"kernel_timestamp_ns\":5736607132427},\"sbom_binding\":{\"binding_status\":\"insufficient_evidence\",\"image_digest\":\"sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7\",\"sbom_id\":null,\"purl\":null,\"confidence\":null,\"resolver_version\":\"v1\",\"method\":\"unresolved\",\"evidence\":[],\"candidate_purls\":[],\"reason\":\"matching SBOM exists but has not passed verification\"},\"contract_violations\":[]}\nCAUSAL_LOG_MATCH\nTRUST_KEYS\n{\"trusted_key_count\": 0, \"revoked_key_count\": 0, \"raw_config_bytes\": 108}\nSBOM_EGRESS_POLICY\n{\"pod_selector\": {\"matchLabels\": {\"app\": \"phantom-sbom-service\"}}, \"egress_rules\": 3, \"s3_ipv4_ranges\": [\"16.12.3.0/24\", \"16.12.36.0/22\", \"16.12.40.0/23\", \"3.5.208.0/22\", \"3.5.212.0/23\", \"52.219.156.0/22\", \"52.219.160.0/23\", \"52.219.62.0/23\", \"52.219.64.0/22\"]}\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

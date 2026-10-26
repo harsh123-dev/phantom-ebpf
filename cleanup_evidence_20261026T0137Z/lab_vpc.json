@@ -1,0 +1,22 @@
+[
+    {
+        "VpcId": "vpc-08127443fa071e39a",
+        "State": "available",
+        "CidrBlock": "10.89.0.0/16",
+        "IsDefault": false,
+        "Tags": [
+            {
+                "Key": "Environment",
+                "Value": "disposable-lab"
+            },
+            {
+                "Key": "Name",
+                "Value": "phantom-k3s-lab-vpc"
+            },
+            {
+                "Key": "Project",
+                "Value": "PHANTOM"
+            }
+        ]
+    }
+]

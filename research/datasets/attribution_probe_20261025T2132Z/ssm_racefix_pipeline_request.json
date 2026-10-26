@@ -1,0 +1,11 @@
+{
+  "DocumentName": "AWS-RunShellScript",
+  "InstanceIds": ["i-06bb29d253668fa5f"],
+  "Parameters": {
+    "commands": [
+      "sudo k3s kubectl -n phantom exec deploy/phantom-postgres -- psql -U phantom -d phantom -Atc \"SELECT d.event_id, o.status, o.redis_message_id, o.attempt_count, d.comm, d.executable_path, d.image_digest, d.sbom_id, d.purl FROM drift_events d JOIN graph_mutations_outbox o ON o.drift_event_id=d.drift_event_id WHERE d.event_id='f344d15a-5260-478c-9025-022ebe955f56'\"",
+      "sudo k3s kubectl -n phantom exec deploy/phantom-redis -- redis-cli XINFO GROUPS phantom:drift-events | tail -12",
+      "sudo k3s kubectl -n phantom logs deploy/phantom-causal-engine --since=2m --tail=100 2>&1 | grep -E 'processed|consumer|error|f344d15a' | tail -25"
+    ]
+  }
+}

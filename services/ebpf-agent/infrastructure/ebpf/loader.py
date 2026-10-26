@@ -130,16 +130,19 @@ RING_BUFFER_SAMPLE_FN = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c
 # Ring-buffer map names (must match SEC(".maps") names in .bpf.c files)
 # ---------------------------------------------------------------------------
 
-RINGBUF_MAP_NAMES = [
-    "rb_exec",
-    "rb_file_open",
-    "rb_file_write",
-    "rb_network",
-    "rb_privilege",
-    "rb_namespace",
-    "rb_module",
-    "rb_loss",
-]
+RINGBUF_MAPS_BY_OBJECT: dict[str, tuple[str, ...]] = {
+    # Each object includes declarations for every map through the shared
+    # header, but only the maps below have producers in that object. Polling
+    # unused duplicates drains global host events that no program produced
+    # into those maps and can overwhelm the Python queue.
+    "syscall_events.bpf.o": ("rb_exec",),
+    # File and network tracepoints are host-wide and currently lack a kernel
+    # cgroup filter. Do not start draining them until collection is scoped;
+    # doing so floods the userspace queue before namespace attribution.
+    "file_events.bpf.o": (),
+    "network_events.bpf.o": (),
+    "process_events.bpf.o": ("rb_privilege", "rb_namespace", "rb_module"),
+}
 
 
 @dataclass
@@ -208,16 +211,21 @@ class PhantomBpfLoader:
         self._bpf_dir = Path(bpf_dir)
         self._ringbuf_size = ringbuf_size_bytes
         self._handles: list[BpfObjectHandle] = []
-        self._ringbuf_fds: dict[str, int] = {}
+        # Every independently loaded BPF object owns its own maps, even when
+        # the map names are identical. Keep every FD: overwriting by map name
+        # silently left the EXEC program's ring buffer unpolled because the
+        # later process_events object replaced syscall_events' ``rb_exec``.
+        self._ringbuf_fds: list[tuple[str, int]] = []
 
     @property
-    def ringbuf_fds(self) -> dict[str, int]:
+    def ringbuf_fds(self) -> tuple[tuple[str, int], ...]:
         """Return the dict of ring-buffer map name → file descriptor.
 
         Returns:
-            Dict mapping ring-buffer map name to its file descriptor.
+            Object-qualified map labels and their file descriptors. Duplicate
+            map names are expected across separately loaded BPF objects.
         """
-        return dict(self._ringbuf_fds)
+        return tuple(self._ringbuf_fds)
 
     def load_all(self) -> None:
         """Load and attach all PHANTOM BPF objects.
@@ -228,6 +236,13 @@ class PhantomBpfLoader:
         """
         lib = _get_libbpf()
         for obj_name in self.BPF_OBJECTS:
+            if not RINGBUF_MAPS_BY_OBJECT.get(obj_name):
+                log.info(
+                    "ebpf_loader.object_not_enabled",
+                    object=obj_name,
+                    reason="no workload-scoped ring-buffer consumer is configured",
+                )
+                continue
             obj_path = self._bpf_dir / obj_name
             if not obj_path.exists():
                 log.warning(
@@ -241,7 +256,7 @@ class PhantomBpfLoader:
         log.info(
             "ebpf_loader.all_objects_loaded",
             count=len(self._handles),
-            ringbuf_fds=list(self._ringbuf_fds.keys()),
+            ringbuf_fds=[name for name, _fd in self._ringbuf_fds],
         )
 
     def _load_one(self, lib: ctypes.CDLL, obj_path: Path) -> BpfObjectHandle:
@@ -276,13 +291,15 @@ class PhantomBpfLoader:
         handle = BpfObjectHandle(obj_ptr=obj_ptr, bpf_file=str(obj_path))
 
         # Collect ring-buffer map file descriptors.
-        for map_name in RINGBUF_MAP_NAMES:
+        map_names = RINGBUF_MAPS_BY_OBJECT.get(obj_path.name, ())
+        for map_name in map_names:
             map_ptr = lib.bpf_object__find_map_by_name(obj_ptr, map_name.encode())
             if map_ptr:
                 fd = lib.bpf_map__fd(map_ptr)
                 if fd >= 0:
                     handle.map_fds[map_name] = fd
-                    self._ringbuf_fds[map_name] = fd
+                    object_map_name = f"{obj_path.name}:{map_name}"
+                    self._ringbuf_fds.append((object_map_name, fd))
 
         # Attach all programs.
         prog_ptr = lib.bpf_object__next_program(obj_ptr, None)
@@ -325,7 +342,16 @@ class PhantomBpfLoader:
         Returns:
             self
         """
-        self.load_all()
+        try:
+            self.load_all()
+        except Exception:
+            # Python does not call __exit__ when __enter__ raises. Release any
+            # objects and links loaded before a later object failed.
+            try:
+                self.close_all()
+            except Exception as cleanup_exc:  # noqa: BLE001
+                log.exception("ebpf_loader.partial_cleanup_failed", error=str(cleanup_exc))
+            raise
         return self
 
     def __exit__(self, *args: object) -> None:

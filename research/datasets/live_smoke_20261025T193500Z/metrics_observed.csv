@@ -1,0 +1,11 @@
+metric,value,unit,sample_time_utc,method_and_limit
+"phantom_redis_stream_messages_total{result=""success""}",12,counter,2026-10-25T19:34:45.054Z,Prometheus instant query; causal consumer UpdateBdgUseCase success count; smoke stream only
+Redis consumer pending messages,0,messages,2026-10-25T19:34:45Z,"XINFO GROUPS phantom:drift-events; entries-read=12, lag=0"
+phantom_event_delivery_lag_seconds_count,5348,observations,2026-10-25T19:34:45.241Z,Prometheus cumulative histogram count since agent process start; all kernel events before namespace filtering
+phantom_event_delivery_lag_seconds p95,0.04005128205128202,seconds,2026-10-25T19:33:11.996Z,"histogram_quantile(0.95, sum by (le)(rate(phantom_event_delivery_lag_seconds_bucket[5m]))); kernel timestamp to ring callback only"
+phantom-api-gateway CPU,0.0035234104572781904,cores,2026-10-25T19:35:18.960Z,"PromQL rate(container_cpu_usage_seconds_total[1m]) by pod; point-in-time resource sample, not overhead"
+phantom-causal-engine CPU,0.0023736810839863017,cores,2026-10-25T19:35:18.960Z,"PromQL rate(container_cpu_usage_seconds_total[1m]) by pod; point-in-time resource sample, not overhead"
+phantom-ebpf-agent CPU,0.012244124625095134,cores,2026-10-25T19:35:18.960Z,"PromQL rate(container_cpu_usage_seconds_total[1m]) by pod; point-in-time resource sample, not overhead"
+phantom-postgres CPU,0.006440504387448964,cores,2026-10-25T19:35:18.960Z,"PromQL rate(container_cpu_usage_seconds_total[1m]) by pod; point-in-time resource sample, not overhead"
+phantom-redis CPU,0.008615683158634604,cores,2026-10-25T19:35:18.960Z,"PromQL rate(container_cpu_usage_seconds_total[1m]) by pod; point-in-time resource sample, not overhead"
+phantom-sbom-service CPU,0.0014048565289319047,cores,2026-10-25T19:35:18.960Z,"PromQL rate(container_cpu_usage_seconds_total[1m]) by pod; point-in-time resource sample, not overhead"

@@ -1,0 +1,6 @@
+{
+    "Status": "Success",
+    "ResponseCode": 0,
+    "Output": "daemonset.apps/phantom-ebpf-agent image updated\nWaiting for daemon set \"phantom-ebpf-agent\" rollout to finish: 0 out of 1 new pods have been updated...\nWaiting for daemon set \"phantom-ebpf-agent\" rollout to finish: 0 of 1 updated pods are available...\ndaemon set \"phantom-ebpf-agent\" successfully rolled out\n1/1 phantom/ebpf-agent:telemetry-20261025T2209Z",
+    "Error": ""
+}

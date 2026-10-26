@@ -1,0 +1,59 @@
+.................................................................s...... [ 19%]
+........................................................................ [ 38%]
+........................................................................ [ 57%]
+........................................................................ [ 76%]
+........................................................................ [ 95%]
+.................                                                        [100%]
+=============================== warnings summary ===============================
+.venv-causal/lib/python3.11/site-packages/starlette/formparsers.py:12
+  /root/phantom-ebpf/.venv-causal/lib/python3.11/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+.venv-causal/lib/python3.11/site-packages/starlette/testclient.py:41
+  /root/phantom-ebpf/.venv-causal/lib/python3.11/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+.venv-causal/lib/python3.11/site-packages/pydantic/_internal/_fields.py:160
+  /root/phantom-ebpf/.venv-causal/lib/python3.11/site-packages/pydantic/_internal/_fields.py:160: UserWarning: Field "model_version" has conflict with protected namespace "model_".
+  
+  You may be able to resolve this warning by setting `model_config['protected_namespaces'] = ()`.
+    warnings.warn(
+
+tests/test_functional_estimation.py::TestDependencyRuntimeChecks::test_pandas_indexing_compatibility
+  /root/phantom-ebpf/services/causal-engine/tests/test_functional_estimation.py:103: FutureWarning: Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+    val = s[0]
+
+tests/test_functional_estimation.py: 13 warnings
+  /root/phantom-ebpf/.venv-causal/lib/python3.11/site-packages/dowhy/graph.py:99: DeprecationWarning: d_separated is deprecated and will be removed in NetworkX v3.5.Please use `is_d_separator(G, x, y, z)`.
+    dseparated = nx.algorithms.d_separated(new_graph, set(nodes1), set(nodes2), set(nodes3))
+
+tests/test_functional_estimation.py::TestFunctionalCausalEstimationDGP::test_successful_functional_estimation_via_adapter
+tests/test_functional_estimation.py::TestFunctionalCausalEstimationDGP::test_successful_functional_estimation_via_adapter
+tests/test_functional_estimation.py::TestPipelineBoundaryAndSerialization::test_successful_pipeline_estimation_and_serialization
+tests/test_functional_estimation.py::TestPipelineBoundaryAndSerialization::test_successful_pipeline_estimation_and_serialization
+tests/test_functional_estimation.py::TestPipelineBoundaryAndSerialization::test_placebo_refutation_evaluation_correctness
+tests/test_functional_estimation.py::TestPipelineBoundaryAndSerialization::test_placebo_refutation_evaluation_correctness
+  /root/phantom-ebpf/.venv-causal/lib/python3.11/site-packages/dowhy/graph.py:201: DeprecationWarning: d_separated is deprecated and will be removed in NetworkX v3.5.Please use `is_d_separator(G, x, y, z)`.
+    dseparated = nx.algorithms.d_separated(new_graph, set(nodes1), set(nodes2), set(nodes3))
+
+tests/test_functional_estimation.py: 904 warnings
+  /root/phantom-ebpf/.venv-causal/lib/python3.11/site-packages/dowhy/causal_estimators/regression_estimator.py:131: FutureWarning: Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+    intercept_parameter = self.model.params[0]
+
+tests/test_functional_estimation.py::TestFunctionalCausalEstimationDGP::test_non_identifiable_effect_abstains_correctly
+  /root/phantom-ebpf/.venv-causal/lib/python3.11/site-packages/dowhy/causal_model.py:583: UserWarning: 1 variables are assumed unobserved because they are not in the dataset. Configure the logging level to `logging.WARNING` or higher for additional details.
+    warnings.warn(
+
+tests/test_functional_estimation.py::TestFunctionalCausalEstimationDGP::test_non_identifiable_effect_abstains_correctly
+tests/test_functional_estimation.py::TestFunctionalCausalEstimationDGP::test_non_identifiable_effect_abstains_correctly
+  /root/phantom-ebpf/.venv-causal/lib/python3.11/site-packages/dowhy/causal_model.py:588: DeprecationWarning: The 'warn' method is deprecated, use 'warning' instead
+    logger.warn(
+
+tests/test_functional_estimation.py: 100 warnings
+  /root/phantom-ebpf/.venv-causal/lib/python3.11/site-packages/scipy/stats/_axis_nan_policy.py:418: UserWarning: `kurtosistest` p-value may be inaccurate with fewer than 20 observations; only n=16 observations were given.
+    return hypotest_fun_in(*args, **kwds)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+SKIPPED [1] services/causal-engine/tests/test_authenticated_sink_composition.py:105: redis-server is not installed; this environment supports fakeredis only
+376 passed, 1 skipped, 1030 warnings in 11.78s

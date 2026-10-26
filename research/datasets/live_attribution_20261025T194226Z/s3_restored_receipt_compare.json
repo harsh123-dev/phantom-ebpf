@@ -1,0 +1,23 @@
+{
+  "live_snapshot_receipts": [
+    [
+      "0956698a-668c-55e8-9033-e61de20f677c",
+      "sha256:c0b61d991288437dd5407b9863eb853db2fd66229e4afe902b3a9eb74a29d6aa"
+    ],
+    [
+      "5ce90608-0117-5836-95dc-01f37543ab38",
+      "sha256:325c19543aeea1f39527dd98c9cad298f6b8c3171f9a6ff35a686315b7aaace0"
+    ]
+  ],
+  "restored_receipts": [
+    [
+      "0956698a-668c-55e8-9033-e61de20f677c",
+      "sha256:c0b61d991288437dd5407b9863eb853db2fd66229e4afe902b3a9eb74a29d6aa"
+    ],
+    [
+      "5ce90608-0117-5836-95dc-01f37543ab38",
+      "sha256:325c19543aeea1f39527dd98c9cad298f6b8c3171f9a6ff35a686315b7aaace0"
+    ]
+  ],
+  "identity_and_integrity_hashes_match": true
+}

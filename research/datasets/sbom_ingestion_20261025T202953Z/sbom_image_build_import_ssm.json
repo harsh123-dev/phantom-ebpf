@@ -1,0 +1,22 @@
+{
+    "CommandId": "339a44ae-f519-4507-9bec-2f1777574ce7",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T20:32:20.787Z",
+    "ExecutionElapsedTime": "PT5.871S",
+    "ExecutionEndDateTime": "2026-10-25T20:32:25.787Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "image_id=sha256:4c6c8aa7a63a21884eb900075a4383e1d9bd86225e840b5bf1e22cd8dc076653\n582e7ef1ab8f237cc008cc6423b317c0f4499086d86a427229a4aec84c3df426  /tmp/phantom-sbom-service-sbomfix.tar\ndocker.io/phantom/sbom service:sbomfix 2\tsaved\t\napplication/vnd.oci.image.index.v1+json sha256:4c6c8aa7a63a21884eb900075a4383e1d9bd86225e840b5bf1e22cd8dc076653\nImporting\telapsed: 1.8 s\ttotal:   0.0 B\t(0.0 B/s)\t\ndocker.io/phantom/sbom-service:sbomfix-20261025T202953Z                                                            application/vnd.oci.image.index.v1+json                   sha256:4c6c8aa7a63a21884eb900075a4383e1d9bd86225e840b5bf1e22cd8dc076653 88.9 MiB  linux/amd64                                                                                            io.cri-containerd.image=managed \n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "#0 building with \"default\" instance using docker driver\n\n#1 [internal] load build definition from Dockerfile\n#1 transferring dockerfile: 1.63kB done\n#1 DONE 0.0s\n\n#2 [internal] load metadata for docker.io/library/python:3.11-slim\n#2 DONE 0.0s\n\n#3 [internal] load .dockerignore\n#3 transferring context: 2B done\n#3 DONE 0.0s\n\n#4 [svc-builder 1/4] FROM docker.io/library/python:3.11-slim@sha256:b7a9e5f6a93d6d4a31f129bbd4bdee69efccb6ded0fb230d78aafaf37af98377\n#4 resolve docker.io/library/python:3.11-slim@sha256:b7a9e5f6a93d6d4a31f129bbd4bdee69efccb6ded0fb230d78aafaf37af98377 0.0s done\n#4 DONE 0.0s\n\n#5 [internal] load build context\n#5 transferring context: 4.77kB done\n#5 DONE 0.0s\n\n#6 [runtime 5/8] COPY --from=svc-builder  /build/dist/*.whl /tmp/\n#6 CACHED\n\n#7 [runtime 3/8] RUN apt-get update -qq && apt-get install -y --no-install-recommends     curl ca-certificates && rm -rf /var/lib/apt/lists/*\n#7 CACHED\n\n#8 [runtime 6/8] RUN pip install --no-cache-dir /tmp/*.whl && rm /tmp/*.whl\n#8 CACHED\n\n#9 [core-builder 3/4] COPY libs/phantom-core/ ./\n#9 CACHED\n\n#10 [svc-builder 2/4] WORKDIR /build\n#10 CACHED\n\n#11 [core-builder 4/4] RUN pip install --no-cache-dir build && python -m build --wheel\n#11 CACHED\n\n#12 [svc-builder 3/4] COPY services/sbom-service/pyproject.toml ./\n#12 CACHED\n\n#13 [runtime 7/8] COPY services/sbom-service/app/ ./app/\n#13 CACHED\n\n#14 [svc-builder 4/4] RUN pip install --no-cache-dir build && python -m build --wheel\n#14 CACHED\n\n#15 [runtime 4/8] COPY --from=core-builder /build/dist/*.whl /tmp/\n#15 CACHED\n\n#16 [runtime 2/8] WORKDIR /app\n#16 CACHED\n\n#17 [runtime 8/8] RUN useradd -r -u 1000 -g root phantom && chown -R phantom:root /app\n#17 CACHED\n\n#18 exporting to image\n#18 exporting layers done\n#18 exporting manifest sha256:5aaa030a8b4f8d4cbc0ee5a5c88a2b45bd8f9d4ea335c40b315b5cf01e9ea35e done\n#18 exporting config sha256:5ccf539861db1c160d02dcb7f13e5bf6d6c621e0920359e622123c7ed5e0415a done\n#18 exporting attestation manifest sha256:cbbb3a9b700d0614f286cead52be8b301b718a444ddf2b5a6eafc621049ab9aa 0.0s done\n#18 exporting manifest list sha256:4c6c8aa7a63a21884eb900075a4383e1d9bd86225e840b5bf1e22cd8dc076653\n#18 exporting manifest list sha256:4c6c8aa7a63a21884eb900075a4383e1d9bd86225e840b5bf1e22cd8dc076653 0.0s done\n#18 naming to docker.io/phantom/sbom-service:sbomfix-20261025T202953Z done\n#18 unpacking to docker.io/phantom/sbom-service:sbomfix-20261025T202953Z done\n#18 DONE 0.1s\n",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

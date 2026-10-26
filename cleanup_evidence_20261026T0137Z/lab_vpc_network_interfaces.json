@@ -1,0 +1,110 @@
+[
+    {
+        "Id": "eni-0278c42abb2997910",
+        "Status": "in-use",
+        "Type": "nat_gateway",
+        "Description": "Interface for NAT Gateway nat-001088ed60b94cb8a",
+        "RequesterManaged": true,
+        "Attachment": {
+            "AttachmentId": "ela-attach-0b99eead3e6fcc7da",
+            "DeleteOnTermination": false,
+            "DeviceIndex": 1,
+            "InstanceOwnerId": "amazon-aws",
+            "Status": "attached"
+        },
+        "Groups": [],
+        "PrivateIp": "10.89.1.82",
+        "Tags": []
+    },
+    {
+        "Id": "eni-0e588c59022f1bac7",
+        "Status": "in-use",
+        "Type": "vpc_endpoint",
+        "Description": "VPC Endpoint Interface vpce-05ca745ed41b2bb43",
+        "RequesterManaged": true,
+        "Attachment": {
+            "AttachmentId": "ela-attach-031f2920ac75f3567",
+            "DeleteOnTermination": false,
+            "DeviceIndex": 1,
+            "InstanceOwnerId": "amazon-aws",
+            "Status": "attached"
+        },
+        "Groups": [
+            {
+                "GroupId": "sg-025807cd0beca7d5c",
+                "GroupName": "phantom-k3s-lab-ssm-endpoints-sg"
+            }
+        ],
+        "PrivateIp": "10.89.2.159",
+        "Tags": []
+    },
+    {
+        "Id": "eni-022e501a83f3f497c",
+        "Status": "in-use",
+        "Type": "vpc_endpoint",
+        "Description": "VPC Endpoint Interface vpce-082f0c70b7a618732",
+        "RequesterManaged": true,
+        "Attachment": {
+            "AttachmentId": "ela-attach-0f96a0b336c56a4f2",
+            "DeleteOnTermination": false,
+            "DeviceIndex": 1,
+            "InstanceOwnerId": "amazon-aws",
+            "Status": "attached"
+        },
+        "Groups": [
+            {
+                "GroupId": "sg-025807cd0beca7d5c",
+                "GroupName": "phantom-k3s-lab-ssm-endpoints-sg"
+            }
+        ],
+        "PrivateIp": "10.89.2.137",
+        "Tags": []
+    },
+    {
+        "Id": "eni-021effa003ebc618e",
+        "Status": "in-use",
+        "Type": "vpc_endpoint",
+        "Description": "VPC Endpoint Interface vpce-06b26a4c99933f440",
+        "RequesterManaged": true,
+        "Attachment": {
+            "AttachmentId": "ela-attach-0c03a4a81204640eb",
+            "DeleteOnTermination": false,
+            "DeviceIndex": 1,
+            "InstanceOwnerId": "amazon-aws",
+            "Status": "attached"
+        },
+        "Groups": [
+            {
+                "GroupId": "sg-025807cd0beca7d5c",
+                "GroupName": "phantom-k3s-lab-ssm-endpoints-sg"
+            }
+        ],
+        "PrivateIp": "10.89.2.94",
+        "Tags": []
+    },
+    {
+        "Id": "eni-00575fc7d1331f7e3",
+        "Status": "in-use",
+        "Type": "interface",
+        "Description": "",
+        "RequesterManaged": false,
+        "Attachment": {
+            "AttachTime": "2026-10-25T19:01:15+00:00",
+            "AttachmentId": "eni-attach-0f7873e0bc93756e2",
+            "DeleteOnTermination": true,
+            "DeviceIndex": 0,
+            "NetworkCardIndex": 0,
+            "InstanceId": "i-06bb29d253668fa5f",
+            "InstanceOwnerId": "253490771520",
+            "Status": "attached"
+        },
+        "Groups": [
+            {
+                "GroupId": "sg-0dd69eccac1594f6f",
+                "GroupName": "phantom-k3s-lab-sg"
+            }
+        ],
+        "PrivateIp": "10.89.2.125",
+        "Tags": []
+    }
+]

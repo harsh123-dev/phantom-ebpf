@@ -1,0 +1,22 @@
+{
+    "CommandId": "1b0893f4-2d3d-45b6-a5ee-169dd736f572",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 127,
+    "ExecutionStartDateTime": "2026-10-25T21:34:52.249Z",
+    "ExecutionElapsedTime": "PT0.005S",
+    "ExecutionEndDateTime": "2026-10-25T21:34:52.249Z",
+    "Status": "Failed",
+    "StatusDetails": "Failed",
+    "StandardOutputContent": "",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "/var/lib/amazon/ssm/i-06bb29d253668fa5f/document/orchestration/1b0893f4-2d3d-45b6-a5ee-169dd736f572/awsrunShellScript/0.awsrunShellScript/_script.sh: 3: aws: not found\nfailed to run commands: exit status 127",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

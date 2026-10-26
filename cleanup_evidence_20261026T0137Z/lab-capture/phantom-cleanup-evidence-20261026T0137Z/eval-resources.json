@@ -1,0 +1,1086 @@
+{
+  "apiVersion": "v1",
+  "items": [
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "annotations": {
+          "deployment.kubernetes.io/revision": "1",
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"name\":\"cartservice\",\"namespace\":\"phantom-eval\"},\"spec\":{\"replicas\":1,\"selector\":{\"matchLabels\":{\"app\":\"cartservice\"}},\"template\":{\"metadata\":{\"labels\":{\"app\":\"cartservice\"}},\"spec\":{\"containers\":[{\"env\":[{\"name\":\"PIP_BREAK_SYSTEM_PACKAGES\",\"value\":\"1\"}],\"image\":\"tiangolo/uwsgi-nginx-flask:python3.11\",\"imagePullPolicy\":\"IfNotPresent\",\"name\":\"server\",\"ports\":[{\"containerPort\":80}],\"readinessProbe\":{\"httpGet\":{\"path\":\"/\",\"port\":80},\"initialDelaySeconds\":5,\"periodSeconds\":10},\"resources\":{\"limits\":{\"cpu\":\"200m\",\"memory\":\"256Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"128Mi\"}}}]}}}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:16:51Z",
+        "generation": 1,
+        "name": "cartservice",
+        "namespace": "phantom-eval",
+        "resourceVersion": "998",
+        "uid": "a6ab8d9d-a5e5-4578-993b-407e46a2f080"
+      },
+      "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 10,
+        "selector": {
+          "matchLabels": {
+            "app": "cartservice"
+          }
+        },
+        "strategy": {
+          "rollingUpdate": {
+            "maxSurge": "25%",
+            "maxUnavailable": "25%"
+          },
+          "type": "RollingUpdate"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "cartservice"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "env": [
+                  {
+                    "name": "PIP_BREAK_SYSTEM_PACKAGES",
+                    "value": "[REDACTED]"
+                  }
+                ],
+                "image": "tiangolo/uwsgi-nginx-flask:python3.11",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "server",
+                "ports": [
+                  {
+                    "containerPort": 80,
+                    "protocol": "TCP"
+                  }
+                ],
+                "readinessProbe": {
+                  "failureThreshold": 3,
+                  "httpGet": {
+                    "path": "/",
+                    "port": 80,
+                    "scheme": "HTTP"
+                  },
+                  "initialDelaySeconds": 5,
+                  "periodSeconds": 10,
+                  "successThreshold": 1,
+                  "timeoutSeconds": 1
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "200m",
+                    "memory": "256Mi"
+                  },
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "128Mi"
+                  }
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File"
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {},
+            "terminationGracePeriodSeconds": 30
+          }
+        }
+      },
+      "status": {
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-10-25T19:17:02Z",
+            "lastUpdateTime": "2026-10-25T19:17:02Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          },
+          {
+            "lastTransitionTime": "2026-10-25T19:16:51Z",
+            "lastUpdateTime": "2026-10-25T19:17:02Z",
+            "message": "ReplicaSet \"cartservice-7958549c8f\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "terminatingReplicas": 0,
+        "updatedReplicas": 1
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "annotations": {
+          "deployment.kubernetes.io/revision": "1",
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"name\":\"emailservice\",\"namespace\":\"phantom-eval\"},\"spec\":{\"replicas\":1,\"selector\":{\"matchLabels\":{\"app\":\"emailservice\"}},\"template\":{\"metadata\":{\"labels\":{\"app\":\"emailservice\"}},\"spec\":{\"containers\":[{\"env\":[{\"name\":\"PIP_BREAK_SYSTEM_PACKAGES\",\"value\":\"1\"}],\"image\":\"tiangolo/uwsgi-nginx-flask:python3.11\",\"imagePullPolicy\":\"IfNotPresent\",\"livenessProbe\":{\"httpGet\":{\"path\":\"/\",\"port\":80},\"initialDelaySeconds\":15,\"periodSeconds\":2015},\"name\":\"server\",\"ports\":[{\"containerPort\":80}],\"readinessProbe\":{\"httpGet\":{\"path\":\"/\",\"port\":80},\"initialDelaySeconds\":5,\"periodSeconds\":10},\"resources\":{\"limits\":{\"cpu\":\"200m\",\"memory\":\"256Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"128Mi\"}}}]}}}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:16:51Z",
+        "generation": 1,
+        "name": "emailservice",
+        "namespace": "phantom-eval",
+        "resourceVersion": "1004",
+        "uid": "9f9d7eb3-ede4-40ec-bc3b-5413d0340ada"
+      },
+      "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 10,
+        "selector": {
+          "matchLabels": {
+            "app": "emailservice"
+          }
+        },
+        "strategy": {
+          "rollingUpdate": {
+            "maxSurge": "25%",
+            "maxUnavailable": "25%"
+          },
+          "type": "RollingUpdate"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "emailservice"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "env": [
+                  {
+                    "name": "PIP_BREAK_SYSTEM_PACKAGES",
+                    "value": "[REDACTED]"
+                  }
+                ],
+                "image": "tiangolo/uwsgi-nginx-flask:python3.11",
+                "imagePullPolicy": "IfNotPresent",
+                "livenessProbe": {
+                  "failureThreshold": 3,
+                  "httpGet": {
+                    "path": "/",
+                    "port": 80,
+                    "scheme": "HTTP"
+                  },
+                  "initialDelaySeconds": 15,
+                  "periodSeconds": 2015,
+                  "successThreshold": 1,
+                  "timeoutSeconds": 1
+                },
+                "name": "server",
+                "ports": [
+                  {
+                    "containerPort": 80,
+                    "protocol": "TCP"
+                  }
+                ],
+                "readinessProbe": {
+                  "failureThreshold": 3,
+                  "httpGet": {
+                    "path": "/",
+                    "port": 80,
+                    "scheme": "HTTP"
+                  },
+                  "initialDelaySeconds": 5,
+                  "periodSeconds": 10,
+                  "successThreshold": 1,
+                  "timeoutSeconds": 1
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "200m",
+                    "memory": "256Mi"
+                  },
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "128Mi"
+                  }
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File"
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {},
+            "terminationGracePeriodSeconds": 30
+          }
+        }
+      },
+      "status": {
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-10-25T19:17:02Z",
+            "lastUpdateTime": "2026-10-25T19:17:02Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          },
+          {
+            "lastTransitionTime": "2026-10-25T19:16:51Z",
+            "lastUpdateTime": "2026-10-25T19:17:02Z",
+            "message": "ReplicaSet \"emailservice-fd75976b\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "terminatingReplicas": 0,
+        "updatedReplicas": 1
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "annotations": {
+          "deployment.kubernetes.io/revision": "3",
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-sink\",\"namespace\":\"phantom-eval\"},\"spec\":{\"replicas\":1,\"selector\":{\"matchLabels\":{\"app\":\"phantom-sink\"}},\"strategy\":{\"type\":\"Recreate\"},\"template\":{\"metadata\":{\"labels\":{\"app\":\"phantom-sink\"}},\"spec\":{\"containers\":[{\"command\":[\"uvicorn\",\"research.evaluation.evidence_sink_service:create_app\",\"--factory\",\"--host\",\"0.0.0.0\",\"--port\",\"9191\",\"--workers\",\"1\"],\"env\":[{\"name\":\"PHANTOM_SINK_DB\",\"value\":\"/data/evidence.sqlite3\"},{\"name\":\"PHANTOM_ORACLE_TRUSTED_KEYS_FILE\",\"value\":\"/etc/phantom-oracle/trusted-keys.json\"}],\"image\":\"phantom/evidence-sink:latest\",\"imagePullPolicy\":\"IfNotPresent\",\"livenessProbe\":{\"httpGet\":{\"path\":\"/healthz\",\"port\":\"api\"},\"periodSeconds\":15},\"name\":\"sink\",\"ports\":[{\"containerPort\":9191,\"name\":\"api\"},{\"containerPort\":8443,\"name\":\"https-beacon\"},{\"containerPort\":4445,\"name\":\"dep-beacon\"},{\"containerPort\":4446,\"name\":\"http-beacon\"},{\"containerPort\":8080,\"name\":\"legacy-beacon\"}],\"readinessProbe\":{\"httpGet\":{\"path\":\"/readyz\",\"port\":\"api\"},\"initialDelaySeconds\":2,\"periodSeconds\":5},\"resources\":{\"limits\":{\"cpu\":\"500m\",\"memory\":\"256Mi\"},\"requests\":{\"cpu\":\"50m\",\"memory\":\"96Mi\"}},\"securityContext\":{\"allowPrivilegeEscalation\":false,\"capabilities\":{\"drop\":[\"ALL\"]},\"readOnlyRootFilesystem\":true,\"runAsGroup\":10001,\"runAsNonRoot\":true,\"runAsUser\":10001,\"seccompProfile\":{\"type\":\"RuntimeDefault\"}},\"volumeMounts\":[{\"mountPath\":\"/data\",\"name\":\"evidence-data\"},{\"mountPath\":\"/etc/phantom-oracle\",\"name\":\"oracle-trust\",\"readOnly\":true}]}],\"securityContext\":{\"fsGroup\":10001,\"fsGroupChangePolicy\":\"OnRootMismatch\"},\"volumes\":[{\"name\":\"evidence-data\",\"persistentVolumeClaim\":{\"claimName\":\"phantom-evidence-data\"}},{\"configMap\":{\"name\":\"phantom-oracle-trust\"},\"name\":\"oracle-trust\"}]}}}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:16:51Z",
+        "generation": 3,
+        "name": "phantom-sink",
+        "namespace": "phantom-eval",
+        "resourceVersion": "2244",
+        "uid": "0f1d7039-05c1-41ce-89c8-0f7aa6fea399"
+      },
+      "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 10,
+        "selector": {
+          "matchLabels": {
+            "app": "phantom-sink"
+          }
+        },
+        "strategy": {
+          "type": "Recreate"
+        },
+        "template": {
+          "metadata": {
+            "annotations": {
+              "kubectl.kubernetes.io/restartedAt": "2026-10-25T19:46:23Z"
+            },
+            "labels": {
+              "app": "phantom-sink"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "command": [
+                  "uvicorn",
+                  "research.evaluation.evidence_sink_service:create_app",
+                  "--factory",
+                  "--host",
+                  "0.0.0.0",
+                  "--port",
+                  "9191",
+                  "--workers",
+                  "1"
+                ],
+                "env": [
+                  {
+                    "name": "PHANTOM_SINK_DB",
+                    "value": "[REDACTED]"
+                  },
+                  {
+                    "name": "PHANTOM_ORACLE_TRUSTED_KEYS_FILE",
+                    "value": "[REDACTED]"
+                  }
+                ],
+                "image": "phantom/evidence-sink:latest",
+                "imagePullPolicy": "IfNotPresent",
+                "livenessProbe": {
+                  "failureThreshold": 3,
+                  "httpGet": {
+                    "path": "/healthz",
+                    "port": "api",
+                    "scheme": "HTTP"
+                  },
+                  "periodSeconds": 15,
+                  "successThreshold": 1,
+                  "timeoutSeconds": 1
+                },
+                "name": "sink",
+                "ports": [
+                  {
+                    "containerPort": 9191,
+                    "name": "api",
+                    "protocol": "TCP"
+                  },
+                  {
+                    "containerPort": 8443,
+                    "name": "https-beacon",
+                    "protocol": "TCP"
+                  },
+                  {
+                    "containerPort": 4445,
+                    "name": "dep-beacon",
+                    "protocol": "TCP"
+                  },
+                  {
+                    "containerPort": 4446,
+                    "name": "http-beacon",
+                    "protocol": "TCP"
+                  },
+                  {
+                    "containerPort": 8080,
+                    "name": "legacy-beacon",
+                    "protocol": "TCP"
+                  }
+                ],
+                "readinessProbe": {
+                  "failureThreshold": 3,
+                  "httpGet": {
+                    "path": "/readyz",
+                    "port": "api",
+                    "scheme": "HTTP"
+                  },
+                  "initialDelaySeconds": 2,
+                  "periodSeconds": 5,
+                  "successThreshold": 1,
+                  "timeoutSeconds": 1
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "256Mi"
+                  },
+                  "requests": {
+                    "cpu": "50m",
+                    "memory": "96Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  },
+                  "readOnlyRootFilesystem": true,
+                  "runAsGroup": 10001,
+                  "runAsNonRoot": true,
+                  "runAsUser": 10001,
+                  "seccompProfile": {
+                    "type": "RuntimeDefault"
+                  }
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                  {
+                    "mountPath": "/data",
+                    "name": "evidence-data"
+                  },
+                  {
+                    "mountPath": "/etc/phantom-oracle",
+                    "name": "oracle-trust",
+                    "readOnly": true
+                  }
+                ]
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {
+              "fsGroup": 10001,
+              "fsGroupChangePolicy": "OnRootMismatch"
+            },
+            "terminationGracePeriodSeconds": 30,
+            "volumes": [
+              {
+                "name": "evidence-data",
+                "persistentVolumeClaim": {
+                  "claimName": "phantom-evidence-data"
+                }
+              },
+              {
+                "configMap": {
+                  "defaultMode": 420,
+                  "name": "phantom-oracle-trust"
+                },
+                "name": "oracle-trust"
+              }
+            ]
+          }
+        }
+      },
+      "status": {
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-10-25T19:46:29Z",
+            "lastUpdateTime": "2026-10-25T19:46:29Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          },
+          {
+            "lastTransitionTime": "2026-10-25T19:16:51Z",
+            "lastUpdateTime": "2026-10-25T19:46:29Z",
+            "message": "ReplicaSet \"phantom-sink-68655c5df\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          }
+        ],
+        "observedGeneration": 3,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "terminatingReplicas": 0,
+        "updatedReplicas": 1
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "annotations": {
+          "deployment.kubernetes.io/revision": "1",
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"name\":\"recommendationservice\",\"namespace\":\"phantom-eval\"},\"spec\":{\"replicas\":1,\"selector\":{\"matchLabels\":{\"app\":\"recommendationservice\"}},\"template\":{\"metadata\":{\"labels\":{\"app\":\"recommendationservice\"}},\"spec\":{\"containers\":[{\"env\":[{\"name\":\"PIP_BREAK_SYSTEM_PACKAGES\",\"value\":\"1\"}],\"image\":\"tiangolo/uwsgi-nginx-flask:python3.11\",\"imagePullPolicy\":\"IfNotPresent\",\"livenessProbe\":{\"httpGet\":{\"path\":\"/\",\"port\":80},\"initialDelaySeconds\":15,\"periodSeconds\":20},\"name\":\"server\",\"ports\":[{\"containerPort\":80}],\"readinessProbe\":{\"httpGet\":{\"path\":\"/\",\"port\":80},\"initialDelaySeconds\":5,\"periodSeconds\":10},\"resources\":{\"limits\":{\"cpu\":\"200m\",\"memory\":\"256Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"128Mi\"}}}]}}}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:16:51Z",
+        "generation": 1,
+        "name": "recommendationservice",
+        "namespace": "phantom-eval",
+        "resourceVersion": "1010",
+        "uid": "fee6e7f3-b448-4aeb-8a5c-4d0bd0ff13bf"
+      },
+      "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 10,
+        "selector": {
+          "matchLabels": {
+            "app": "recommendationservice"
+          }
+        },
+        "strategy": {
+          "rollingUpdate": {
+            "maxSurge": "25%",
+            "maxUnavailable": "25%"
+          },
+          "type": "RollingUpdate"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "recommendationservice"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "env": [
+                  {
+                    "name": "PIP_BREAK_SYSTEM_PACKAGES",
+                    "value": "[REDACTED]"
+                  }
+                ],
+                "image": "tiangolo/uwsgi-nginx-flask:python3.11",
+                "imagePullPolicy": "IfNotPresent",
+                "livenessProbe": {
+                  "failureThreshold": 3,
+                  "httpGet": {
+                    "path": "/",
+                    "port": 80,
+                    "scheme": "HTTP"
+                  },
+                  "initialDelaySeconds": 15,
+                  "periodSeconds": 20,
+                  "successThreshold": 1,
+                  "timeoutSeconds": 1
+                },
+                "name": "server",
+                "ports": [
+                  {
+                    "containerPort": 80,
+                    "protocol": "TCP"
+                  }
+                ],
+                "readinessProbe": {
+                  "failureThreshold": 3,
+                  "httpGet": {
+                    "path": "/",
+                    "port": 80,
+                    "scheme": "HTTP"
+                  },
+                  "initialDelaySeconds": 5,
+                  "periodSeconds": 10,
+                  "successThreshold": 1,
+                  "timeoutSeconds": 1
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "200m",
+                    "memory": "256Mi"
+                  },
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "128Mi"
+                  }
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File"
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {},
+            "terminationGracePeriodSeconds": 30
+          }
+        }
+      },
+      "status": {
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-10-25T19:17:02Z",
+            "lastUpdateTime": "2026-10-25T19:17:02Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          },
+          {
+            "lastTransitionTime": "2026-10-25T19:16:51Z",
+            "lastUpdateTime": "2026-10-25T19:17:02Z",
+            "message": "ReplicaSet \"recommendationservice-5dc98bbcb9\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "terminatingReplicas": 0,
+        "updatedReplicas": 1
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"name\":\"cartservice\",\"namespace\":\"phantom-eval\"},\"spec\":{\"ports\":[{\"port\":7070,\"targetPort\":7070}],\"selector\":{\"app\":\"cartservice\"}}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:16:51Z",
+        "name": "cartservice",
+        "namespace": "phantom-eval",
+        "resourceVersion": "893",
+        "uid": "efacf20f-0f85-4302-9fa7-8f01e1354ec8"
+      },
+      "spec": {
+        "clusterIP": "10.43.222.207",
+        "clusterIPs": [
+          "10.43.222.207"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "port": 7070,
+            "protocol": "TCP",
+            "targetPort": 7070
+          }
+        ],
+        "selector": {
+          "app": "cartservice"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      },
+      "status": {
+        "loadBalancer": {}
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"name\":\"emailservice\",\"namespace\":\"phantom-eval\"},\"spec\":{\"ports\":[{\"port\":8080,\"targetPort\":80}],\"selector\":{\"app\":\"emailservice\"}}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:16:51Z",
+        "name": "emailservice",
+        "namespace": "phantom-eval",
+        "resourceVersion": "867",
+        "uid": "e5e46e2b-7c06-4345-8f5f-d1ec1f87bcfd"
+      },
+      "spec": {
+        "clusterIP": "10.43.30.179",
+        "clusterIPs": [
+          "10.43.30.179"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "port": 8080,
+            "protocol": "TCP",
+            "targetPort": 80
+          }
+        ],
+        "selector": {
+          "app": "emailservice"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      },
+      "status": {
+        "loadBalancer": {}
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-sink\",\"namespace\":\"phantom-eval\"},\"spec\":{\"ports\":[{\"name\":\"api\",\"port\":9191,\"targetPort\":9191},{\"name\":\"https-beacon\",\"port\":8443,\"targetPort\":8443},{\"name\":\"dep-beacon\",\"port\":4445,\"targetPort\":4445},{\"name\":\"http-beacon\",\"port\":4446,\"targetPort\":4446},{\"name\":\"http\",\"port\":8080,\"targetPort\":8080}],\"selector\":{\"app\":\"phantom-sink\"}}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:16:51Z",
+        "name": "phantom-sink",
+        "namespace": "phantom-eval",
+        "resourceVersion": "908",
+        "uid": "d7f97305-8229-49c2-8cd4-5f4add06a7f6"
+      },
+      "spec": {
+        "clusterIP": "10.43.224.170",
+        "clusterIPs": [
+          "10.43.224.170"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "name": "api",
+            "port": 9191,
+            "protocol": "TCP",
+            "targetPort": 9191
+          },
+          {
+            "name": "https-beacon",
+            "port": 8443,
+            "protocol": "TCP",
+            "targetPort": 8443
+          },
+          {
+            "name": "dep-beacon",
+            "port": 4445,
+            "protocol": "TCP",
+            "targetPort": 4445
+          },
+          {
+            "name": "http-beacon",
+            "port": 4446,
+            "protocol": "TCP",
+            "targetPort": 4446
+          },
+          {
+            "name": "http",
+            "port": 8080,
+            "protocol": "TCP",
+            "targetPort": 8080
+          }
+        ],
+        "selector": {
+          "app": "phantom-sink"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      },
+      "status": {
+        "loadBalancer": {}
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"name\":\"recommendationservice\",\"namespace\":\"phantom-eval\"},\"spec\":{\"ports\":[{\"port\":8080,\"targetPort\":80}],\"selector\":{\"app\":\"recommendationservice\"}}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:16:51Z",
+        "name": "recommendationservice",
+        "namespace": "phantom-eval",
+        "resourceVersion": "854",
+        "uid": "1d9e213e-7a2d-460c-9d8e-a5d8af297e3a"
+      },
+      "spec": {
+        "clusterIP": "10.43.180.150",
+        "clusterIPs": [
+          "10.43.180.150"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "port": 8080,
+            "protocol": "TCP",
+            "targetPort": 80
+          }
+        ],
+        "selector": {
+          "app": "recommendationservice"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      },
+      "status": {
+        "loadBalancer": {}
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"networking.k8s.io/v1\",\"kind\":\"NetworkPolicy\",\"metadata\":{\"annotations\":{},\"name\":\"isolate-phantom-eval-egress\",\"namespace\":\"phantom-eval\"},\"spec\":{\"egress\":[{\"ports\":[{\"port\":53,\"protocol\":\"UDP\"},{\"port\":53,\"protocol\":\"TCP\"}],\"to\":[{\"namespaceSelector\":{\"matchLabels\":{\"kubernetes.io/metadata.name\":\"kube-system\"}}}]},{\"ports\":[{\"port\":8443,\"protocol\":\"TCP\"},{\"port\":4445,\"protocol\":\"TCP\"},{\"port\":4446,\"protocol\":\"TCP\"},{\"port\":8080,\"protocol\":\"TCP\"}],\"to\":[{\"podSelector\":{\"matchLabels\":{\"app\":\"phantom-sink\"}}}]},{\"ports\":[{\"port\":8080,\"protocol\":\"TCP\"}],\"to\":[{\"podSelector\":{\"matchLabels\":{\"app\":\"pypiserver-mirror\"}}}]},{\"ports\":[{\"port\":80,\"protocol\":\"TCP\"},{\"port\":8080,\"protocol\":\"TCP\"},{\"port\":7070,\"protocol\":\"TCP\"}],\"to\":[{\"podSelector\":{\"matchExpressions\":[{\"key\":\"app\",\"operator\":\"In\",\"values\":[\"recommendationservice\",\"emailservice\",\"cartservice\"]}]}}]}],\"podSelector\":{},\"policyTypes\":[\"Egress\"]}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:16:51Z",
+        "generation": 1,
+        "name": "isolate-phantom-eval-egress",
+        "namespace": "phantom-eval",
+        "resourceVersion": "922",
+        "uid": "1850e349-b9a8-4a97-8742-595ccecb6b8b"
+      },
+      "spec": {
+        "egress": [
+          {
+            "ports": [
+              {
+                "port": 53,
+                "protocol": "UDP"
+              },
+              {
+                "port": 53,
+                "protocol": "TCP"
+              }
+            ],
+            "to": [
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "kubernetes.io/metadata.name": "kube-system"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "ports": [
+              {
+                "port": 8443,
+                "protocol": "TCP"
+              },
+              {
+                "port": 4445,
+                "protocol": "TCP"
+              },
+              {
+                "port": 4446,
+                "protocol": "TCP"
+              },
+              {
+                "port": 8080,
+                "protocol": "TCP"
+              }
+            ],
+            "to": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app": "phantom-sink"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "ports": [
+              {
+                "port": 8080,
+                "protocol": "TCP"
+              }
+            ],
+            "to": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app": "pypiserver-mirror"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "ports": [
+              {
+                "port": 80,
+                "protocol": "TCP"
+              },
+              {
+                "port": 8080,
+                "protocol": "TCP"
+              },
+              {
+                "port": 7070,
+                "protocol": "TCP"
+              }
+            ],
+            "to": [
+              {
+                "podSelector": {
+                  "matchExpressions": [
+                    {
+                      "key": "app",
+                      "operator": "In",
+                      "values": [
+                        "recommendationservice",
+                        "emailservice",
+                        "cartservice"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "podSelector": {},
+        "policyTypes": [
+          "Egress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"networking.k8s.io/v1\",\"kind\":\"NetworkPolicy\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-evidence-collector-egress\",\"namespace\":\"phantom-eval\"},\"spec\":{\"egress\":[{\"ports\":[{\"port\":9191,\"protocol\":\"TCP\"}],\"to\":[{\"podSelector\":{\"matchLabels\":{\"app\":\"phantom-sink\"}}}]}],\"podSelector\":{\"matchLabels\":{\"app\":\"phantom-evidence-collector\"}},\"policyTypes\":[\"Egress\"]}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:16:51Z",
+        "generation": 1,
+        "name": "phantom-evidence-collector-egress",
+        "namespace": "phantom-eval",
+        "resourceVersion": "923",
+        "uid": "55e9a508-139b-4435-82d8-9e0234183b6c"
+      },
+      "spec": {
+        "egress": [
+          {
+            "ports": [
+              {
+                "port": 9191,
+                "protocol": "TCP"
+              }
+            ],
+            "to": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app": "phantom-sink"
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "podSelector": {
+          "matchLabels": {
+            "app": "phantom-evidence-collector"
+          }
+        },
+        "policyTypes": [
+          "Egress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"networking.k8s.io/v1\",\"kind\":\"NetworkPolicy\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-sink-private-ingress\",\"namespace\":\"phantom-eval\"},\"spec\":{\"ingress\":[{\"from\":[{\"namespaceSelector\":{\"matchLabels\":{\"kubernetes.io/metadata.name\":\"phantom-eval\"}},\"podSelector\":{\"matchExpressions\":[{\"key\":\"app\",\"operator\":\"In\",\"values\":[\"recommendationservice\",\"emailservice\",\"cartservice\"]}]}}],\"ports\":[{\"port\":8443,\"protocol\":\"TCP\"},{\"port\":4445,\"protocol\":\"TCP\"},{\"port\":4446,\"protocol\":\"TCP\"},{\"port\":8080,\"protocol\":\"TCP\"}]},{\"from\":[{\"namespaceSelector\":{\"matchLabels\":{\"kubernetes.io/metadata.name\":\"phantom-eval\"}},\"podSelector\":{\"matchLabels\":{\"app\":\"phantom-evidence-collector\"}}},{\"namespaceSelector\":{\"matchLabels\":{\"kubernetes.io/metadata.name\":\"phantom\"}},\"podSelector\":{\"matchLabels\":{\"app\":\"phantom-api-gateway\"}}}],\"ports\":[{\"port\":9191,\"protocol\":\"TCP\"}]}],\"podSelector\":{\"matchLabels\":{\"app\":\"phantom-sink\"}},\"policyTypes\":[\"Ingress\"]}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:16:51Z",
+        "generation": 1,
+        "name": "phantom-sink-private-ingress",
+        "namespace": "phantom-eval",
+        "resourceVersion": "915",
+        "uid": "7a426ae1-a780-475c-9857-90a4c72a409a"
+      },
+      "spec": {
+        "ingress": [
+          {
+            "from": [
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "kubernetes.io/metadata.name": "phantom-eval"
+                  }
+                },
+                "podSelector": {
+                  "matchExpressions": [
+                    {
+                      "key": "app",
+                      "operator": "In",
+                      "values": [
+                        "recommendationservice",
+                        "emailservice",
+                        "cartservice"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "ports": [
+              {
+                "port": 8443,
+                "protocol": "TCP"
+              },
+              {
+                "port": 4445,
+                "protocol": "TCP"
+              },
+              {
+                "port": 4446,
+                "protocol": "TCP"
+              },
+              {
+                "port": 8080,
+                "protocol": "TCP"
+              }
+            ]
+          },
+          {
+            "from": [
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "kubernetes.io/metadata.name": "phantom-eval"
+                  }
+                },
+                "podSelector": {
+                  "matchLabels": {
+                    "app": "phantom-evidence-collector"
+                  }
+                }
+              },
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "kubernetes.io/metadata.name": "phantom"
+                  }
+                },
+                "podSelector": {
+                  "matchLabels": {
+                    "app": "phantom-api-gateway"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "port": 9191,
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ],
+        "podSelector": {
+          "matchLabels": {
+            "app": "phantom-sink"
+          }
+        },
+        "policyTypes": [
+          "Ingress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"PersistentVolumeClaim\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-evidence-data\",\"namespace\":\"phantom-eval\"},\"spec\":{\"accessModes\":[\"ReadWriteOnce\"],\"resources\":{\"requests\":{\"storage\":\"2Gi\"}},\"storageClassName\":\"local-path\"}}\n",
+          "pv.kubernetes.io/bind-completed": "yes",
+          "pv.kubernetes.io/bound-by-controller": "yes",
+          "volume.beta.kubernetes.io/storage-provisioner": "rancher.io/local-path",
+          "volume.kubernetes.io/selected-node": "ip-10-89-2-125",
+          "volume.kubernetes.io/storage-provisioner": "rancher.io/local-path"
+        },
+        "creationTimestamp": "2026-10-25T19:16:51Z",
+        "finalizers": [
+          "kubernetes.io/pvc-protection"
+        ],
+        "name": "phantom-evidence-data",
+        "namespace": "phantom-eval",
+        "resourceVersion": "968",
+        "uid": "8ed61432-d7f3-4cef-9926-d9da7fde63d3"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "resources": {
+          "requests": {
+            "storage": "2Gi"
+          }
+        },
+        "storageClassName": "local-path",
+        "volumeMode": "Filesystem",
+        "volumeName": "pvc-8ed61432-d7f3-4cef-9926-d9da7fde63d3"
+      },
+      "status": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "capacity": {
+          "storage": "2Gi"
+        },
+        "phase": "Bound"
+      }
+    }
+  ],
+  "kind": "List",
+  "metadata": {
+    "resourceVersion": ""
+  }
+}

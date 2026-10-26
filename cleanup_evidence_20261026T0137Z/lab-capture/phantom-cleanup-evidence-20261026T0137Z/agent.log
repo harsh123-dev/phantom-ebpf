@@ -1,0 +1,250 @@
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92a821be10000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246558 status=missing tgid=246558
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92a825d4d0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246558 status=missing tgid=246558
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92a8265dd0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246558 status=missing tgid=246558
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92a83d1ca0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246558 status=missing tgid=246558
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92a84087f0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246558 status=missing tgid=246558
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92a840f4a0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246558 status=missing tgid=246558
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92a8448f80000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246558 status=missing tgid=246558
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92a8472680000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246558 status=missing tgid=246558
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92a84789b0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246558 status=missing tgid=246558
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92aa35ee70000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246558 status=missing tgid=246558
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92aa571f80000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246558 status=missing tgid=246558
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92aa62cb50000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246558 status=missing tgid=246558
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92ad16dcf0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246558 status=missing tgid=246558
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92ae33bb30000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246559 status=missing tgid=246559
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92e967e170000000000000002 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246567 status=missing tgid=246567
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=k3s event_id=000015b92f179ecf0000000000000001 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246568 status=missing tgid=246568
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92ec22d910000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246567 status=missing tgid=246567
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92ec270ed0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246567 status=missing tgid=246567
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92ec279050000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246567 status=missing tgid=246567
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92ec3deb20000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246567 status=missing tgid=246567
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92ec415de0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246567 status=missing tgid=246567
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92ec41c710000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246567 status=missing tgid=246567
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92ec460330000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246567 status=missing tgid=246567
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92ec489af0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246567 status=missing tgid=246567
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92ec490880000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246567 status=missing tgid=246567
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92ed18bef0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246567 status=missing tgid=246567
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92ed354aa0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246567 status=missing tgid=246567
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92ed3fdf50000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246567 status=missing tgid=246567
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92eff09230000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246567 status=missing tgid=246567
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b92f11a7930000000000000001 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246568 status=missing tgid=246568
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=kubectl event_id=000015b92f4f43790000000000000002 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246568 status=missing tgid=246568
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=iptables-restor event_id=000015b93470a1610000000000000002 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246581 status=missing tgid=246581
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b937ccfccc0000000000000002 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246582 status=missing tgid=246582
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=k3s event_id=000015b9384dd2b50000000000000001 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246583 status=missing tgid=246583
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b937f661fa0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246582 status=missing tgid=246582
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b937f6a9ca0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246582 status=missing tgid=246582
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b937f6b2e60000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246582 status=missing tgid=246582
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b937f867300000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246582 status=missing tgid=246582
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b937f89f9b0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246582 status=missing tgid=246582
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b937f8a6830000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246582 status=missing tgid=246582
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b937f8e21f0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246582 status=missing tgid=246582
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b937f90d470000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246582 status=missing tgid=246582
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b937f913ac0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246582 status=missing tgid=246582
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9380a5e050000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246582 status=missing tgid=246582
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9380c3a520000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246582 status=missing tgid=246582
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9380cead90000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246582 status=missing tgid=246582
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9383680480000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246582 status=missing tgid=246582
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b93847c0150000000000000001 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246583 status=missing tgid=246583
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=kubectl event_id=000015b93889de2a0000000000000000 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246583 status=missing tgid=246583
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=iptables-restor event_id=000015b93d923def0000000000000003 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246597 status=missing tgid=246597
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9402289200000000000000002 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246598 status=missing tgid=246598
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=k3s event_id=000015b940a463350000000000000001 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246599 status=missing tgid=246599
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9404d13120000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246598 status=missing tgid=246598
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9404d5f9f0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246598 status=missing tgid=246598
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9404d696c0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246598 status=missing tgid=246598
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9404f4cd00000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246598 status=missing tgid=246598
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9404f968a0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246598 status=missing tgid=246598
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9404f9e070000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246598 status=missing tgid=246598
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9404fdfe90000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246598 status=missing tgid=246598
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b940500c8b0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246598 status=missing tgid=246598
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b94050131a0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246598 status=missing tgid=246598
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9405cdbf90000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246598 status=missing tgid=246598
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b94061c2340000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246598 status=missing tgid=246598
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9406276df0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246598 status=missing tgid=246598
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9408b80ec0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246598 status=missing tgid=246598
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9409e9f170000000000000001 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246599 status=missing tgid=246599
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=kubectl event_id=000015b940dd81cf0000000000000001 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246599 status=missing tgid=246599
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=iptables-restor event_id=000015b945c954130000000000000000 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246612 status=missing tgid=246612
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b949c318300000000000000003 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246613 status=missing tgid=246613
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b949f21a470000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246613 status=missing tgid=246613
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b949f25a8d0000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246613 status=missing tgid=246613
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b949f2636d0000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246613 status=missing tgid=246613
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b949f3f78c0000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246613 status=missing tgid=246613
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b949f42cf60000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246613 status=missing tgid=246613
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b949f433fa0000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246613 status=missing tgid=246613
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b949f46e970000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246613 status=missing tgid=246613
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b949f497880000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246613 status=missing tgid=246613
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b949f49df10000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246613 status=missing tgid=246613
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b94a0143c60000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246613 status=missing tgid=246613
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b94a02f0310000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246613 status=missing tgid=246613
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b94a03a4110000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246613 status=missing tgid=246613
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=k3s event_id=000015b94a48489e0000000000000001 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246614 status=missing tgid=246614
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=kubectl event_id=000015b94a90d8110000000000000001 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246614 status=missing tgid=246614
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b94a2e26f50000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246613 status=missing tgid=246613
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b94a429d540000000000000001 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246614 status=missing tgid=246614
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=iptables-restor event_id=000015b94f7e6c8a0000000000000000 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246627 status=missing tgid=246627
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=python3 event_id=000015b95381433a0000000000000000 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246629 status=missing tgid=246629
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b955ca1d430000000000000003 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246630 status=missing tgid=246630
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=tail event_id=000015b955cb765b0000000000000000 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246631 status=missing tgid=246631
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=k3s event_id=000015b9564b479b0000000000000000 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246632 status=missing tgid=246632
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b955f64f410000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246630 status=missing tgid=246630
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b955f69de70000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246630 status=missing tgid=246630
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b955f6a9670000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246630 status=missing tgid=246630
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b955f8c70b0000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246630 status=missing tgid=246630
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b955f918f30000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246630 status=missing tgid=246630
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b955f91ffa0000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246630 status=missing tgid=246630
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b955f9665c0000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246630 status=missing tgid=246630
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b955f992370000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246630 status=missing tgid=246630
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b955f998b40000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246630 status=missing tgid=246630
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b956081a200000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246630 status=missing tgid=246630
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95609eb010000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246630 status=missing tgid=246630
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9560af2bc0000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246630 status=missing tgid=246630
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b9563486d80000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246630 status=missing tgid=246630
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95645f1bd0000000000000000 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246632 status=missing tgid=246632
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=kubectl event_id=000015b9568428ef0000000000000001 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246632 status=missing tgid=246632
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=iptables-restor event_id=000015b95b7158730000000000000002 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246645 status=missing tgid=246645
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95dfcd37b0000000000000003 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246646 status=missing tgid=246646
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:26 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=python3 event_id=000015b95dfed8760000000000000000 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246647 status=missing tgid=246647
+2026-10-26 01:39:26 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=k3s event_id=000015b95e9a7c150000000000000001 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246648 status=missing tgid=246648
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95e30305f0000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246646 status=missing tgid=246646
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95e3072070000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246646 status=missing tgid=246646
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95e307a320000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246646 status=missing tgid=246646
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95e3200af0000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246646 status=missing tgid=246646
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95e32369a0000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246646 status=missing tgid=246646
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95e323d6b0000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246646 status=missing tgid=246646
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95e3278620000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246646 status=missing tgid=246646
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95e32a3b20000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246646 status=missing tgid=246646
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95e32aa7d0000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246646 status=missing tgid=246646
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95e424ac10000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246646 status=missing tgid=246646
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95e44a3520000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246646 status=missing tgid=246646
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95e45975c0000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246646 status=missing tgid=246646
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95e7d49330000000000000002 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246646 status=missing tgid=246646
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=000015b95e94210c0000000000000001 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=246648 status=missing tgid=246648
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=kubectl event_id=000015b95ed8e1110000000000000001 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246648 status=missing tgid=246648
+2026-10-26 01:39:27 [debug    ] attributor.cache_hit           cgroup_id=4390 node_name=ip-10-89-2-125 status=missing
+2026-10-26 01:39:27 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=iptables-restor event_id=000015b963eef5540000000000000003 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=246661 status=missing tgid=246661

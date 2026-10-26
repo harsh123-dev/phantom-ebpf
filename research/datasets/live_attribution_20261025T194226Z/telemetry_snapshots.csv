@@ -1,0 +1,5 @@
+observed_at_utc,metric_or_state,value,semantics,limitations
+2026-10-25T19:54:49Z,Redis consumer group entries-read,22,Cumulative stream group read position,Not an experiment denominator or per-run count.
+2026-10-25T19:54:49Z,Redis consumer group pending,0,No currently pending group messages,Does not establish ground truth or component binding.
+2026-10-25T19:54:49Z,Redis consumer group lag,0,Redis reported no unread stream backlog at query time,Snapshot only.
+2026-10-25T19:55:49.186Z,"phantom_redis_stream_messages_total{result=""success"",stream=""phantom:drift-events""}",28,Cumulative causal consumer processing success counter,Not per-event correlation or experiment result; no error series was exported in this sample.

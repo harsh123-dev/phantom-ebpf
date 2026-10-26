@@ -1,0 +1,25 @@
+[
+    {
+        "InstanceId": "i-06bb29d253668fa5f",
+        "State": "terminated",
+        "PrivateIp": null,
+        "Tags": [
+            {
+                "Key": "Environment",
+                "Value": "disposable-lab"
+            },
+            {
+                "Key": "Project",
+                "Value": "PHANTOM"
+            },
+            {
+                "Key": "Name",
+                "Value": "phantom-k3s-lab"
+            },
+            {
+                "Key": "AutoTeardown",
+                "Value": "true"
+            }
+        ]
+    }
+]

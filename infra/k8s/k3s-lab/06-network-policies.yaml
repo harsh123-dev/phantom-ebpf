@@ -60,3 +60,22 @@ spec:
 
     # NOTE: Any traffic to the public internet, cloud metadata (169.254.169.254),
     # or external sinks is denied by default by this policy.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: phantom-evidence-collector-egress
+  namespace: phantom-eval
+spec:
+  podSelector:
+    matchLabels:
+      app: phantom-evidence-collector
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: phantom-sink
+      ports:
+        - protocol: TCP
+          port: 9191

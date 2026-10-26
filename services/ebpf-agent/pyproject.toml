@@ -27,6 +27,11 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["."]
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["application*", "domain*", "infrastructure*"]
+exclude = ["tests*"]
+
 [tool.ruff]
 target-version = "py311"
 line-length = 100

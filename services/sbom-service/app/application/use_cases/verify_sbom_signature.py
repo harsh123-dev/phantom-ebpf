@@ -32,6 +32,7 @@ from app.domain.entities import VerificationJob
 from app.domain.exceptions import (
     VerificationAlreadyInProgressError,
     VerificationJobNotFoundError,
+    VerificationServiceUnavailableError,
 )
 
 log: structlog.BoundLogger = structlog.get_logger(__name__)
@@ -350,10 +351,14 @@ class RunVerificationUseCase:
         bound_log.info("verify_sbom.run_started")
 
         # 1. Load the job (raises VerificationJobNotFoundError if absent).
-        job = await self._job_repo.get_by_sbom_id(
-            sbom_id=command.verification_job_id,   # fallback lookup
+        job = await self._job_repo.get_by_id(
+            verification_job_id=command.verification_job_id,
             tenant_id=command.tenant_id,
         )
+
+        if job.status != "queued":
+            bound_log.info("verify_sbom.job_already_claimed", status=job.status)
+            return
 
         # Mark as running.
         import dataclasses
@@ -390,6 +395,15 @@ class RunVerificationUseCase:
                 failure_reason=None,
             )
             bound_log.info("verify_sbom.run_succeeded")
+
+        except VerificationServiceUnavailableError as exc:
+            # Missing binary, unavailable Sigstore, or absent operator trust
+            # policy does not prove that the SBOM signature is invalid.
+            job = dataclasses.replace(
+                job, status="failed", completed_at=now, failure_reason=str(exc)
+            )
+            updated_sbom = sbom
+            bound_log.warning("verify_sbom.service_unavailable", error=str(exc))
 
         except Exception as exc:  # noqa: BLE001
             # 4b. Verification failed — mark both job and SBOM as failed.

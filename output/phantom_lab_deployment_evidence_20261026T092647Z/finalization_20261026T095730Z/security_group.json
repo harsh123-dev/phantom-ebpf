@@ -1,0 +1,76 @@
+{
+    "GroupId": "sg-0717df3a8b373f320",
+    "Ingress": [],
+    "Egress": [
+        {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "UserIdGroupPairs": [],
+            "IpRanges": [
+                {
+                    "Description": "Ubuntu package mirror access (APT repository signatures remain verified)",
+                    "CidrIp": "0.0.0.0/0"
+                }
+            ],
+            "Ipv6Ranges": [],
+            "PrefixListIds": []
+        },
+        {
+            "IpProtocol": "tcp",
+            "FromPort": 53,
+            "ToPort": 53,
+            "UserIdGroupPairs": [],
+            "IpRanges": [
+                {
+                    "Description": "VPC DNS over TCP",
+                    "CidrIp": "10.89.0.0/16"
+                }
+            ],
+            "Ipv6Ranges": [],
+            "PrefixListIds": []
+        },
+        {
+            "IpProtocol": "udp",
+            "FromPort": 53,
+            "ToPort": 53,
+            "UserIdGroupPairs": [],
+            "IpRanges": [
+                {
+                    "Description": "VPC DNS resolution",
+                    "CidrIp": "10.89.0.0/16"
+                }
+            ],
+            "Ipv6Ranges": [],
+            "PrefixListIds": []
+        },
+        {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "UserIdGroupPairs": [],
+            "IpRanges": [
+                {
+                    "Description": "HTTPS package and image retrieval",
+                    "CidrIp": "0.0.0.0/0"
+                }
+            ],
+            "Ipv6Ranges": [],
+            "PrefixListIds": []
+        },
+        {
+            "IpProtocol": "udp",
+            "FromPort": 123,
+            "ToPort": 123,
+            "UserIdGroupPairs": [],
+            "IpRanges": [
+                {
+                    "Description": "Amazon Time Sync Service",
+                    "CidrIp": "169.254.169.123/32"
+                }
+            ],
+            "Ipv6Ranges": [],
+            "PrefixListIds": []
+        }
+    ]
+}

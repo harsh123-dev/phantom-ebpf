@@ -1,0 +1,18 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app
+WORKDIR /app
+
+RUN useradd --system --uid 10001 --home-dir /nonexistent --shell /usr/sbin/nologin phantom
+COPY research/evaluation/evidence_sink_service.py /app/research/evaluation/evidence_sink_service.py
+COPY research/evaluation/evidence_store.py /app/research/evaluation/evidence_store.py
+COPY research/evaluation/evidence_backup.py /app/research/evaluation/evidence_backup.py
+COPY research/evaluation/evidence_s3.py /app/research/evaluation/evidence_s3.py
+COPY research/evaluation/oracle.py /app/research/evaluation/oracle.py
+RUN pip install --no-cache-dir 'cryptography>=42.0.8,<50' 'fastapi>=0.115.0,<1' 'uvicorn[standard]>=0.30.0,<1' 'boto3>=1.34.0,<2.0.0'
+
+USER 10001:10001
+EXPOSE 9191 8443 4445 4446 8080
+CMD ["uvicorn", "research.evaluation.evidence_sink_service:create_app", "--factory", "--host", "0.0.0.0", "--port", "9191", "--workers", "1"]

@@ -1,0 +1,7 @@
+{
+  "artifact_bytes": 7887054,
+  "artifact_file_sha256": "sha256:c5b3a412b3534cfb0647b639cbc3e2993bbd2b09797aff9b34ce5a3904e04c80",
+  "canonical_sbom_digest_expected_by_service": "sha256:65fc90d4219c3d53bf2ed82f365376f5433920309406d62af0f799f515daf5bb",
+  "component_count": 22823,
+  "spec_version": "1.7"
+}

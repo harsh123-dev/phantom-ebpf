@@ -73,6 +73,7 @@ class GetSbomResult:
     signature_bundle_uri: str | None
     verified_at: datetime | None
     verification_error: str | None
+    image_reference: str | None = None
 
     @classmethod
     def from_entity(cls, sbom: Sbom) -> GetSbomResult:
@@ -87,6 +88,7 @@ class GetSbomResult:
         return cls(
             sbom_id=sbom.sbom_id,
             image_digest=sbom.image_digest.value,
+            image_reference=sbom.image_reference,
             sbom_digest=sbom.sbom_digest.value,
             format="CycloneDX",
             spec_version=sbom.spec_version,

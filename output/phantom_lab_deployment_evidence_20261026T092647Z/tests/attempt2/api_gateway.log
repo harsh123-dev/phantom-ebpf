@@ -1,0 +1,14 @@
+...............................................................          [100%]
+=============================== warnings summary ===============================
+.venv-services/lib/python3.11/site-packages/starlette/formparsers.py:12
+  /root/phantom-ebpf/.venv-services/lib/python3.11/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+.venv-services/lib/python3.11/site-packages/pydantic/_internal/_fields.py:160
+  /root/phantom-ebpf/.venv-services/lib/python3.11/site-packages/pydantic/_internal/_fields.py:160: UserWarning: Field "model_version" has conflict with protected namespace "model_".
+  
+  You may be able to resolve this warning by setting `model_config['protected_namespaces'] = ()`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+63 passed, 2 warnings in 1.43s

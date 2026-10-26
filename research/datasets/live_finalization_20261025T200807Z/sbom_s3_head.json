@@ -1,0 +1,16 @@
+{
+    "AcceptRanges": "bytes",
+    "LastModified": "2026-10-25T19:52:10+00:00",
+    "ContentLength": 7887054,
+    "ETag": "\"198d34942b8c034f362cb69515f8cb2f\"",
+    "VersionId": "SV8YOafJ8buQsqEpJiK7bgE6c0jezWIu",
+    "ContentType": "application/vnd.cyclonedx+json",
+    "ServerSideEncryption": "AES256",
+    "Metadata": {
+        "image-manifest": "sha256:ec4370b0af44b4ba2ffe0247f1b1339c4f4debdba319d025d5753140ccec4184",
+        "sha256": "c5b3a412b3534cfb0647b639cbc3e2993bbd2b09797aff9b34ce5a3904e04c80",
+        "image-config": "sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7",
+        "generator": "syft-1.55.0",
+        "schema": "cyclonedx-json"
+    }
+}

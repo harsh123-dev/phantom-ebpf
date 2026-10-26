@@ -178,8 +178,29 @@ spec:
     - port: 7070
       targetPort: 7070
 ---
-# phantom-sink — Accepts inbound beacon connections from attack payloads
-# (simple netcat/socat listener so the beacon TCP connect succeeds)
+# Evidence sink trust configuration is intentionally empty until a real
+# independent observer public key is provisioned by the lab operator.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: phantom-oracle-trust
+  namespace: phantom-eval
+data:
+  trusted-keys.json: '{"schema_version":"1.0","trust_store_id":"phantom-lab-oracle","generation":1,"keys":[],"revoked_key_ids":[]}'
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: phantom-evidence-data
+  namespace: phantom-eval
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+---
+# Persistent HTTP evidence service plus durable passive scenario beacon receipts.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -187,6 +208,8 @@ metadata:
   namespace: phantom-eval
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: phantom-sink
@@ -195,38 +218,71 @@ spec:
       labels:
         app: phantom-sink
     spec:
+      securityContext:
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
       containers:
         - name: sink
-          image: python:3.11-slim
-          command:
-            - python3
-            - -c
-            - |
-              import socket, threading
-              def handle(c):
-                  try: c.recv(1024)
-                  finally: c.close()
-              for port in [8443, 4445, 4446, 8080]:
-                  s = socket.socket()
-                  s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                  s.bind(('0.0.0.0', port))
-                  s.listen(50)
-                  threading.Thread(target=lambda srv=s: [handle(srv.accept()[0]) for _ in iter(int, 1)], daemon=True).start()
-              print("phantom-sink listening on 8443, 4445, 4446, 8080")
-              import time
-              while True: time.sleep(60)
+          image: phantom/evidence-sink:latest
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "research.evaluation.evidence_sink_service:create_app", "--factory", "--host", "0.0.0.0", "--port", "9191", "--workers", "1"]
           ports:
-            - containerPort: 8443
-            - containerPort: 4445
-            - containerPort: 4446
-            - containerPort: 8080
+            - name: api
+              containerPort: 9191
+            - name: https-beacon
+              containerPort: 8443
+            - name: dep-beacon
+              containerPort: 4445
+            - name: http-beacon
+              containerPort: 4446
+            - name: legacy-beacon
+              containerPort: 8080
+          env:
+            - name: PHANTOM_SINK_DB
+              value: /data/evidence.sqlite3
+            - name: PHANTOM_ORACLE_TRUSTED_KEYS_FILE
+              value: /etc/phantom-oracle/trusted-keys.json
+          volumeMounts:
+            - name: evidence-data
+              mountPath: /data
+            - name: oracle-trust
+              mountPath: /etc/phantom-oracle
+              readOnly: true
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: api
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: api
+            periodSeconds: 15
           resources:
             requests:
-              cpu: "10m"
-              memory: "32Mi"
+              cpu: "50m"
+              memory: "96Mi"
             limits:
-              cpu: "100m"
-              memory: "64Mi"
+              cpu: "500m"
+              memory: "256Mi"
+      volumes:
+        - name: evidence-data
+          persistentVolumeClaim:
+            claimName: phantom-evidence-data
+        - name: oracle-trust
+          configMap:
+            name: phantom-oracle-trust
 ---
 apiVersion: v1
 kind: Service
@@ -237,6 +293,9 @@ spec:
   selector:
     app: phantom-sink
   ports:
+    - name: api
+      port: 9191
+      targetPort: 9191
     - name: https-beacon
       port: 8443
       targetPort: 8443
@@ -249,3 +308,49 @@ spec:
     - name: http
       port: 8080
       targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: phantom-sink-private-ingress
+  namespace: phantom-eval
+spec:
+  podSelector:
+    matchLabels:
+      app: phantom-sink
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: phantom-eval
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values: ["recommendationservice", "emailservice", "cartservice"]
+      ports:
+        - protocol: TCP
+          port: 8443
+        - protocol: TCP
+          port: 4445
+        - protocol: TCP
+          port: 4446
+        - protocol: TCP
+          port: 8080
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: phantom-eval
+          podSelector:
+            matchLabels:
+              app: phantom-evidence-collector
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: phantom
+          podSelector:
+            matchLabels:
+              app: phantom-api-gateway
+      ports:
+        - protocol: TCP
+          port: 9191

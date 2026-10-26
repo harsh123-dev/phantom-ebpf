@@ -1,0 +1,6 @@
+{
+    "Status": "Success",
+    "ResponseCode": 0,
+    "Output": "\n Performance counter stats for 'system wide':\n\n                 0      sched:sched_process_exec                                              \n\n       1.001689718 seconds time elapsed\n\n\n Performance counter stats for '/bin/sh -c true':\n\n              0.63 msec task-clock                       #    0.541 CPUs utilized             \n                 0      context-switches                 #    0.000 /sec                      \n\n       0.001170374 seconds time elapsed\n\n       0.000000000 seconds user\n       0.001239000 seconds sys\n\n\n",
+    "Error": ""
+}

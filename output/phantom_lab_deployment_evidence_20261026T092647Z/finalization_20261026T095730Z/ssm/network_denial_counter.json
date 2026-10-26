@@ -1,0 +1,9 @@
+{
+    "CommandId": "3ca8e5af-964b-447a-8d52-21978d7ecfd9",
+    "Status": "Success",
+    "ExitCode": 0,
+    "Start": "2026-10-26T09:54:01.923Z",
+    "End": "2026-10-26T09:54:02.923Z",
+    "Stdout": "POLICY_DROP_COUNTER_BEFORE=0 0\nCONTROL_UNAUTHORIZED_CROSS_NAMESPACE_EGRESS\ncontrol_status=200\nEVAL_UNAUTHORIZED_CROSS_NAMESPACE_EGRESS\nresolved=10.43.221.233\nDENIED=ConnectionRefusedError\nPOLICY_DROP_COUNTER_AFTER=1 60\n",
+    "Stderr": ""
+}

@@ -1,0 +1,10 @@
+[
+    {
+        "SnapshotId": "snap-09eeb6885e00b8443",
+        "VolumeId": "vol-ffffffff",
+        "State": "completed",
+        "Description": "",
+        "StartTime": "2026-10-21T06:33:31.012000+00:00",
+        "Tags": null
+    }
+]

@@ -1,0 +1,16 @@
+{
+  "request_event_id": "7893c151-30ff-4c78-b1d2-38c695c658ec",
+  "image_digest": "sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7",
+  "response": {
+    "binding_status": "unbound",
+    "sbom_id": null,
+    "purl": null,
+    "confidence": null,
+    "method": "unresolved",
+    "reason": "No SBOM indexed for image_digest=sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7",
+    "candidate_purls": [],
+    "evidence": []
+  },
+  "source": "live POST to phantom-sbom-service /internal/v1/runtime-bindings from the SBOM service pod",
+  "observed_at_utc": "2026-10-25T20:11Z"
+}

@@ -1,0 +1,8 @@
+Python AST validation: PASS, 285 files parsed, exit 0.
+YAML validation: PASS, 33 YAML documents/files parsed, exit 0.
+git diff --check: PASS, exit 0.
+Terraform fmt -check -recursive: PASS, exit 0.
+Terraform init -input=false -backend=false: PASS, exit 0.
+Terraform validate: PASS, exit 0.
+Terraform plan -input=false -var='enable_nat_gateway=false' -detailed-exitcode: PASS, no changes, exit 0.
+Safe evaluation runner --dry-run: PASS, exit 0; output directory remained absent; no cluster commands, scenario payloads, or sinks used.

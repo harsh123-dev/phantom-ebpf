@@ -1,0 +1,17 @@
+{
+    "AcceptRanges": "bytes",
+    "LastModified": "2026-10-25T19:47:40+00:00",
+    "ContentLength": 36864,
+    "ETag": "\"bcf5561dd2ff33299c8a4a745fd4ee91\"",
+    "VersionId": "Mq1rr2Ry6Ko1P9a3Zx91DYAG.d_JvSqy",
+    "ContentType": "application/vnd.sqlite3",
+    "ServerSideEncryption": "AES256",
+    "Metadata": {
+        "sha256": "cf0c27fb9c1b9a0f05e82d56a3dcca69605e2ef99d787f8e7686a67c3837de3d",
+        "sqlite-integrity": "ok",
+        "evidence-count": "2",
+        "created-at": "2026-10-25T19:47:39.866523+00:00",
+        "schema": "phantom-sqlite-backup-v1",
+        "tcp-evidence-count": "0"
+    }
+}

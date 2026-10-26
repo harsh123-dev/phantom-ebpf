@@ -1,0 +1,2 @@
+
+aws: [ERROR]: An error occurred (InvocationDoesNotExist) when calling the GetCommandInvocation operation: Invocation not found for 118a81bc-4b15-4a1b-9992-4a7f67741908, i-06bb29d253668fa5f

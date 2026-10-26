@@ -20,18 +20,169 @@ provider "aws" {
   region = var.aws_region
 }
 
+data "aws_caller_identity" "current" {}
+
 # ---------------------------------------------------------------------------
-# Network & Subnet Discovery (uses default VPC to eliminate VPC NAT gateway costs)
+# Dedicated PHANTOM network. The existing default VPC contains unrelated
+# resources and an existing subnet covering its entire CIDR, so the lab gets
+# its own VPC instead of changing shared routes or subnet settings.
 # ---------------------------------------------------------------------------
 
-data "aws_vpc" "default" {
-  default = true
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
-data "aws_subnets" "default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
+resource "aws_vpc" "lab" {
+  cidr_block           = "10.89.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+  tags = {
+    Name        = "${var.lab_name}-vpc"
+    Project     = "PHANTOM"
+    Environment = "disposable-lab"
+  }
+}
+
+resource "aws_internet_gateway" "lab" {
+  vpc_id = aws_vpc.lab.id
+  tags = {
+    Name        = "${var.lab_name}-igw"
+    Project     = "PHANTOM"
+    Environment = "disposable-lab"
+  }
+}
+
+resource "aws_subnet" "public_nat" {
+  vpc_id                  = aws_vpc.lab.id
+  cidr_block              = "10.89.1.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = false
+  tags = {
+    Name        = "${var.lab_name}-${var.enable_nat_gateway ? "nat-public" : "public-egress"}"
+    Project     = "PHANTOM"
+    Environment = "disposable-lab"
+    Purpose     = var.enable_nat_gateway ? "nat-egress-only" : "lab-node-restricted-egress"
+  }
+}
+
+resource "aws_subnet" "lab_private" {
+  vpc_id                  = aws_vpc.lab.id
+  cidr_block              = "10.89.2.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = false
+  tags = {
+    Name        = "${var.lab_name}-private"
+    Project     = "PHANTOM"
+    Environment = "disposable-lab"
+  }
+}
+
+resource "aws_route_table" "public_nat" {
+  vpc_id = aws_vpc.lab.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.lab.id
+  }
+  tags = {
+    Name        = "${var.lab_name}-${var.enable_nat_gateway ? "nat-public" : "public-egress"}"
+    Project     = "PHANTOM"
+    Environment = "disposable-lab"
+  }
+}
+
+resource "aws_route_table_association" "public_nat" {
+  subnet_id      = aws_subnet.public_nat.id
+  route_table_id = aws_route_table.public_nat.id
+}
+
+resource "aws_eip" "nat" {
+  count  = var.enable_nat_gateway ? 1 : 0
+  domain = "vpc"
+  tags = {
+    Name        = "${var.lab_name}-nat-eip"
+    Project     = "PHANTOM"
+    Environment = "disposable-lab"
+  }
+}
+
+resource "aws_nat_gateway" "lab" {
+  count             = var.enable_nat_gateway ? 1 : 0
+  allocation_id     = aws_eip.nat[0].id
+  subnet_id         = aws_subnet.public_nat.id
+  connectivity_type = "public"
+  depends_on        = [aws_internet_gateway.lab, aws_route_table_association.public_nat]
+  tags = {
+    Name        = "${var.lab_name}-nat"
+    Project     = "PHANTOM"
+    Environment = "disposable-lab"
+  }
+}
+
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.lab.id
+  dynamic "route" {
+    for_each = var.enable_nat_gateway ? [true] : []
+    content {
+      cidr_block     = "0.0.0.0/0"
+      nat_gateway_id = aws_nat_gateway.lab[0].id
+    }
+  }
+  tags = {
+    Name        = "${var.lab_name}-private"
+    Project     = "PHANTOM"
+    Environment = "disposable-lab"
+  }
+}
+
+resource "aws_route_table_association" "private" {
+  subnet_id      = aws_subnet.lab_private.id
+  route_table_id = aws_route_table.private.id
+}
+
+resource "aws_security_group" "ssm_endpoints" {
+  name        = "${var.lab_name}-ssm-endpoints-sg"
+  description = "HTTPS from the private PHANTOM lab node to AWS SSM endpoints"
+  vpc_id      = aws_vpc.lab.id
+  ingress {
+    description     = "Private lab node to SSM interface endpoints"
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    security_groups = [aws_security_group.lab.id]
+  }
+  egress = []
+  tags = {
+    Name        = "${var.lab_name}-ssm-endpoints-sg"
+    Project     = "PHANTOM"
+    Environment = "disposable-lab"
+  }
+}
+
+resource "aws_vpc_endpoint" "ssm" {
+  for_each            = var.enable_ssm ? toset(["ssm", "ssmmessages", "ec2messages"]) : []
+  vpc_id              = aws_vpc.lab.id
+  service_name        = "com.amazonaws.${var.aws_region}.${each.key}"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [aws_subnet.lab_private.id]
+  security_group_ids  = [aws_security_group.ssm_endpoints.id]
+  private_dns_enabled = true
+  tags = {
+    Name        = "${var.lab_name}-${each.key}"
+    Project     = "PHANTOM"
+    Environment = "disposable-lab"
+  }
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  count             = var.enable_evidence_backups ? 1 : 0
+  vpc_id            = aws_vpc.lab.id
+  service_name      = "com.amazonaws.${var.aws_region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = var.enable_nat_gateway ? [aws_route_table.private.id] : [aws_route_table.public_nat.id]
+  tags = {
+    Name        = "${var.lab_name}-s3"
+    Project     = "PHANTOM"
+    Environment = "disposable-lab"
   }
 }
 
@@ -60,36 +211,56 @@ data "aws_ami" "ubuntu" {
 }
 
 # ---------------------------------------------------------------------------
-# Security Group: STRICT INBOUND RESTRICTION
+# Security Group: SSM-only administration and restricted host egress
 # ---------------------------------------------------------------------------
 # No public Kubernetes API (6443), PHANTOM API (8080), Prometheus (9090),
-# or sink ports are exposed to the internet.
-# Administrator accesses services via SSH local port forwarding or SSM.
+# SSH, or sink ports are exposed: this security group has no ingress rules.
+# With NAT enabled the instance is private. With NAT disabled, it receives a
+# public IPv4 address for outbound bootstrap but still has no inbound rule.
+# Administration uses Systems Manager in either mode.
 
 resource "aws_security_group" "lab" {
   name        = "${var.lab_name}-sg"
   description = "Strict security group for disposable PHANTOM k3s lab"
-  vpc_id      = data.aws_vpc.default.id
+  vpc_id      = aws_vpc.lab.id
 
-  # Inbound: SSH only from operator's specific IP (if provided)
-  dynamic "ingress" {
-    for_each = var.operator_ip != "" ? [var.operator_ip] : []
-    content {
-      description = "Operator SSH access"
-      from_port   = 22
-      to_port     = 22
-      protocol    = "tcp"
-      cidr_blocks = ["${ingress.value}/32"]
-    }
-  }
-
-  # Outbound: All traffic allowed for package updates, container images, and GitHub
+  # Bootstrap uses package/image registries over HTTP(S). Limit host egress to
+  # HTTP(S), VPC DNS, and Amazon Time Sync; this is controlled public egress,
+  # not a host-level public-egress-deny policy.
   egress {
-    description = "Allow outbound traffic for dependencies"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    description = "Ubuntu package mirror access (APT repository signatures remain verified)"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    description = "HTTPS package and image retrieval"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    description = "VPC DNS resolution"
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
+    cidr_blocks = [aws_vpc.lab.cidr_block]
+  }
+  egress {
+    description = "VPC DNS over TCP"
+    from_port   = 53
+    to_port     = 53
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.lab.cidr_block]
+  }
+  egress {
+    description = "Amazon Time Sync Service"
+    from_port   = 123
+    to_port     = 123
+    protocol    = "udp"
+    cidr_blocks = ["169.254.169.123/32"]
   }
 
   tags = {
@@ -105,7 +276,7 @@ resource "aws_security_group" "lab" {
 # Allows zero-inbound-port access via AWS Console or 'aws ssm start-session'.
 
 resource "aws_iam_role" "ssm" {
-  count = var.enable_ssm ? 1 : 0
+  count = (var.enable_ssm || var.enable_evidence_backups || var.enable_s3_workload_identity) ? 1 : 0
   name  = "${var.lab_name}-ssm-role"
 
   assume_role_policy = jsonencode({
@@ -135,9 +306,78 @@ resource "aws_iam_role_policy_attachment" "ssm" {
 }
 
 resource "aws_iam_instance_profile" "ssm" {
-  count = var.enable_ssm ? 1 : 0
+  count = (var.enable_ssm || var.enable_evidence_backups || var.enable_s3_workload_identity) ? 1 : 0
   name  = "${var.lab_name}-instance-profile"
   role  = aws_iam_role.ssm[0].name
+}
+
+locals {
+  sbom_workload_bucket_name = var.enable_evidence_backups ? aws_s3_bucket.evidence_backups[0].bucket : var.sbom_workload_bucket_name
+  sbom_workload_bucket_arn  = local.sbom_workload_bucket_name == "" ? "" : "arn:aws:s3:::${local.sbom_workload_bucket_name}"
+}
+
+# The broker keeps EC2 instance-profile credentials on the node and exchanges
+# them for this short-lived, S3-prefix-limited role only after TokenReview has
+# authenticated the exact phantom/phantom-sbom-service service account.
+resource "aws_iam_role" "sbom_workload" {
+  count                = var.enable_s3_workload_identity ? 1 : 0
+  name                 = "${var.lab_name}-sbom-workload-role"
+  max_session_duration = 3600
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Action    = "sts:AssumeRole"
+      Principal = { AWS = aws_iam_role.ssm[0].arn }
+    }]
+  })
+
+  tags = {
+    Name        = "${var.lab_name}-sbom-workload-role"
+    Project     = "PHANTOM"
+    Environment = "disposable-lab"
+    Purpose     = "sbom-s3-workload-identity"
+  }
+
+  lifecycle {
+    precondition {
+      condition     = var.enable_evidence_backups || var.sbom_workload_bucket_name != ""
+      error_message = "Set sbom_workload_bucket_name or enable the existing PHANTOM evidence bucket before enabling workload identity."
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "sbom_workload_s3" {
+  count = var.enable_s3_workload_identity ? 1 : 0
+  name  = "${var.lab_name}-sbom-s3-prefix"
+  role  = aws_iam_role.sbom_workload[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid      = "ReadAndWriteSbomObjects"
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:PutObject"]
+      Resource = "${local.sbom_workload_bucket_arn}/${var.sbom_workload_prefix}/*"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "ssm_assume_sbom_workload" {
+  count = var.enable_s3_workload_identity ? 1 : 0
+  name  = "${var.lab_name}-assume-sbom-workload"
+  role  = aws_iam_role.ssm[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid      = "AssumeOnlySbomWorkloadRole"
+      Effect   = "Allow"
+      Action   = ["sts:AssumeRole"]
+      Resource = aws_iam_role.sbom_workload[0].arn
+    }]
+  })
 }
 
 # ---------------------------------------------------------------------------
@@ -178,11 +418,17 @@ resource "local_file" "private_key" {
 resource "aws_instance" "k3s_lab" {
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.instance_type
-  subnet_id                   = tolist(data.aws_subnets.default.ids)[0]
+  subnet_id                   = var.enable_nat_gateway ? aws_subnet.lab_private.id : aws_subnet.public_nat.id
   vpc_security_group_ids      = [aws_security_group.lab.id]
-  iam_instance_profile        = var.enable_ssm ? aws_iam_instance_profile.ssm[0].name : null
+  iam_instance_profile        = (var.enable_ssm || var.enable_evidence_backups || var.enable_s3_workload_identity) ? aws_iam_instance_profile.ssm[0].name : null
   key_name                    = var.key_name != "" ? var.key_name : (var.enable_ssm ? null : aws_key_pair.generated[0].key_name)
-  associate_public_ip_address = true
+  associate_public_ip_address = !var.enable_nat_gateway
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+  }
 
   root_block_device {
     volume_size           = var.root_volume_size
@@ -274,8 +520,112 @@ resource "aws_instance" "k3s_lab" {
 
   lifecycle {
     precondition {
-      condition     = var.enable_ssm || var.operator_ip != ""
-      error_message = "Enable SSM or provide an operator_ip so the disposable lab has a controlled administration path."
+      condition     = var.enable_ssm
+      error_message = "This private PHANTOM lab requires Systems Manager for administration."
     }
   }
+}
+
+# ---------------------------------------------------------------------------
+# Optional versioned off-node evidence backup bucket
+# ---------------------------------------------------------------------------
+# Disabled by default. Enabling creates a project-dedicated bucket and grants
+# only the lab instance role access to the configured object prefix.
+
+resource "aws_s3_bucket" "evidence_backups" {
+  count         = var.enable_evidence_backups ? 1 : 0
+  bucket        = "${var.lab_name}-${data.aws_caller_identity.current.account_id}-${var.aws_region}-evidence"
+  force_destroy = false
+
+  tags = {
+    Name        = "${var.lab_name}-evidence-backups"
+    Project     = "PHANTOM"
+    Environment = "disposable-lab"
+    Purpose     = "evidence-backups"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "evidence_backups" {
+  count                   = var.enable_evidence_backups ? 1 : 0
+  bucket                  = aws_s3_bucket.evidence_backups[0].id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_ownership_controls" "evidence_backups" {
+  count  = var.enable_evidence_backups ? 1 : 0
+  bucket = aws_s3_bucket.evidence_backups[0].id
+  rule { object_ownership = "BucketOwnerEnforced" }
+}
+
+resource "aws_s3_bucket_versioning" "evidence_backups" {
+  count  = var.enable_evidence_backups ? 1 : 0
+  bucket = aws_s3_bucket.evidence_backups[0].id
+  versioning_configuration { status = "Enabled" }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "evidence_backups" {
+  count  = var.enable_evidence_backups ? 1 : 0
+  bucket = aws_s3_bucket.evidence_backups[0].id
+  rule {
+    apply_server_side_encryption_by_default { sse_algorithm = "AES256" }
+    bucket_key_enabled = false
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "evidence_backups" {
+  count  = var.enable_evidence_backups ? 1 : 0
+  bucket = aws_s3_bucket.evidence_backups[0].id
+  rule {
+    id     = "abort-incomplete-multipart"
+    status = "Enabled"
+    filter { prefix = "${var.evidence_backup_prefix}/" }
+    abort_incomplete_multipart_upload { days_after_initiation = 7 }
+  }
+}
+
+resource "aws_s3_bucket_policy" "evidence_backups" {
+  count  = var.enable_evidence_backups ? 1 : 0
+  bucket = aws_s3_bucket.evidence_backups[0].id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "DenyInsecureTransport"
+      Effect    = "Deny"
+      Principal = "*"
+      Action    = "s3:*"
+      Resource = [aws_s3_bucket.evidence_backups[0].arn,
+      "${aws_s3_bucket.evidence_backups[0].arn}/*"]
+      Condition = { Bool = { "aws:SecureTransport" = "false" } }
+    }]
+  })
+  depends_on = [aws_s3_bucket_public_access_block.evidence_backups]
+}
+
+resource "aws_iam_role_policy" "evidence_backups" {
+  count = var.enable_evidence_backups ? 1 : 0
+  name  = "${var.lab_name}-evidence-backups"
+  role  = aws_iam_role.ssm[0].id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid      = "ListBackupPrefix"
+        Effect   = "Allow"
+        Action   = ["s3:ListBucket"]
+        Resource = aws_s3_bucket.evidence_backups[0].arn
+        Condition = { StringLike = {
+          "s3:prefix" = ["${var.evidence_backup_prefix}", "${var.evidence_backup_prefix}/*"]
+        } }
+      },
+      {
+        Sid      = "WriteAndRecoverEvidenceObjects"
+        Effect   = "Allow"
+        Action   = ["s3:PutObject", "s3:GetObject", "s3:GetObjectVersion"]
+        Resource = "${aws_s3_bucket.evidence_backups[0].arn}/${var.evidence_backup_prefix}/*"
+      }
+    ]
+  })
 }

@@ -1,0 +1,148 @@
+{
+  "bomFormat": "CycloneDX",
+  "bytes": 7887054,
+  "component_count": 22823,
+  "file_component_count": 22268,
+  "path": "research/datasets/live_attribution_20261025T194226Z/evaluation-image.cdx.json",
+  "python_executable_file": [
+    {
+      "bom-ref": "3d8a78640133cf4b",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "a81a7eb2b1b7a7994075efb90da609d6bf85cf7a"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "46d05ca7094b029959f0218e990a7f2737dbc87d5b2e783ecfc44e978937922a"
+        }
+      ],
+      "name": "/usr/local/bin/python3.11",
+      "type": "file"
+    }
+  ],
+  "python_package_component_count": 17,
+  "python_package_components": [
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "libpython3-stdlib",
+      "purl": "pkg:deb/debian/libpython3-stdlib@3.13.5-1?arch=amd64&distro=debian-13.7&upstream=python3-defaults",
+      "version": "3.13.5-1"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "libpython3.13-minimal",
+      "purl": "pkg:deb/debian/libpython3.13-minimal@3.13.5-2%2Bdeb13u5?arch=amd64&distro=debian-13.7&upstream=python3.13",
+      "version": "3.13.5-2+deb13u5"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "libpython3.13-stdlib",
+      "purl": "pkg:deb/debian/libpython3.13-stdlib@3.13.5-2%2Bdeb13u5?arch=amd64&distro=debian-13.7&upstream=python3.13",
+      "version": "3.13.5-2+deb13u5"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "python",
+      "purl": "pkg:generic/python@3.11.17",
+      "version": "3.11.17"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "python3",
+      "purl": "pkg:deb/debian/python3@3.13.5-1?arch=amd64&distro=debian-13.7&upstream=python3-defaults",
+      "version": "3.13.5-1"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "python3-autocommand",
+      "purl": "pkg:deb/debian/python3-autocommand@2.2.2-3?arch=all&distro=debian-13.7&upstream=python-autocommand",
+      "version": "2.2.2-3"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "python3-inflect",
+      "purl": "pkg:deb/debian/python3-inflect@7.3.1-2?arch=all&distro=debian-13.7&upstream=python-inflect",
+      "version": "7.3.1-2"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "python3-jaraco.context",
+      "purl": "pkg:deb/debian/python3-jaraco.context@6.0.1-1%2Bdeb13u1?arch=all&distro=debian-13.7&upstream=jaraco.context",
+      "version": "6.0.1-1+deb13u1"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "python3-jaraco.functools",
+      "purl": "pkg:deb/debian/python3-jaraco.functools@4.1.0-1?arch=all&distro=debian-13.7&upstream=python-jaraco.functools",
+      "version": "4.1.0-1"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "python3-minimal",
+      "purl": "pkg:deb/debian/python3-minimal@3.13.5-1?arch=amd64&distro=debian-13.7&upstream=python3-defaults",
+      "version": "3.13.5-1"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "python3-more-itertools",
+      "purl": "pkg:deb/debian/python3-more-itertools@10.7.0-1?arch=all&distro=debian-13.7&upstream=more-itertools",
+      "version": "10.7.0-1"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "python3-packaging",
+      "purl": "pkg:deb/debian/python3-packaging@25.0-1?arch=all&distro=debian-13.7&upstream=python-packaging",
+      "version": "25.0-1"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "python3-pkg-resources",
+      "purl": "pkg:deb/debian/python3-pkg-resources@78.1.1-0.1?arch=all&distro=debian-13.7&upstream=setuptools",
+      "version": "78.1.1-0.1"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "python3-typeguard",
+      "purl": "pkg:deb/debian/python3-typeguard@4.4.2-1?arch=all&distro=debian-13.7&upstream=python-typeguard",
+      "version": "4.4.2-1"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "python3-typing-extensions",
+      "purl": "pkg:deb/debian/python3-typing-extensions@4.13.2-1?arch=all&distro=debian-13.7&upstream=python-typing-extensions",
+      "version": "4.13.2-1"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "python3.13",
+      "purl": "pkg:deb/debian/python3.13@3.13.5-2%2Bdeb13u5?arch=amd64&distro=debian-13.7",
+      "version": "3.13.5-2+deb13u5"
+    },
+    {
+      "evidence": {},
+      "hashes": [],
+      "name": "python3.13-minimal",
+      "purl": "pkg:deb/debian/python3.13-minimal@3.13.5-2%2Bdeb13u5?arch=amd64&distro=debian-13.7&upstream=python3.13",
+      "version": "3.13.5-2+deb13u5"
+    }
+  ],
+  "sha256": "sha256:c5b3a412b3534cfb0647b639cbc3e2993bbd2b09797aff9b34ce5a3904e04c80",
+  "specVersion": "1.7"
+}

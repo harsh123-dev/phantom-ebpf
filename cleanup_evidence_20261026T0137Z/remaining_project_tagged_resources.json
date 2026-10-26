@@ -1,0 +1,128 @@
+{
+    "PaginationToken": "",
+    "ResourceTagMappingList": [
+        {
+            "ResourceARN": "arn:aws:ec2:ap-south-1:253490771520:volume/vol-059e997e6d7909b5f",
+            "Tags": [
+                {
+                    "Key": "Project",
+                    "Value": "PHANTOM"
+                },
+                {
+                    "Key": "Environment",
+                    "Value": "disposable-lab"
+                },
+                {
+                    "Key": "Name",
+                    "Value": "phantom-k3s-lab-root-vol"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:ec2:ap-south-1:253490771520:vpc-endpoint/vpce-048c299d62a1d84fd",
+            "Tags": [
+                {
+                    "Key": "Project",
+                    "Value": "PHANTOM"
+                },
+                {
+                    "Key": "Environment",
+                    "Value": "disposable-lab"
+                },
+                {
+                    "Key": "Name",
+                    "Value": "phantom-k3s-lab-s3"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:ec2:ap-south-1:253490771520:vpc-endpoint/vpce-06b26a4c99933f440",
+            "Tags": [
+                {
+                    "Key": "Project",
+                    "Value": "PHANTOM"
+                },
+                {
+                    "Key": "Environment",
+                    "Value": "disposable-lab"
+                },
+                {
+                    "Key": "Name",
+                    "Value": "phantom-k3s-lab-ssmmessages"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:ec2:ap-south-1:253490771520:instance/i-06bb29d253668fa5f",
+            "Tags": [
+                {
+                    "Key": "Project",
+                    "Value": "PHANTOM"
+                },
+                {
+                    "Key": "AutoTeardown",
+                    "Value": "true"
+                },
+                {
+                    "Key": "Environment",
+                    "Value": "disposable-lab"
+                },
+                {
+                    "Key": "Name",
+                    "Value": "phantom-k3s-lab"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:ec2:ap-south-1:253490771520:vpc-endpoint/vpce-05ca745ed41b2bb43",
+            "Tags": [
+                {
+                    "Key": "Project",
+                    "Value": "PHANTOM"
+                },
+                {
+                    "Key": "Environment",
+                    "Value": "disposable-lab"
+                },
+                {
+                    "Key": "Name",
+                    "Value": "phantom-k3s-lab-ssm"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:ec2:ap-south-1:253490771520:natgateway/nat-001088ed60b94cb8a",
+            "Tags": [
+                {
+                    "Key": "Project",
+                    "Value": "PHANTOM"
+                },
+                {
+                    "Key": "Environment",
+                    "Value": "disposable-lab"
+                },
+                {
+                    "Key": "Name",
+                    "Value": "phantom-k3s-lab-nat"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:ec2:ap-south-1:253490771520:vpc-endpoint/vpce-082f0c70b7a618732",
+            "Tags": [
+                {
+                    "Key": "Project",
+                    "Value": "PHANTOM"
+                },
+                {
+                    "Key": "Environment",
+                    "Value": "disposable-lab"
+                },
+                {
+                    "Key": "Name",
+                    "Value": "phantom-k3s-lab-ec2messages"
+                }
+            ]
+        }
+    ]
+}

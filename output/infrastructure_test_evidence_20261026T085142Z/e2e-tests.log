@@ -1,0 +1,78 @@
+........................................................................ [ 18%]
+........................................................................ [ 37%]
+........................................................................ [ 55%]
+.......F...........FF................................................... [ 74%]
+........................................................................ [ 92%]
+.............................                                            [100%]
+=================================== FAILURES ===================================
+___ TestScenario1RawDatasetAudit.test_raw_dataset_historical_runs_inventory ____
+
+self = <tests.e2e.test_tier4_scenarios.TestScenario1RawDatasetAudit object at 0x72af17687790>
+raw_data_dir = PosixPath('/root/phantom-ebpf/research/datasets/raw')
+
+    def test_raw_dataset_historical_runs_inventory(self, raw_data_dir: Path):
+        """Verify the presence of historical run files in raw directory."""
+        all_json_files = list(raw_data_dir.glob("*.json"))
+        # Exclude index.json
+        run_files = [p for p in all_json_files if p.stem != "index"]
+        # There are over 100 historical run files in raw/
+>       assert len(run_files) >= 108, f"Expected >= 108 historical files, found {len(run_files)}"
+E       AssertionError: Expected >= 108 historical files, found 69
+E       assert 69 >= 108
+E        +  where 69 = len([PosixPath('/root/phantom-ebpf/research/datasets/raw/20260818T193956Z_benign-restart-001_rep1.json'), PosixPath('/root...1_rep1.json'), PosixPath('/root/phantom-ebpf/research/datasets/raw/20260823T170813Z_benign-update-001_rep1.json'), ...])
+
+tests/e2e/test_tier4_scenarios.py:121: AssertionError
+_________ TestScenario4OracleAlignment.test_oracle_manifest_inventory __________
+
+self = <tests.e2e.test_tier4_scenarios.TestScenario4OracleAlignment object at 0x72af17698c50>
+oracles_dir = PosixPath('/root/phantom-ebpf/research/evaluation/oracles')
+
+    def test_oracle_manifest_inventory(self, oracles_dir: Path):
+        """All 6 oracle YAML files must exist in research/evaluation/oracles/."""
+        expected_oracles = [
+            "xzutils-001.yaml",
+            "dep-confusion-001.yaml",
+            "solarwinds-001.yaml",
+            "benign-load-001.yaml",
+            "benign-restart-001.yaml",
+            "benign-update-001.yaml",
+        ]
+        for o_name in expected_oracles:
+            o_path = oracles_dir / o_name
+>           assert o_path.exists(), f"Oracle manifest missing: {o_path}"
+E           AssertionError: Oracle manifest missing: /root/phantom-ebpf/research/evaluation/oracles/xzutils-001.yaml
+E           assert False
+E            +  where False = <bound method Path.exists of PosixPath('/root/phantom-ebpf/research/evaluation/oracles/xzutils-001.yaml')>()
+E            +    where <bound method Path.exists of PosixPath('/root/phantom-ebpf/research/evaluation/oracles/xzutils-001.yaml')> = PosixPath('/root/phantom-ebpf/research/evaluation/oracles/xzutils-001.yaml').exists
+
+tests/e2e/test_tier4_scenarios.py:379: AssertionError
+_____ TestScenario4OracleAlignment.test_oracle_attack_and_benign_partition _____
+
+self = <tests.e2e.test_tier4_scenarios.TestScenario4OracleAlignment object at 0x72af17699410>
+oracles_dir = PosixPath('/root/phantom-ebpf/research/evaluation/oracles')
+
+    def test_oracle_attack_and_benign_partition(self, oracles_dir: Path):
+        """Oracles must partition into 3 attacks (label=1) and 3 benign controls (label=0)."""
+        attack_oracles = []
+        benign_oracles = []
+    
+        for p in oracles_dir.glob("*.yaml"):
+            with open(p, encoding="utf-8") as f:
+                doc = yaml.safe_load(f)
+            if doc["ground_truth_label"] == 1:
+                attack_oracles.append(doc)
+            elif doc["ground_truth_label"] == 0:
+                benign_oracles.append(doc)
+            else:
+                pytest.fail(f"Invalid ground_truth_label {doc['ground_truth_label']} in {p.name}")
+    
+>       assert len(attack_oracles) == 3
+E       assert 0 == 3
+E        +  where 0 = len([])
+
+tests/e2e/test_tier4_scenarios.py:396: AssertionError
+=========================== short test summary info ============================
+FAILED tests/e2e/test_tier4_scenarios.py::TestScenario1RawDatasetAudit::test_raw_dataset_historical_runs_inventory
+FAILED tests/e2e/test_tier4_scenarios.py::TestScenario4OracleAlignment::test_oracle_manifest_inventory
+FAILED tests/e2e/test_tier4_scenarios.py::TestScenario4OracleAlignment::test_oracle_attack_and_benign_partition
+3 failed, 386 passed in 30.03s

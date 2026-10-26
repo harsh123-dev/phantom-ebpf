@@ -1,0 +1,22 @@
+{
+    "CommandId": "d6a6b9c0-9d88-4f75-8655-86c1bc06ebb4",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "phantom-api-persisted-exec-smoke",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T23:08:25.535Z",
+    "ExecutionElapsedTime": "PT5.797S",
+    "ExecutionEndDateTime": "2026-10-25T23:08:30.535Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "TARGET=recommendationservice-5dc98bbcb9-xq42k\nAPP_EXEC_RC=0\n[]\nPERSISTED_SLEEP_EVENT_QUERY_RC=0\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

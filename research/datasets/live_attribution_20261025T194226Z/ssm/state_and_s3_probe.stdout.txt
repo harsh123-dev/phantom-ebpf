@@ -1,0 +1,15 @@
+PODS\nphantom-eval   cartservice-7958549c8f-685cr              1/1     Running   0          28m   10.42.0.8    ip-10-89-2-125   <none>           <none>
+phantom-eval   emailservice-fd75976b-plr66               1/1     Running   0          28m   10.42.0.9    ip-10-89-2-125   <none>           <none>
+phantom-eval   phantom-sink-5c8bbdfbf8-5ksmt             1/1     Running   0          13m   10.42.0.24   ip-10-89-2-125   <none>           <none>
+phantom-eval   recommendationservice-5dc98bbcb9-xq42k    1/1     Running   0          28m   10.42.0.7    ip-10-89-2-125   <none>           <none>
+phantom        phantom-api-gateway-64d4d745df-rlqgs      1/1     Running   0          19m   10.42.0.21   ip-10-89-2-125   <none>           <none>
+phantom        phantom-causal-engine-57576cd69c-b2mn9    1/1     Running   0          26m   10.42.0.17   ip-10-89-2-125   <none>           <none>
+phantom        phantom-ebpf-agent-4r68v                  1/1     Running   0          19m   10.42.0.20   ip-10-89-2-125   <none>           <none>
+phantom        phantom-postgres-57dd79788f-8bfdx         1/1     Running   0          29m   10.42.0.6    ip-10-89-2-125   <none>           <none>
+phantom        phantom-redis-64555c745-jx4kk             1/1     Running   0          29m   10.42.0.5    ip-10-89-2-125   <none>           <none>
+phantom        phantom-sbom-service-6566454c47-54nz6     1/1     Running   0          15m   10.42.0.23   ip-10-89-2-125   <none>           <none>
+\nSBOM_CONFIG\nbucket=unset
+region=unset
+explicit_key=unset
+explicit_secret=unset
+\nDB_PODS\npod/phantom-postgres-57dd79788f-8bfdx

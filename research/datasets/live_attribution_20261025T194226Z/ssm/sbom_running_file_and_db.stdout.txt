@@ -1,0 +1,6 @@
+RUNNING_FILE /usr/local/bin/python3.11 sha256:46d05ca7094b029959f0218e990a7f2737dbc87d5b2e783ecfc44e978937922a
+0
+\nNAMESPACE      NAME                                POD-SELECTOR                     AGE
+phantom-eval   isolate-phantom-eval-egress         <none>                           36m
+phantom-eval   phantom-evidence-collector-egress   app=phantom-evidence-collector   36m
+phantom-eval   phantom-sink-private-ingress        app=phantom-sink                 36m

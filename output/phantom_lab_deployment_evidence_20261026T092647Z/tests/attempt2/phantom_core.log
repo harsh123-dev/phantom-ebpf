@@ -1,0 +1,10 @@
+................................................                         [100%]
+=============================== warnings summary ===============================
+.venv-causal/lib/python3.11/site-packages/pydantic/_internal/_fields.py:160
+  /root/phantom-ebpf/.venv-causal/lib/python3.11/site-packages/pydantic/_internal/_fields.py:160: UserWarning: Field "model_version" has conflict with protected namespace "model_".
+  
+  You may be able to resolve this warning by setting `model_config['protected_namespaces'] = ()`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+48 passed, 1 warning in 0.24s

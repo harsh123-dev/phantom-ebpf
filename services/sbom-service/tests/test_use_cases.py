@@ -24,6 +24,8 @@ from app.application.use_cases.verify_sbom_signature import (
     EnqueueVerificationUseCase,
     GetVerificationResultQuery,
     GetVerificationResultUseCase,
+    RunVerificationCommand,
+    RunVerificationUseCase,
 )
 from app.domain.entities import (
     ImageDigest,
@@ -39,6 +41,7 @@ from app.domain.exceptions import (
     SbomNotFoundError,
     VerificationAlreadyInProgressError,
     VerificationJobNotFoundError,
+    VerificationServiceUnavailableError,
 )
 
 # ---------------------------------------------------------------------------
@@ -109,6 +112,7 @@ class TestIngestSbomUseCase:
     async def test_successful_ingest(self) -> None:
         """Happy path: valid document persisted and artifact uploaded."""
         sbom_repo = AsyncMock()
+        sbom_repo.find_by_image_and_digest.return_value = None
         component_repo = AsyncMock()
         artifact_store = AsyncMock()
         artifact_store.upload_sbom.return_value = "s3://bucket/key"
@@ -122,13 +126,50 @@ class TestIngestSbomUseCase:
 
         assert result.format == "CycloneDX"
         assert result.verification_status == "pending"
-        sbom_repo.save.assert_awaited_once()
+        sbom_repo.save_with_components.assert_awaited_once()
         artifact_store.upload_sbom.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_identical_ingest_retry_returns_existing_record(self) -> None:
+        """An identical retry returns the persisted record without duplicate writes."""
+        existing = _make_sbom_entity(sbom_id=uuid.uuid4())
+        sbom_repo = AsyncMock()
+        sbom_repo.find_by_image_and_digest.return_value = existing
+        artifact_store = AsyncMock()
+        use_case = IngestSbomUseCase(sbom_repo, AsyncMock(), artifact_store)
+
+        result = await use_case.execute(self._make_command())
+
+        assert result.sbom_id == existing.sbom_id
+        assert result.image_digest == existing.image_digest.value
+        assert result.sbom_digest == existing.sbom_digest.value
+        sbom_repo.save_with_components.assert_not_awaited()
+        artifact_store.upload_sbom.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_identical_retry_binds_legacy_record_to_exact_image_reference(self) -> None:
+        """A digest-only legacy record can be safely upgraded, never replaced."""
+        existing = _make_sbom_entity(sbom_id=uuid.uuid4())
+        sbom_repo = AsyncMock()
+        sbom_repo.find_by_image_and_digest.return_value = existing
+        artifact_store = AsyncMock()
+        use_case = IngestSbomUseCase(sbom_repo, AsyncMock(), artifact_store)
+        image_reference = "ghcr.io/example/target@" + _DIGEST
+
+        result = await use_case.execute(self._make_command(image_reference=image_reference))
+
+        sbom_repo.bind_image_reference.assert_awaited_once_with(
+            existing.sbom_id, existing.tenant_id, image_reference
+        )
+        assert result.image_reference == image_reference
+        sbom_repo.save_with_components.assert_not_awaited()
+        artifact_store.upload_sbom.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_invalid_cyclonedx_document_raises(self) -> None:
         """Non-CycloneDX document raises InvalidSbomError."""
         sbom_repo = AsyncMock()
+        sbom_repo.find_by_image_and_digest.return_value = None
         component_repo = AsyncMock()
         artifact_store = AsyncMock()
 
@@ -151,6 +192,7 @@ class TestIngestSbomUseCase:
         from app.domain.exceptions import DigestMismatchError
 
         sbom_repo = AsyncMock()
+        sbom_repo.find_by_image_and_digest.return_value = None
         component_repo = AsyncMock()
         artifact_store = AsyncMock()
 
@@ -168,7 +210,8 @@ class TestIngestSbomUseCase:
     async def test_duplicate_sbom_propagates(self) -> None:
         """DuplicateSbomError from repo propagates out of the use case."""
         sbom_repo = AsyncMock()
-        sbom_repo.save.side_effect = DuplicateSbomError(
+        sbom_repo.find_by_image_and_digest.return_value = None
+        sbom_repo.save_with_components.side_effect = DuplicateSbomError(
             _DIGEST, "sha256:" + "b" * 64, _DIGEST
         )
         component_repo = AsyncMock()
@@ -181,6 +224,46 @@ class TestIngestSbomUseCase:
         )
         with pytest.raises(DuplicateSbomError):
             await use_case.execute(self._make_command())
+
+    @pytest.mark.asyncio
+    async def test_artifact_upload_failure_does_not_persist_database_record(self) -> None:
+        from app.domain.exceptions import SbomStorageError
+
+        sbom_repo = AsyncMock()
+        sbom_repo.find_by_image_and_digest.return_value = None
+        component_repo = AsyncMock()
+        artifact_store = AsyncMock()
+        artifact_store.upload_sbom.side_effect = SbomStorageError("S3 unavailable")
+        use_case = IngestSbomUseCase(sbom_repo, component_repo, artifact_store)
+
+        with pytest.raises(SbomStorageError, match="S3 unavailable"):
+            await use_case.execute(self._make_command())
+
+        sbom_repo.save_with_components.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_existing_artifact_is_verified_before_atomic_database_persist(self) -> None:
+        sbom_repo = AsyncMock()
+        sbom_repo.find_by_image_and_digest.return_value = None
+        component_repo = AsyncMock()
+        artifact_store = AsyncMock()
+        use_case = IngestSbomUseCase(sbom_repo, component_repo, artifact_store)
+        command = self._make_command(
+            artifact_uri="s3://phantom-bucket/phantom/evidence/run/sbom.json",
+            artifact_download_url=(
+                "https://phantom-bucket.s3.ap-south-1.amazonaws.com/"
+                "phantom/evidence/run/sbom.json?versionId=vid&X-Amz-Signature=test"
+            ),
+            artifact_version_id="vid",
+            artifact_content_sha256="sha256:" + "c" * 64,
+            artifact_manifest_digest="sha256:" + "d" * 64,
+        )
+
+        await use_case.execute(command)
+
+        artifact_store.verify_external_sbom.assert_awaited_once()
+        artifact_store.upload_sbom.assert_not_awaited()
+        sbom_repo.save_with_components.assert_awaited_once()
 
 
 # ---------------------------------------------------------------------------
@@ -330,3 +413,42 @@ class TestGetVerificationResultUseCase:
             await use_case.execute(
                 GetVerificationResultQuery(sbom_id=_UUID, tenant_id=_UUID)
             )
+
+
+class TestRunVerificationUseCase:
+    """Verification must address the exact job and preserve pending on outages."""
+
+    @pytest.mark.asyncio
+    async def test_exact_job_lookup_and_unavailable_verifier_keep_sbom_pending(self) -> None:
+        job = _make_job(_UUID)
+        sbom = _make_sbom_entity(sbom_id=_UUID)
+        sbom_repo = AsyncMock()
+        sbom_repo.get_by_id.return_value = sbom
+        job_repo = AsyncMock()
+        job_repo.get_by_id.return_value = job
+        verifier = AsyncMock()
+        verifier.verify.side_effect = VerificationServiceUnavailableError("trust not configured")
+
+        runner = RunVerificationUseCase(sbom_repo, job_repo, verifier)
+        await runner.execute(RunVerificationCommand(job.verification_job_id, _UUID))
+
+        job_repo.get_by_id.assert_awaited_once_with(
+            verification_job_id=job.verification_job_id, tenant_id=_UUID
+        )
+        assert job_repo.get_by_sbom_id.await_count == 0
+        assert job_repo.update.await_args.args[0].status == "failed"
+        assert sbom_repo.update_verification.await_args.args[0].verification_status == (
+            VerificationStatus.PENDING
+        )
+
+    @pytest.mark.asyncio
+    async def test_duplicate_job_delivery_does_not_verify_twice(self) -> None:
+        job = _make_job(_UUID, status="verified")
+        job_repo = AsyncMock()
+        job_repo.get_by_id.return_value = job
+        sbom_repo = AsyncMock()
+        verifier = AsyncMock()
+        runner = RunVerificationUseCase(sbom_repo, job_repo, verifier)
+        await runner.execute(RunVerificationCommand(job.verification_job_id, _UUID))
+        verifier.verify.assert_not_awaited()
+        sbom_repo.update_verification.assert_not_awaited()

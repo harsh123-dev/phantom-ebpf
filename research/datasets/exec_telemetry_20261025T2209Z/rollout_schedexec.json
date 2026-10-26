@@ -1,0 +1,5 @@
+{
+    "Status": "Success",
+    "Output": "/tmp/phantom-exec-sched.PrN6TO/source.tar.gz: OK\nsha256:fe609e18d8700846e772b85967603faa993a8fc7d755871e73b7cbcb63245927\ndocker.io/phantom/ebpf agent:schedexec 2\tsaved\t\napplication/vnd.oci.image.index.v1+json sha256:fe609e18d8700846e772b85967603faa993a8fc7d755871e73b7cbcb63245927\nImporting\telapsed: 5.9 s\ttotal:   0.0 B\t(0.0 B/s)\t\ndaemonset.apps/phantom-ebpf-agent image updated\nWaiting for daemon set \"phantom-ebpf-agent\" rollout to finish: 0 out of 1 new pods have been updated...\nWaiting for daemon set \"phantom-ebpf-agent\" rollout to finish: 0 of 1 updated pods are available...\ndaemon set \"phantom-ebpf-agent\" successfully rolled out\n1/1 phantom/ebpf-agent:schedexec-20261025T2215Z",
+    "Error": ""
+}

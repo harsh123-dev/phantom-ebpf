@@ -126,6 +126,34 @@ def _get_pod_name(namespace: str, app_label: str, kubectl_context: str | None) -
     return pod
 
 
+def _direct_behavior_assertion(result: Any) -> dict[str, Any]:
+    """Serialize scenario-harness state separately from detector output.
+
+    This is useful behavioral evidence only. It deliberately never labels a
+    contract outcome and does not infer from PHANTOM/Falco alerts.
+    """
+    verified = result.behavior_verified
+    return {
+        "observer": "scenario_runner.attack.verify_injection",
+        "observed_at": (result.scenario_label or {}).get("run_ended_at"),
+        "injection_status": (
+            "failed" if result.inject_ok is False
+            else "succeeded" if result.inject_ok is True
+            else "unknown"
+        ),
+        "behavior_assertion": (
+            "confirmed" if verified is True
+            else "not_confirmed" if verified is False
+            else "unknown"
+        ),
+        "evidence": (result.scenario_label or {}).get("behavior_evidence"),
+        "source_is_phantom_detection": False,
+        "contract_outcome": "unknown",
+        "image_digest": None,
+        "event_correlation": "unavailable",
+    }
+
+
 # ---------------------------------------------------------------------------
 # Benign control scenario implementations
 # ---------------------------------------------------------------------------
@@ -288,7 +316,7 @@ def _print_summary(results: list[ScenarioResult]) -> None:
     """
     header = (
         f"{'Run ID':<50} {'Attack ID':<22} {'Rep':>3} "
-        f"{'Label':>5} {'TP':>4} {'MTTD(s)':>10} {'#Detect':>8} "
+        f"{'Plan':>5} {'Outcome':>9} {'MTTD(s)':>10} {'#Detect':>8} "
         f"{'#Falco':>7} {'Error':<40}"
     )
     sep = "-" * len(header)
@@ -299,19 +327,15 @@ def _print_summary(results: list[ScenarioResult]) -> None:
     print(sep)
 
     for r in results:
-        mttd = f"{r.mttd_s:.1f}" if r.mttd_s is not None else "—"
-        if r.is_true_positive:
-            tp = "TP"
-        elif r.ground_truth_label == 0 and r.phantom_detections:
-            tp = "FP"
-        elif r.ground_truth_label == 0:
-            tp = "TN"
-        else:
-            tp = "FN"
+        # The manifest label is a plan, never an independent observation.
+        # The runner currently stores only unknown oracle receipts, so even a
+        # detected attack cannot be reported as a TP here.
+        outcome = "FAILED" if r.error or r.inject_ok is False else "UNKNOWN"
+        lag = f"{r.mttd_s:.1f}" if r.mttd_s is not None else "—"
         error_short = r.error[:38] if r.error else ""
         print(
             f"{r.run_id:<50} {r.attack_id:<22} {r.repetition:>3} "
-            f"{r.ground_truth_label:>5} {tp:>4} {mttd:>10} "
+            f"{r.ground_truth_label:>5} {outcome:>9} {lag:>10} "
             f"{len(r.phantom_detections):>8} {len(r.falco_detections):>7} "
             f"{error_short:<40}"
         )
@@ -327,17 +351,12 @@ def _print_summary(results: list[ScenarioResult]) -> None:
     for family, fam_results in sorted(by_family.items()):
         n_attack = sum(1 for r in fam_results if r.ground_truth_label == 1)
         n_benign = sum(1 for r in fam_results if r.ground_truth_label == 0)
-        n_tp = sum(1 for r in fam_results if r.is_true_positive)
-        n_fp = sum(
-            1 for r in fam_results
-            if r.ground_truth_label == 0 and r.phantom_detections
-        )
-        mttd_vals = [r.mttd_s for r in fam_results if r.mttd_s is not None]
-        mean_mttd = sum(mttd_vals) / len(mttd_vals) if mttd_vals else None
+        n_failed = sum(1 for r in fam_results if r.error or r.inject_ok is False)
+        n_unknown = len(fam_results) - n_failed
+        n_alerted = sum(1 for r in fam_results if r.phantom_detections)
         print(
-            f"  {family:<28} attacks={n_attack} benign={n_benign} "
-            f"TP={n_tp} FP={n_fp} "
-            f"mean_MTTD={'%.1f' % mean_mttd if mean_mttd is not None else '—'}s"
+            f"  {family:<28} planned_attacks={n_attack} planned_controls={n_benign} "
+            f"failed={n_failed} ground_truth_unknown={n_unknown} alerted={n_alerted}"
         )
     print()
 
@@ -632,8 +651,17 @@ def main() -> None:
             provenance={
                 "source": "scenario_runner",
                 "result_artifact": str(result_path),
+                "direct_harness_assertion": _direct_behavior_assertion(result),
                 "contract_snapshot_available": False,
-                "independent_observation_collector_available": False,
+                "scenario_policy_document": "research/evaluation/scenario_oracle_policies.yaml",
+                "observer_interface_available": True,
+                "independent_assertion_collector_available": False,
+                "contract_registry_trust_anchor_available": False,
+                "ground_truth_blocker": (
+                    "the runner records a direct scenario behavior assertion, but no "
+                    "separate authenticated contract snapshot/observer signature binds "
+                    "it to immutable workload/image/event identities"
+                ),
             },
         )
         log.info("oracle_receipt.persisted", extra={

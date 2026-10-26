@@ -1,0 +1,22 @@
+{
+  "CommandId": "bc6bbe5a-9255-47c8-8a21-771da1f6e501",
+  "InstanceId": "i-06bb29d253668fa5f",
+  "Comment": "",
+  "DocumentName": "AWS-RunShellScript",
+  "DocumentVersion": "$DEFAULT",
+  "PluginName": "aws:runShellScript",
+  "ResponseCode": 1,
+  "ExecutionStartDateTime": "2026-10-25T19:46:49.542Z",
+  "ExecutionElapsedTime": "PT0.595S",
+  "ExecutionEndDateTime": "2026-10-25T19:46:49.542Z",
+  "Status": "Failed",
+  "StatusDetails": "Failed",
+  "StandardOutputContent": "",
+  "StandardOutputUrl": "",
+  "StandardErrorContent": "Traceback (most recent call last):\n  File \"<stdin>\", line 5, in <module>\nOSError: [Errno 30] Read-only file system: '/tmp/phantom-live-evidence-snapshot.sqlite3'\ncommand terminated with exit code 1\nfailed to run commands: exit status 1",
+  "StandardErrorUrl": "",
+  "CloudWatchOutputConfig": {
+    "CloudWatchLogGroupName": "",
+    "CloudWatchOutputEnabled": false
+  }
+}

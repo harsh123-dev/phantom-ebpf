@@ -238,24 +238,24 @@ spec:
                   key: database_url
             - name: SBOM_SERVICE_S3_BUCKET
               valueFrom:
-                secretKeyRef:
-                  name: phantom-sbom-service-secret
-                  key: s3_bucket
-            - name: SBOM_SERVICE_S3_ACCESS_KEY_ID
-              valueFrom:
-                secretKeyRef:
-                  name: phantom-sbom-service-secret
-                  key: s3_access_key_id
-            - name: SBOM_SERVICE_S3_SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: phantom-sbom-service-secret
-                  key: s3_secret_access_key
+                configMapKeyRef:
+                  name: phantom-config
+                  key: sbom_s3_bucket
             - name: SBOM_SERVICE_S3_REGION
               valueFrom:
-                secretKeyRef:
-                  name: phantom-sbom-service-secret
-                  key: s3_region
+                configMapKeyRef:
+                  name: phantom-config
+                  key: sbom_s3_region
+            - name: SBOM_SERVICE_S3_KEY_PREFIX
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: sbom_s3_key_prefix
+            - name: SBOM_SERVICE_ALLOWED_ARTIFACT_PREFIX
+              valueFrom:
+                configMapKeyRef:
+                  name: phantom-config
+                  key: sbom_allowed_artifact_prefix
             - name: LOG_LEVEL
               valueFrom:
                 configMapKeyRef:

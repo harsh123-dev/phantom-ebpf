@@ -1,0 +1,22 @@
+{
+    "CommandId": "76ab00f9-02db-47e6-85f9-26ad0092de8b",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T21:04:44.371Z",
+    "ExecutionElapsedTime": "PT3.173S",
+    "ExecutionEndDateTime": "2026-10-25T21:04:47.371Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "2026-10-25T21:04:44Z\napp_http_status=2002026-10-25 21:04:45 [warning  ] event_processor.identity_insufficient event_id=000006bc006675d60000000000000001 has_image_digest=False status=missing\n2026-10-25 21:04:45 [warning  ] event_processor.identity_insufficient event_id=000006bc00672d1b0000000000000002 has_image_digest=False status=missing\n2026-10-25 21:04:45 [warning  ] event_processor.identity_insufficient event_id=000006bc0067821d0000000000000003 has_image_digest=False status=missing\n2026-10-25 21:04:45 [warning  ] event_processor.identity_insufficient event_id=000006bc0067cc900000000000000002 has_image_digest=False status=missing\n2026-10-25 21:04:45 [warning  ] event_processor.identity_insufficient event_id=000006bc006846890000000000000001 has_image_digest=False status=missing\n2026-10-25 21:04:45 [warning  ] event_processor.identity_insufficient event_id=000006bc006883f40000000000000003 has_image_digest=False status=missing\n2026-10-25 21:04:47 [warning  ] event_processor.identity_insufficient event_id=000006bc6972e1f80000000000000002 has_image_digest=False status=missing\n2026-10-25 21:04:47 [warning  ] event_processor.identity_insufficient event_id=000006bc697327b10000000000000002 has_image_digest=False status=missing\n2026-10-25 21:04:47 [warning  ] event_processor.identity_insufficient event_id=000006bc69732ffb0000000000000002 has_image_digest=False status=missing\n2026-10-25 21:04:47 [warning  ] event_processor.identity_insufficient event_id=000006bc6974a78f0000000000000002 has_image_digest=False status=missing\n2026-10-25 21:04:47 [warning  ] event_processor.identity_insufficient event_id=000006bc6974e5b80000000000000002 has_image_digest=False status=missing\n2026-10-25 21:04:47 [warning  ] event_processor.identity_insufficient event_id=000006bc6974ec510000000000000002 has_image_digest=False status=missing\n2026-10-25 21:04:47 [warning  ] event_processor.identity_insufficient event_id=000006bc6975245e0000000000000002 has_image_digest=False status=missing\n2026-10-25 21:04:47 [warning  ] event_processor.identity_insufficient event_id=000006bc697551520000000000000002 has_image_digest=False status=missing\n2026-10-25 21:04:47 [warning  ] event_processor.identity_insufficient event_id=000006bc6975579f0000000000000002 has_image_digest=False status=missing\n2026-10-25 21:04:47 [warning  ] event_processor.identity_insufficient event_id=000006bc698b98040000000000000002 has_image_digest=False status=missing\n2026-10-25 21:04:47 [warning  ] event_processor.identity_insufficient event_id=000006bc698d741c0000000000000002 has_image_digest=False status=missing\n2026-10-25 21:04:47 [warning  ] event_processor.identity_insufficient event_id=000006bc698e2cab0000000000000002 has_image_digest=False status=missing\n2026-10-25 21:04:47 [warning  ] event_processor.identity_insufficient event_id=000006bc69b688660000000000000002 has_image_digest=False status=missing\n2026-10-25 21:04:47 [warning  ] event_processor.identity_insufficient event_id=000006bc69c900490000000000000001 has_image_digest=False status=missing\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

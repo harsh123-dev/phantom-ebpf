@@ -1,0 +1,1 @@
+The first evidence-capture wrapper exited 1 before running the test commands because it invoked `python` by name, which is not on the current PATH. No test suite or Terraform command started in that wrapper. The focused tests had already run successfully in this environment. The wrapper was corrected to use the repository's `.venv-causal/bin/python` executable and rerun.

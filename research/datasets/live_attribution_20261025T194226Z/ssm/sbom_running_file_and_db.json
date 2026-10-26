@@ -1,0 +1,22 @@
+{
+  "CommandId": "ae1e28e2-e82b-4cc5-ac8f-b4a7c7279d28",
+  "InstanceId": "i-06bb29d253668fa5f",
+  "Comment": "",
+  "DocumentName": "AWS-RunShellScript",
+  "DocumentVersion": "$DEFAULT",
+  "PluginName": "aws:runShellScript",
+  "ResponseCode": 0,
+  "ExecutionStartDateTime": "2026-10-25T19:53:41.305Z",
+  "ExecutionElapsedTime": "PT0.986S",
+  "ExecutionEndDateTime": "2026-10-25T19:53:41.305Z",
+  "Status": "Success",
+  "StatusDetails": "Success",
+  "StandardOutputContent": "RUNNING_FILE /usr/local/bin/python3.11 sha256:46d05ca7094b029959f0218e990a7f2737dbc87d5b2e783ecfc44e978937922a\n0\n\\nNAMESPACE      NAME                                POD-SELECTOR                     AGE\nphantom-eval   isolate-phantom-eval-egress         <none>                           36m\nphantom-eval   phantom-evidence-collector-egress   app=phantom-evidence-collector   36m\nphantom-eval   phantom-sink-private-ingress        app=phantom-sink                 36m\n",
+  "StandardOutputUrl": "",
+  "StandardErrorContent": "",
+  "StandardErrorUrl": "",
+  "CloudWatchOutputConfig": {
+    "CloudWatchLogGroupName": "",
+    "CloudWatchOutputEnabled": false
+  }
+}

@@ -1,0 +1,35 @@
+{
+    "RoleName": "phantom-k3s-lab-ssm-role",
+    "PolicyName": "phantom-k3s-lab-evidence-backups",
+    "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Action": [
+                    "s3:ListBucket"
+                ],
+                "Condition": {
+                    "StringLike": {
+                        "s3:prefix": [
+                            "phantom/evidence",
+                            "phantom/evidence/*"
+                        ]
+                    }
+                },
+                "Effect": "Allow",
+                "Resource": "arn:aws:s3:::phantom-k3s-lab-253490771520-ap-south-1-evidence",
+                "Sid": "ListBackupPrefix"
+            },
+            {
+                "Action": [
+                    "s3:PutObject",
+                    "s3:GetObject",
+                    "s3:GetObjectVersion"
+                ],
+                "Effect": "Allow",
+                "Resource": "arn:aws:s3:::phantom-k3s-lab-253490771520-ap-south-1-evidence/phantom/evidence/*",
+                "Sid": "WriteAndRecoverEvidenceObjects"
+            }
+        ]
+    }
+}

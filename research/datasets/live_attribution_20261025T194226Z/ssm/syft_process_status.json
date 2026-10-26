@@ -1,0 +1,22 @@
+{
+  "CommandId": "e83a554f-fe0c-4c23-a5ac-a4a0adb81299",
+  "InstanceId": "i-06bb29d253668fa5f",
+  "Comment": "",
+  "DocumentName": "AWS-RunShellScript",
+  "DocumentVersion": "$DEFAULT",
+  "PluginName": "aws:runShellScript",
+  "ResponseCode": 0,
+  "ExecutionStartDateTime": "2026-10-25T19:50:31.715Z",
+  "ExecutionElapsedTime": "PT0.02S",
+  "ExecutionEndDateTime": "2026-10-25T19:50:31.715Z",
+  "Status": "Success",
+  "StatusDetails": "Success",
+  "StandardOutputContent": "  43505       00:58  247  9.3 Sl   futex_wait_queue     /tmp/syft scan registry:docker.io/tiangolo/uwsgi-nginx-flask@sha256:ec4370b0af44b4ba2ffe0247f1b1339c4f4debdba319d025d5753140ccec4184 --scope all-layers -o cyclonedx-json=/tmp/phantom-evaluation-image.cdx.json\n89M\t/tmp/syft\n4.0K\t/tmp/syft-cataloger-4027694149\n30M\t/tmp/syft_1.55.0_linux_amd64.tar.gz\n0\t/tmp/phantom-evaluation-image.cdx.json\nFilesystem      Size  Used Avail Use% Mounted on\n/dev/root        49G   23G   26G  47% /\n",
+  "StandardOutputUrl": "",
+  "StandardErrorContent": "",
+  "StandardErrorUrl": "",
+  "CloudWatchOutputConfig": {
+    "CloudWatchLogGroupName": "",
+    "CloudWatchOutputEnabled": false
+  }
+}

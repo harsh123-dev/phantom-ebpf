@@ -5,15 +5,13 @@
  * Minimum kernel: 5.8
  *   - BPF_MAP_TYPE_RINGBUF: 5.8
  *   - CO-RE (BPF_CORE_READ): 5.2 + CONFIG_DEBUG_INFO_BTF
- *   - tracepoint/syscalls/sys_exit_execve: 4.7
+ *   - tracepoint/sched/sched_process_exec: 2.6.28
  *   - bpf_get_current_cgroup_id(): 4.18
  *
- * Attach points:
- *   sys_exit_execve  — captures executable path + argc at execve() return.
- *                      sys_exit is preferred over sys_enter because at entry
- *                      the path has not yet been resolved by the kernel;
- *                      at exit the bprm->filename is already set.
- *   sys_exit_execveat — same semantics for execveat(2).
+ * Attach point:
+ *   sched_process_exec — fires after a successful exec has installed the new
+ *                        mm. Unlike sys_exit_execve, it is a scheduler event
+ *                        tied to the task that actually changed executable.
  *
  * Design notes:
  *   - The full argv vector is NOT captured (privacy/verifier/size risk).
@@ -21,12 +19,9 @@
  *     argv_digest is zeroed by eBPF; user space fills it from /proc/<pid>/cmdline.
  *   - executable_path is read via bpf_probe_read_kernel_str into ring-buffer
  *     memory, NOT onto the BPF stack (stack limit 512 B; PATH_MAX = 4096).
- *   - This program reports both successful and failed exec() calls
- *     (syscall_result != 0) because failed exec attempts are themselves
- *     behavioral evidence.
- *
- * # VERIFY: sys_exit_execve args layout may differ across kernel versions.
- *           The fields used here (ret) are stable from 4.7+.
+ *   - Only successful executable changes are reported. This event describes
+ *     the current task after exec; it does not by itself authenticate the
+ *     userspace file bytes or prove an SBOM component mapping.
  */
 
 /* vmlinux.h provides kernel struct definitions for CO-RE.
@@ -43,43 +38,27 @@
 #include "phantom_helpers.h"
 
 /* -------------------------------------------------------------------------
- * tracepoint context for sys_exit_execve / sys_exit_execveat.
- *
- * The tracepoint format for sys_exit_* is:
- *   struct { long long pad; long ret; };
- * The 'filename' argument is NOT available at sys_exit; it was consumed
- * by the kernel. We read the current task's comm and derive the path
- * from the mm->exe_file->f_path using CO-RE.
- * # VERIFY: mm->exe_file path is safe to read at sys_exit if execve succeeded.
- *           On failure the mm may not be updated; check ret != 0 first.
+ * Tracepoint context for sched_process_exec is kernel-version specific and
+ * not needed here; the current task is the task whose exec just completed.
+ * # VERIFY: mm->exe_file is read at sched_process_exec after successful exec.
  * ------------------------------------------------------------------------- */
-struct execve_exit_ctx {
-    unsigned long long pad;  /* Tracepoint common fields (ignored). */
-    long               ret;  /* Return value of execve(). */
-};
-
 /* -------------------------------------------------------------------------
  * phantom_collect_exec()
  *
- * Core event collection logic, called from both execve and execveat handlers.
+ * Core event collection logic, called from sched_process_exec.
  *
  * Reserves a phantom_exec_event in the ring buffer, fills it from the
  * current task context, and reads the executable path via CO-RE.
  *
- * # VERIFY: bpf_d_path() is available on 5.9+. For kernels 5.8 we fall
- *           back to reading task->mm->exe_file->f_path.dentry->d_name.name.
- *           For correctness and portability, we read the path via the
- *           sched_process_exec tracepoint (see process_events.bpf.c) which
- *           provides the filename argument; here we only capture the comm
- *           plus the mm-based path as a fallback.
+ * The dentry name here is only a basename, not a stable file identity. It
+ * must not be used alone for SBOM component binding.
  * ------------------------------------------------------------------------- */
 static __always_inline int
-phantom_collect_exec(long ret)
+phantom_collect_exec(void)
 {
     struct phantom_exec_event *evt;
     struct task_struct *task;
     struct mm_struct *mm;
-    const char *exe_name;
 
     /* Reserve ring-buffer space BEFORE any expensive reads.
      * If reserve fails we count it and bail; the loss metric is updated. */
@@ -101,7 +80,7 @@ phantom_collect_exec(long ret)
     evt->argc       = 0;
     evt->exec_flags = 0;
 
-    /* executable_path: read from mm->exe_file->f_path via CO-RE.
+    /* executable_path: read the current executable's dentry basename via CO-RE.
      * Written directly into ring-buffer memory — NOT the BPF stack —
      * because PHANTOM_PATH_MAX = 4096 exceeds the 512-byte stack limit.
      *
@@ -142,30 +121,14 @@ phantom_collect_exec(long ret)
     return 0;
 }
 
-/* -------------------------------------------------------------------------
- * BPF program: tracepoint/syscalls/sys_exit_execve
- *
- * Fires on return from execve(2). Collects exec behavioral evidence.
- * We capture both success (ret == 0) and failure (ret < 0) because
- * failed exec calls are themselves behavioral observations (e.g., an
- * attacker probing binaries).
- * ------------------------------------------------------------------------- */
-SEC("tracepoint/syscalls/sys_exit_execve")
-int handle_execve_exit(struct execve_exit_ctx *ctx)
+/* Successful process exec only. Failed exec attempts are not reported as a
+ * change in runtime executable state. The task's current mm is authoritative
+ * at this tracepoint, while userspace still must validate workload identity. */
+SEC("tracepoint/sched/sched_process_exec")
+int handle_sched_process_exec(void *ctx)
 {
-    return phantom_collect_exec(ctx->ret);
-}
-
-/* -------------------------------------------------------------------------
- * BPF program: tracepoint/syscalls/sys_exit_execveat
- *
- * Same semantics as sys_exit_execve but for execveat(2).
- * # VERIFY: execveat tracepoint exists from kernel 3.19+.
- * ------------------------------------------------------------------------- */
-SEC("tracepoint/syscalls/sys_exit_execveat")
-int handle_execveat_exit(struct execve_exit_ctx *ctx)
-{
-    return phantom_collect_exec(ctx->ret);
+    (void)ctx;
+    return phantom_collect_exec();
 }
 
 char LICENSE[] SEC("license") = "GPL";

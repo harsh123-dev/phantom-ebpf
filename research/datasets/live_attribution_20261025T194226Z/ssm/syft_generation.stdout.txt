@@ -1,0 +1,11 @@
+syft_1.55.0_linux_amd64.tar.gz: OK
+Application:   syft
+Version:       1.55.0
+BuildDate:     2026-10-19T18:54:46Z
+GitCommit:     f15c3343e29dfb20cf6d82c820e7090b49808c96
+GitDescription: v1.55.0
+Platform:      linux/amd64
+GoVersion:     go1.26.8
+Compiler:      gc
+SchemaVersion: 16.1.11
+SBOM_META {"bomFormat": "CycloneDX", "bytes": 7887054, "component_count": 22823, "components_sample": [{"hashes": [], "name": "Simple Launcher", "purl": null, "version": "1.1.0.14"}, {"hashes": [], "name": "Simple Launcher", "purl": null, "version": "1.1.0.14"}, {"hashes": [], "name": "Simple Launcher", "purl": null, "version": "1.1.0.14"}, {"hashes": [], "name": "Simple Launcher", "purl": null, "version": "1.1.0.14"}, {"hashes": [], "name": "Simple Launcher", "purl": null, "version": "1.1.0.14"}, {"hashes": [], "name": "Simple Launcher", "purl": null, "version": "1.1.0.14"}, {"hashes": [], "name": "adduser", "purl": "pkg:deb/debian/adduser@3.152?arch=all&distro=debian-13.7", "version": "3.152"}, {"hashes": [], "name": "apt", "purl": "pkg:deb/debian/apt@3.0.3?arch=amd64&distro=debian-13.7", "version": "3.0.3"}, {"hashes": [], "name": "autocommand", "purl": "pkg:pypi/autocommand@2.2.2", "version": "2.2.2"}, {"hashes": [], "name": "autocommand", "purl": "pkg:pypi/autocommand@2.2.2", "version": "2.2.2"}, {"hashes": [], "name": "autoconf", "purl": "pkg:deb/debian/autoconf@2.72-3.1?arch=all&distro=debian-13.7", "version": "2.72-3.1"}, {"hashes": [], "name": "automake", "purl": "pkg:deb/debian/automake@1%3A1.17-4?arch=all&distro=debian-13.7&upstream=automake-1.17", "version": "1:1.17-4"}], "file_component_count": 22268, "path": "/tmp/phantom-evaluation-image.cdx.json", "serialNumber": "urn:uuid:bb3adc79-da3c-4be3-838c-a3e584a3d382", "sha256": "sha256:c5b3a412b3534cfb0647b639cbc3e2993bbd2b09797aff9b34ce5a3904e04c80", "sha256_component_hashes": 22268, "specVersion": "1.7"}

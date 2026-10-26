@@ -268,14 +268,26 @@ class TestDriftEventIngestRequest:
     def test_runtime_file_provenance_fields_are_optional_and_validated(self) -> None:
         request = self._build_valid_request().model_dump(mode="json")
         request["process"]["executable_hash"] = "sha256:" + "a" * 64
+        request["process"]["executable_hash_status"] = "available"
         request["evidence"]["resource_path"] = "/usr/lib/example.so"
         request["evidence"]["resource_hash"] = "b" * 64
         parsed = DriftEventIngestRequest.model_validate(request)
         assert parsed.process.executable_hash == "sha256:" + "a" * 64
         assert parsed.evidence.resource_path == "/usr/lib/example.so"
         assert parsed.evidence.resource_hash == "b" * 64
+        request["evidence"]["run_id"] = "run-01"
+        request["evidence"]["scenario_id"] = "scenario-01"
+        parsed = DriftEventIngestRequest.model_validate(request)
+        assert parsed.evidence.run_id == "run-01"
+        assert parsed.evidence.scenario_id == "scenario-01"
         request["process"]["executable_hash"] = "not-a-digest"
         with pytest.raises(ValidationError):
+            DriftEventIngestRequest.model_validate(request)
+
+        request = self._build_valid_request().model_dump(mode="json")
+        request["process"]["executable_hash_status"] = "unavailable"
+        request["process"]["executable_hash"] = "sha256:" + "a" * 64
+        with pytest.raises(ValidationError, match="non-available"):
             DriftEventIngestRequest.model_validate(request)
 
     def test_valid_request(self) -> None:

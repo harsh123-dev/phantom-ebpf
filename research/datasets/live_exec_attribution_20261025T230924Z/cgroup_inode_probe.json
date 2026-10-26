@@ -1,0 +1,22 @@
+{
+    "CommandId": "d25711a3-37a0-4011-a456-af583fcd4d75",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "phantom-cgroup-id-check",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T23:03:44.176Z",
+    "ExecutionElapsedTime": "PT0.023S",
+    "ExecutionEndDateTime": "2026-10-25T23:03:44.176Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "TARGET_CGROUP_PATH=/sys/fs/cgroup/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod3b5831cc_199c_4d7a_b862_d6289acc8619.slice/cri-containerd-34da75370182e76d2e5cb0548a39cb530ebebbb74844d634f30ea4495c67b798.scope\nTARGET_CGROUP_INODE=10148\nEVENT_CGROUP_ID=10148\nMATCHING_DIRECTORIES\n/sys/fs/cgroup/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod3b5831cc_199c_4d7a_b862_d6289acc8619.slice/cri-containerd-34da75370182e76d2e5cb0548a39cb530ebebbb74844d634f30ea4495c67b798.scope\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

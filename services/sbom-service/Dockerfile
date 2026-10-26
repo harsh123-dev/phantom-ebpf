@@ -22,9 +22,16 @@ FROM python:3.11-slim AS runtime
 LABEL org.opencontainers.image.title="PHANTOM sbom-service"
 LABEL org.opencontainers.image.source="https://github.com/phantom-research/phantom"
 WORKDIR /app
-# Install cosign CLI (not via shell=True; explicit path invocation in adapter)
+# Pin the official Cosign release binary by its GitHub release SHA-256.
+# Tool integrity does not establish trust in any SBOM signer.
 RUN apt-get update -qq && apt-get install -y --no-install-recommends \
     curl ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN test "$(dpkg --print-architecture)" = amd64 && \
+    curl -fsSL --retry 3 \
+      https://github.com/sigstore/cosign/releases/download/v3.1.4/cosign-linux-amd64 \
+      -o /usr/local/bin/cosign && \
+    echo '424e2c97d0b45fd7a6b608a87f090f35633f4c23ece5f092d48bba11aaf4bbfa  /usr/local/bin/cosign' \
+      | sha256sum -c - && chmod 0755 /usr/local/bin/cosign
 # Install phantom-core first (local dep), then the service
 COPY --from=core-builder /build/dist/*.whl /tmp/
 COPY --from=svc-builder  /build/dist/*.whl /tmp/

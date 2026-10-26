@@ -1,0 +1,66 @@
+................F.....F......                                            [100%]
+=================================== FAILURES ===================================
+_ TestAdversarialTask2TableParsingAndSyntax.test_csv_dict_reader_strict_parseability[output/table_1_detection_performance.csv] _
+
+self = <tests.verify_m4_adversarial.TestAdversarialTask2TableParsingAndSyntax object at 0x7ed509cb8dd0>
+csv_path = PosixPath('/root/phantom-ebpf/output/table_1_detection_performance.csv')
+
+    def test_csv_dict_reader_strict_parseability(self, csv_path):
+        """Verify CSV is strictly parseable with csv.DictReader with no extra or missing keys."""
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            fieldnames = reader.fieldnames
+            assert fieldnames is not None
+            assert len(fieldnames) == 20
+            expected_fields = [
+                "detector_name", "tpr", "fpr", "precision", "recall", "f1",
+                "mttd_mean_s", "mttd_p50_s", "mttd_p95_s",
+                "cpu_overhead_pct", "memory_overhead_mb", "false_positives_per_hour",
+                "attribution_accuracy", "brier_score", "tp", "fp", "fn", "tn",
+                "n_attack_scenarios", "n_benign_scenarios"
+            ]
+            assert fieldnames == expected_fields
+    
+            rows = list(reader)
+            assert len(rows) == 4, f"Expected 4 detector rows, got {len(rows)}"
+    
+            for row in rows:
+                assert None not in row, f"Malformed row with extra fields: {row}"
+                assert row["detector_name"] in [
+                    "phantom", "falco-default-rules", "trivy-sbom-static", "isolation-forest-syscall-frequency"
+                ]
+    
+                # Check phantom row
+                if row["detector_name"] == "phantom":
+>                   assert row["tpr"] == "1.0000"
+E                   AssertionError: assert '0.0000' == '1.0000'
+E                     
+E                     - 1.0000
+E                     ? ^
+E                     + 0.0000
+E                     ? ^
+
+tests/verify_m4_adversarial.py:242: AssertionError
+_ TestAdversarialTask2TableParsingAndSyntax.test_latex_does_not_bold_unmeasured_zeros[output/table_1_detection_performance.tex] _
+
+self = <tests.verify_m4_adversarial.TestAdversarialTask2TableParsingAndSyntax object at 0x7ed509cbb790>
+tex_path = PosixPath('/root/phantom-ebpf/output/table_1_detection_performance.tex')
+
+    def test_latex_does_not_bold_unmeasured_zeros(self, tex_path):
+        """Verify that LaTeX table does NOT bold unmeasured zeros (e.g. \\textbf{0.000})."""
+        with open(tex_path, "r", encoding="utf-8") as f:
+            content = f.read()
+    
+        # Find all bolded tokens: \textbf{...}
+        bold_matches = re.findall(r"\\textbf\{([^}]+)\}", content)
+        for token in bold_matches:
+            # Unmeasured zeros must NOT be bolded
+>           assert token not in ("0.000", "0.0", "0", "0.00"), f"Found forbidden bolded zero in LaTeX table: \\textbf{{{token}}}"
+E           AssertionError: Found forbidden bolded zero in LaTeX table: \textbf{0.000}
+E           assert '0.000' not in ('0.000', '0.0', '0', '0.00')
+
+tests/verify_m4_adversarial.py:312: AssertionError
+=========================== short test summary info ============================
+FAILED tests/verify_m4_adversarial.py::TestAdversarialTask2TableParsingAndSyntax::test_csv_dict_reader_strict_parseability[output/table_1_detection_performance.csv]
+FAILED tests/verify_m4_adversarial.py::TestAdversarialTask2TableParsingAndSyntax::test_latex_does_not_bold_unmeasured_zeros[output/table_1_detection_performance.tex]
+2 failed, 27 passed in 0.53s

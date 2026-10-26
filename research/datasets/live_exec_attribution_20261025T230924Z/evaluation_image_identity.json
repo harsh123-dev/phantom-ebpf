@@ -1,0 +1,22 @@
+{
+    "CommandId": "69d5ecca-5403-4829-b8d4-3af8c8d40a69",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "phantom-confirm-evaluation-image-ref",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T23:10:49.546Z",
+    "ExecutionElapsedTime": "PT0.146S",
+    "ExecutionEndDateTime": "2026-10-25T23:10:49.546Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "pod=recommendationservice-5dc98bbcb9-xq42k node=ip-10-89-2-125 image=tiangolo/uwsgi-nginx-flask:python3.11 imageID=sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7\\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

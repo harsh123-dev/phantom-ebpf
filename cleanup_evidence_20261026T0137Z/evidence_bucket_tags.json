@@ -1,0 +1,20 @@
+{
+    "TagSet": [
+        {
+            "Key": "Project",
+            "Value": "PHANTOM"
+        },
+        {
+            "Key": "Environment",
+            "Value": "disposable-lab"
+        },
+        {
+            "Key": "Purpose",
+            "Value": "evidence-backups"
+        },
+        {
+            "Key": "Name",
+            "Value": "phantom-k3s-lab-evidence-backups"
+        }
+    ]
+}

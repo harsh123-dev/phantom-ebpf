@@ -1,0 +1,10 @@
+........................................................................ [ 34%]
+........................................................................ [ 68%]
+...................................................................      [100%]
+=============================== warnings summary ===============================
+.venv-services/lib/python3.11/site-packages/starlette/formparsers.py:12
+  /root/phantom-ebpf/.venv-services/lib/python3.11/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+211 passed, 1 warning in 0.65s

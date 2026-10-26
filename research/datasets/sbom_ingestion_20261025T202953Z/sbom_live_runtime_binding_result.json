@@ -1,0 +1,22 @@
+{
+    "CommandId": "bf54b6df-c330-4ef3-bc48-3a4774c849bf",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T20:46:05.999Z",
+    "ExecutionElapsedTime": "PT0.772S",
+    "ExecutionEndDateTime": "2026-10-25T20:46:05.999Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "{\"event_id\": \"b7869afd-36ce-423a-81e9-3f17e5331a07\", \"executable_path\": \"runc:[2:INIT]\", \"executable_hash\": null, \"image_digest\": \"sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7\", \"binding_status\": \"insufficient_evidence\", \"reason\": \"matching SBOM exists but has not passed verification\", \"sbom_id\": null, \"purl\": null, \"confidence\": null}\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

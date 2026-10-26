@@ -1,0 +1,15 @@
+{
+    "CommandId": "aa57c747-ab95-4384-8a62-8bc1d40c2926",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "phantom-agent-cgroup-attribution-20261025",
+    "DocumentName": "AWS-RunRemoteScript",
+    "DocumentVersion": "$DEFAULT",
+    "ResponseCode": 0,
+    "ExecutionEndDateTime": "",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

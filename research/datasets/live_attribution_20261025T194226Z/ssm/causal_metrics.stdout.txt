@@ -1,0 +1,2 @@
+phantom_redis_stream_messages_total{result="success",stream="phantom:drift-events"} 28.0
+CAUSAL_POD=phantom-causal-engine-57576cd69c-b2mn9

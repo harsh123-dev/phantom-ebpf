@@ -1,0 +1,345 @@
+[
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/bootstrap/20261025-agent-cachefix-source.tar.gz.version-SWu9isfKgEh82Xp.2RjVVCbQjR82_Eci",
+    "original_sha256": "5ee7381e240bfec0ae42f8e2e1e3e055051e2071df2adc2fd31a572139c24dc2",
+    "saved_sha256": "d98b2056b22f3ad842a913e7b1d3be5a4d56202e2d8a5ea13a913fd5d4b44772",
+    "sanitized": true,
+    "removed_members": [
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      }
+    ],
+    "saved_size": 1242316,
+    "s3_key": "phantom/evidence/bootstrap/20261025-agent-cachefix-source.tar.gz",
+    "version_id": "SWu9isfKgEh82Xp.2RjVVCbQjR82_Eci",
+    "s3_sha256": "5ee7381e240bfec0ae42f8e2e1e3e055051e2071df2adc2fd31a572139c24dc2",
+    "s3_size": 1251452
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/bootstrap/20261025-sbom-migrations-source-v2.tar.gz.version-y5L8TMpfMXvmZK5eeGU2lZWUhU4R6xOe",
+    "original_sha256": "a0ac7c02b31f2339c4c350db55a56777d249238839d358d891b52fa4d29f4c1a",
+    "saved_sha256": "92a37ec58e0920615810ae1ed019d05203230bb0184edd7a3b285b813196f2ca",
+    "sanitized": true,
+    "removed_members": [
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      }
+    ],
+    "saved_size": 1243406,
+    "s3_key": "phantom/evidence/bootstrap/20261025-sbom-migrations-source-v2.tar.gz",
+    "version_id": "y5L8TMpfMXvmZK5eeGU2lZWUhU4R6xOe",
+    "s3_sha256": "a0ac7c02b31f2339c4c350db55a56777d249238839d358d891b52fa4d29f4c1a",
+    "s3_size": 1252956
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/bootstrap/20261025-agent-cachefix-source-v2.tar.gz.version-Nm3kRjxBsrEuQSoBR3pVwRG6LuWgF05X",
+    "original_sha256": "5ee7381e240bfec0ae42f8e2e1e3e055051e2071df2adc2fd31a572139c24dc2",
+    "saved_sha256": "d98b2056b22f3ad842a913e7b1d3be5a4d56202e2d8a5ea13a913fd5d4b44772",
+    "sanitized": true,
+    "removed_members": [
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      }
+    ],
+    "saved_size": 1242316,
+    "s3_key": "phantom/evidence/bootstrap/20261025-agent-cachefix-source-v2.tar.gz",
+    "version_id": "Nm3kRjxBsrEuQSoBR3pVwRG6LuWgF05X",
+    "s3_sha256": "5ee7381e240bfec0ae42f8e2e1e3e055051e2071df2adc2fd31a572139c24dc2",
+    "s3_size": 1251452
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/bootstrap/20261025-runtime-fixes-source.tar.gz.version-3I32Z5KDV9zEV9UJYzUmmWzrBL.E_Dda",
+    "original_sha256": "472c019896fa93e696d4227ecd1daa2fac08d36a25dc54cb773ed526b13c1b0f",
+    "saved_sha256": "ce98eefb3cac7aa12d8c05f66eb1665242bd05854ea01d8b7cffadd9eb79c95a",
+    "sanitized": true,
+    "removed_members": [
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      }
+    ],
+    "saved_size": 1242565,
+    "s3_key": "phantom/evidence/bootstrap/20261025-runtime-fixes-source.tar.gz",
+    "version_id": "3I32Z5KDV9zEV9UJYzUmmWzrBL.E_Dda",
+    "s3_sha256": "472c019896fa93e696d4227ecd1daa2fac08d36a25dc54cb773ed526b13c1b0f",
+    "s3_size": 1251713
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/bootstrap/20261025-source.tar.gz.version-d3S8P0_zc1UculcyYuuZFeu6UKwpOvGu",
+    "original_sha256": "3abc76c65e1a319e4a964dfa0a23ed5784e79d198b4c9ce4274857127e2d6c38",
+    "saved_sha256": "e5ad408a2ec468fa56a03cb8ccf8562bc1027dbb05487524da34054c163c1083",
+    "sanitized": true,
+    "removed_members": [
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      }
+    ],
+    "saved_size": 1241430,
+    "s3_key": "phantom/evidence/bootstrap/20261025-source.tar.gz",
+    "version_id": "d3S8P0_zc1UculcyYuuZFeu6UKwpOvGu",
+    "s3_sha256": "3abc76c65e1a319e4a964dfa0a23ed5784e79d198b4c9ce4274857127e2d6c38",
+    "s3_size": 1251538
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/bootstrap/20261025-causal-fix-source.tar.gz.version-qAavdIQRIe8TP8DNWS97JP4ThoJgfJAD",
+    "original_sha256": "0b1fce8fce8698af4fb2339e78fac85f815954f8e3afaa3ee299b7bae4508963",
+    "saved_sha256": "c795c4b3f9e23e465cc7a14fc560a82ba97fe704ffac6665940e05867190ec53",
+    "sanitized": true,
+    "removed_members": [
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      }
+    ],
+    "saved_size": 1241655,
+    "s3_key": "phantom/evidence/bootstrap/20261025-causal-fix-source.tar.gz",
+    "version_id": "qAavdIQRIe8TP8DNWS97JP4ThoJgfJAD",
+    "s3_sha256": "0b1fce8fce8698af4fb2339e78fac85f815954f8e3afaa3ee299b7bae4508963",
+    "s3_size": 1251683
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/bootstrap/20261025-sbom-migrations-source.tar.gz.version-GBX2lbd6G_9Ik8lzSzb1R0z5I41jgQRZ",
+    "original_sha256": "fcb652791d342dfa2406e50e680e8903fb64b77a796d9889a7453b4a0db6dc72",
+    "saved_sha256": "2712db67623f775f86e71e32287c63f53f818c56f4fb35a4caaba18c08492530",
+    "sanitized": true,
+    "removed_members": [
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      },
+      {
+        "member": "phantom-ebpf/infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml",
+        "reason": "Kubernetes Secret document"
+      }
+    ],
+    "saved_size": 1243393,
+    "s3_key": "phantom/evidence/bootstrap/20261025-sbom-migrations-source.tar.gz",
+    "version_id": "GBX2lbd6G_9Ik8lzSzb1R0z5I41jgQRZ",
+    "s3_sha256": "fcb652791d342dfa2406e50e680e8903fb64b77a796d9889a7453b4a0db6dc72",
+    "s3_size": 1252926
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/sbom-ingestion-20261025T202953Z/build-context.tar.gz.version-3Ih3V6rvHCHKdD.BQggNH1IPe6rATlbw",
+    "original_sha256": "01e434c1e0a4d1fe3759c98a328e1c1e92efdd163966e67d523822a688cfda4c",
+    "saved_sha256": "9f7e2ffb123026057290462dae454e8164e473ea1cb80c9f0def47e83b45e0e1",
+    "sanitized": false,
+    "removed_members": [],
+    "saved_size": 105140,
+    "s3_key": "phantom/evidence/sbom-ingestion-20261025T202953Z/build-context.tar.gz",
+    "version_id": "3Ih3V6rvHCHKdD.BQggNH1IPe6rATlbw",
+    "s3_sha256": "01e434c1e0a4d1fe3759c98a328e1c1e92efdd163966e67d523822a688cfda4c",
+    "s3_size": 106190
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/sbom-ingestion-20261025T202953Z/build-context-idempotent.tar.gz.version-VXuw9xVtGqrKATHFvNgk4fX92ZKanoxw",
+    "original_sha256": "3706eb4ecadd219d397d02677c6457debda1cfbf72bf96d9951b2672e100fd6f",
+    "saved_sha256": "44d5c54c432d5946caa85b53db2251c634be4501bac508c4d8cc4cebc674811f",
+    "sanitized": false,
+    "removed_members": [],
+    "saved_size": 105024,
+    "s3_key": "phantom/evidence/sbom-ingestion-20261025T202953Z/build-context-idempotent.tar.gz",
+    "version_id": "VXuw9xVtGqrKATHFvNgk4fX92ZKanoxw",
+    "s3_sha256": "3706eb4ecadd219d397d02677c6457debda1cfbf72bf96d9951b2672e100fd6f",
+    "s3_size": 106063
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/exec_loader_fix_20261025T2245Z/agent-source.tar.gz.version-7B1eTmzr3bdleNc9Qju3c0t18UPcDpOD",
+    "original_sha256": "4051fbc1b613212f3bf584a9044065c75e4b8f4fef167ce9062e71cf9fb51404",
+    "saved_sha256": "401a65aa59acbf600c5e8878f2bcabd7bc329f41f458efabd25a2cf38c9abe8d",
+    "sanitized": false,
+    "removed_members": [],
+    "saved_size": 79933,
+    "s3_key": "phantom/evidence/exec_loader_fix_20261025T2245Z/agent-source.tar.gz",
+    "version_id": "7B1eTmzr3bdleNc9Qju3c0t18UPcDpOD",
+    "s3_sha256": "4051fbc1b613212f3bf584a9044065c75e4b8f4fef167ce9062e71cf9fb51404",
+    "s3_size": 80443
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/exec_loader_fix_20261025T2255Z/agent-source.tar.gz.version-.T8nB1zdZr.UIFGgO3wHrMuzW2wNk5dA",
+    "original_sha256": "7bf9800d7bab2e4388748aa9cab98f8a682eb8120d99d1957bc6b2c2d88dd73b",
+    "saved_sha256": "a806bebf3d18a2565ec144b59ae673866356da4e75bc7182b1e07bc353daea66",
+    "sanitized": false,
+    "removed_members": [],
+    "saved_size": 80138,
+    "s3_key": "phantom/evidence/exec_loader_fix_20261025T2255Z/agent-source.tar.gz",
+    "version_id": ".T8nB1zdZr.UIFGgO3wHrMuzW2wNk5dA",
+    "s3_sha256": "7bf9800d7bab2e4388748aa9cab98f8a682eb8120d99d1957bc6b2c2d88dd73b",
+    "s3_size": 80650
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/trust_integration_20261025T2150Z/sbom-source.tar.gz.version-8VxzCRzsJ3YjQk4rli_lw2Z5cA.dpaW_",
+    "original_sha256": "e19d09b26ff6de0594d8ef6cf4f51cd4bb86c44cbc0b0669514f8c8feaf92fbc",
+    "saved_sha256": "1e6c8c777b24db3cf0e72ed355135d875959b5c0b057cd5c496a457f0c39f090",
+    "sanitized": false,
+    "removed_members": [],
+    "saved_size": 109365,
+    "s3_key": "phantom/evidence/trust_integration_20261025T2150Z/sbom-source.tar.gz",
+    "version_id": "8VxzCRzsJ3YjQk4rli_lw2Z5cA.dpaW_",
+    "s3_sha256": "e19d09b26ff6de0594d8ef6cf4f51cd4bb86c44cbc0b0669514f8c8feaf92fbc",
+    "s3_size": 110437
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/attribution_probe_20261025T2132Z/agent-source.tar.gz.version-m.RQIXsDmYoyt0EkyXcYlzemaSNIVp2x",
+    "original_sha256": "622d4e1116a904c3ffe42864176108873a31cf9192f66b2e205b60348de76bd9",
+    "saved_sha256": "309c473eeec376c6ac2afb2a4a8f790d5bae146247f5faecbd621e443d06cbb5",
+    "sanitized": false,
+    "removed_members": [],
+    "saved_size": 78596,
+    "s3_key": "phantom/evidence/attribution_probe_20261025T2132Z/agent-source.tar.gz",
+    "version_id": "m.RQIXsDmYoyt0EkyXcYlzemaSNIVp2x",
+    "s3_sha256": "622d4e1116a904c3ffe42864176108873a31cf9192f66b2e205b60348de76bd9",
+    "s3_size": 79101
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/attribution_probe_20261025T2132Z/agent-racefix-source.tar.gz.version-codnYzYnC4lUbdxVv9T6oxRwKZGwYhrd",
+    "original_sha256": "1396c5055cf0fb816285e7f0cb084c72f12b9a988a85fc6ce55a9cf75b92b05b",
+    "saved_sha256": "34f9a84f0adb29d19e0eb4aa7256acb561a185bbce9cb02a011b1bab6faa9047",
+    "sanitized": false,
+    "removed_members": [],
+    "saved_size": 78909,
+    "s3_key": "phantom/evidence/attribution_probe_20261025T2132Z/agent-racefix-source.tar.gz",
+    "version_id": "codnYzYnC4lUbdxVv9T6oxRwKZGwYhrd",
+    "s3_sha256": "1396c5055cf0fb816285e7f0cb084c72f12b9a988a85fc6ce55a9cf75b92b05b",
+    "s3_size": 79424
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/exec_loader_fix_20261025T2320Z/agent-source.tar.gz.version-6kf75aVCh97l7O2SyHppBJX9NdPe9nYG",
+    "original_sha256": "9b4e7e2081ee63327a420343e914953d66a05c2d88912dd4a4a64ecd2a2a68ec",
+    "saved_sha256": "e22724c1376a4f1c93ff162f2988815763050ac2d8943b60b17ed38880d4471d",
+    "sanitized": false,
+    "removed_members": [],
+    "saved_size": 80342,
+    "s3_key": "phantom/evidence/exec_loader_fix_20261025T2320Z/agent-source.tar.gz",
+    "version_id": "6kf75aVCh97l7O2SyHppBJX9NdPe9nYG",
+    "s3_sha256": "9b4e7e2081ee63327a420343e914953d66a05c2d88912dd4a4a64ecd2a2a68ec",
+    "s3_size": 80853
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/exec_telemetry_20261025T2209Z/agent-source.tar.gz.version-jbfsHxodr.5ZWp_xlbhsjIpaSWQFPjte",
+    "original_sha256": "5ea1eb07d6c6c511532c757d29ba55bd6a39bc3402d103162b15c59f48e6b1c4",
+    "saved_sha256": "3bf2e683c018322a8fd2738e570c52fbe0ca25222211f625e1467c4f0e8b6b9b",
+    "sanitized": false,
+    "removed_members": [],
+    "saved_size": 79193,
+    "s3_key": "phantom/evidence/exec_telemetry_20261025T2209Z/agent-source.tar.gz",
+    "version_id": "jbfsHxodr.5ZWp_xlbhsjIpaSWQFPjte",
+    "s3_sha256": "5ea1eb07d6c6c511532c757d29ba55bd6a39bc3402d103162b15c59f48e6b1c4",
+    "s3_size": 79709
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/exec_telemetry_20261025T2209Z/agent-source.tar.gz.version-AlncmK0wEP7uSo6dzFoNNY0FvOxfL5oM",
+    "original_sha256": "cc3765f8b5516d076ce33d1f4dc5ba08489726245567d9a4c04b01376d3f0e8b",
+    "saved_sha256": "6366c8ce4c0f4d30f3abc6b6c51882c6bfa633e9d92e619ffebc29d51363720b",
+    "sanitized": false,
+    "removed_members": [],
+    "saved_size": 79066,
+    "s3_key": "phantom/evidence/exec_telemetry_20261025T2209Z/agent-source.tar.gz",
+    "version_id": "AlncmK0wEP7uSo6dzFoNNY0FvOxfL5oM",
+    "s3_sha256": "cc3765f8b5516d076ce33d1f4dc5ba08489726245567d9a4c04b01376d3f0e8b",
+    "s3_size": 79578
+  },
+  {
+    "local_path": "s3-evidence-versions/phantom/evidence/exec_loader_fix_20261025T2305Z/agent-source.tar.gz.version-jQMt9ahgIoNeBIHsf_YkJM.zCgA2u.J4",
+    "original_sha256": "e92f6e2103b9754f1fa938aabb66701b02fa2da653f3f9a268641a8722921035",
+    "saved_sha256": "24834e905e0cc85d2295a3adc8ea6d7ce6e94773bd57210d7303f4d6a39a1a47",
+    "sanitized": false,
+    "removed_members": [],
+    "saved_size": 80306,
+    "s3_key": "phantom/evidence/exec_loader_fix_20261025T2305Z/agent-source.tar.gz",
+    "version_id": "jQMt9ahgIoNeBIHsf_YkJM.zCgA2u.J4",
+    "s3_sha256": "e92f6e2103b9754f1fa938aabb66701b02fa2da653f3f9a268641a8722921035",
+    "s3_size": 80820
+  },
+  {
+    "local_path": "s3-transfer/patches/phantom-attribution-fix.tar.gz",
+    "original_sha256": "a6e221629d26338074b0f1d873581e023badc6b0b8f1c245b4e30ab255e2756e",
+    "saved_sha256": "39f82053f5daa97d4cbd08aaa3655b8137fec5a7d00393d381f7dda23fc91058",
+    "sanitized": false,
+    "removed_members": [],
+    "saved_size": 13991
+  }
+]

@@ -1,0 +1,22 @@
+{
+    "CommandId": "8c178225-1d6c-426d-b64e-86a9a3d4cfe7",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 1,
+    "ExecutionStartDateTime": "2026-10-25T20:48:09.304Z",
+    "ExecutionElapsedTime": "PT1.683S",
+    "ExecutionEndDateTime": "2026-10-25T20:48:10.304Z",
+    "Status": "Failed",
+    "StatusDetails": "Failed",
+    "StandardOutputContent": "{\"http_status\": 200, \"sbom_id\": \"f6ffce2a-50c1-4284-91f4-5d515e43da9e\", \"image_digest\": \"sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7\", \"sbom_digest\": \"sha256:65fc90d4219c3d53bf2ed82f365376f5433920309406d62af0f799f515daf5bb\", \"retrieved_document_canonical_sha256\": \"sha256:65fc90d4219c3d53bf2ed82f365376f5433920309406d62af0f799f515daf5bb\", \"digest_match\": true, \"component_count\": 22823, \"verification_status\": \"pending\"}\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "ERROR:  syntax error at or near \":\"\nLINE 1: ... FROM phantom_sbom.sboms WHERE image_digest=sha256:149440c61...\n                                                             ^\ncommand terminated with exit code 1\nfailed to run commands: exit status 1",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

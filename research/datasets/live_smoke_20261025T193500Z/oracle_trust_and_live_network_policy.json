@@ -1,0 +1,22 @@
+{
+  "CommandId": "b77d3d95-1d30-4976-96a0-bac60977d7f7",
+  "InstanceId": "i-06bb29d253668fa5f",
+  "Comment": "",
+  "DocumentName": "AWS-RunShellScript",
+  "DocumentVersion": "$DEFAULT",
+  "PluginName": "aws:runShellScript",
+  "ResponseCode": 0,
+  "ExecutionStartDateTime": "2026-10-25T19:39:07.277Z",
+  "ExecutionElapsedTime": "PT0.533S",
+  "ExecutionEndDateTime": "2026-10-25T19:39:07.277Z",
+  "Status": "Success",
+  "StatusDetails": "Success",
+  "StandardOutputContent": "{\n    \"apiVersion\": \"v1\",\n    \"data\": {\n        \"trusted-keys.json\": \"{\\\"schema_version\\\":\\\"1.0\\\",\\\"trust_store_id\\\":\\\"phantom-lab-oracle\\\",\\\"generation\\\":1,\\\"keys\\\":[],\\\"revoked_key_ids\\\":[]}\"\n    },\n    \"kind\": \"ConfigMap\",\n    \"metadata\": {\n        \"annotations\": {\n            \"kubectl.kubernetes.io/last-applied-configuration\": \"{\\\"apiVersion\\\":\\\"v1\\\",\\\"data\\\":{\\\"trusted-keys.json\\\":\\\"{\\\\\\\"schema_version\\\\\\\":\\\\\\\"1.0\\\\\\\",\\\\\\\"trust_store_id\\\\\\\":\\\\\\\"phantom-lab-oracle\\\\\\\",\\\\\\\"generation\\\\\\\":1,\\\\\\\"keys\\\\\\\":[],\\\\\\\"revoked_key_ids\\\\\\\":[]}\\\"},\\\"kind\\\":\\\"ConfigMap\\\",\\\"metadata\\\":{\\\"annotations\\\":{},\\\"name\\\":\\\"phantom-oracle-trust\\\",\\\"namespace\\\":\\\"phantom-eval\\\"}}\\n\"\n        },\n        \"creationTimestamp\": \"2026-10-25T19:16:51Z\",\n        \"name\": \"phantom-oracle-trust\",\n        \"namespace\": \"phantom-eval\",\n        \"resourceVersion\": \"898\",\n        \"uid\": \"e5aa4c0f-a828-4896-9adc-3fd085597c4b\"\n    }\n}\nNAME                                POD-SELECTOR                     AGE\nisolate-phantom-eval-egress         <none>                           22m\nphantom-evidence-collector-egress   app=phantom-evidence-collector   22m\nphantom-sink-private-ingress        app=phantom-sink                 22m\nName:         isolate-phantom-eval-egress\nNamespace:    phantom-eval\nCreated on:   2026-10-25 19:16:51 +0000 UTC\nLabels:       <none>\nAnnotations:  <none>\nSpec:\n  PodSelector:     <none> (Allowing the specific traffic to all pods in this namespace)\n  Not affecting ingress traffic\n  Allowing egress traffic:\n    To Port: 53/UDP\n    To Port: 53/TCP\n    To:\n      NamespaceSelector: kubernetes.io/metadata.name=kube-system\n    ----------\n    To Port: 8443/TCP\n    To Port: 4445/TCP\n    To Port: 4446/TCP\n    To Port: 8080/TCP\n    To:\n      PodSelector: app=phantom-sink\n    ----------\n    To Port: 8080/TCP\n    To:\n      PodSelector: app=pypiserver-mirror\n    ----------\n    To Port: 80/TCP\n    To Port: 8080/TCP\n    To Port: 7070/TCP\n    To:\n      PodSelector: app in (cartservice,emailservice,recommendationservice)\n  Policy Types: Egress\nName:         phantom-sink-private-ingress\nNamespace:    phantom-eval\nCreated on:   2026-10-25 19:16:51 +0000 UTC\nLabels:       <none>\nAnnotations:  <none>\nSpec:\n  PodSelector:     app=phantom-sink\n  Allowing ingress traffic:\n    To Port: 8443/TCP\n    To Port: 4445/TCP\n    To Port: 4446/TCP\n    To Port: 8080/TCP\n    From:\n      NamespaceSelector: kubernetes.io/metadata.name=phantom-eval\n      PodSelector: app in (cartservice,emailservice,recommendationservice)\n    ----------\n    To Port: 9191/TCP\n    From:\n      NamespaceSelector: kubernetes.io/metadata.name=phantom-eval\n      PodSelector: app=phantom-evidence-collector\n    From:\n      NamespaceSelector: kubernetes.io/metadata.name=phantom\n      PodSelector: app=phantom-api-gateway\n  Not affecting egress traffic\n  Policy Types: Ingress\n",
+  "StandardOutputUrl": "",
+  "StandardErrorContent": "",
+  "StandardErrorUrl": "",
+  "CloudWatchOutputConfig": {
+    "CloudWatchLogGroupName": "",
+    "CloudWatchOutputEnabled": false
+  }
+}

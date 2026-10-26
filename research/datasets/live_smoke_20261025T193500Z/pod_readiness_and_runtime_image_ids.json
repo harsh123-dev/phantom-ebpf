@@ -1,0 +1,22 @@
+{
+  "CommandId": "2ac7bb9b-4d1d-41ed-8b24-172801464018",
+  "InstanceId": "i-06bb29d253668fa5f",
+  "Comment": "",
+  "DocumentName": "AWS-RunShellScript",
+  "DocumentVersion": "$DEFAULT",
+  "PluginName": "aws:runShellScript",
+  "ResponseCode": 0,
+  "ExecutionStartDateTime": "2026-10-25T19:35:37.567Z",
+  "ExecutionElapsedTime": "PT0.669S",
+  "ExecutionEndDateTime": "2026-10-25T19:35:37.567Z",
+  "Status": "Success",
+  "StatusDetails": "Success",
+  "StandardOutputContent": "NAME                                     READY   IMAGE_ID\nphantom-api-gateway-64d4d745df-rlqgs     true    sha256:f963a42fac74ae9eb9a5bb542dcb74d774b696742e9c96122220fe103f3718f6\nphantom-causal-engine-57576cd69c-b2mn9   true    sha256:30a9e66b6166457313daaf586d7129a24cb5262d09b9f286ef095a07e91e683e\nphantom-ebpf-agent-4r68v                 true    sha256:2693620eba1c7bd20d21cacf1cfa16e4c4890c7dce746357a14ecce06ad8b777\nphantom-postgres-57dd79788f-8bfdx        true    sha256:93c9497cfc4d1b1ff9f969868b48e2479bc99663c115857dd787cca4a8741753\nphantom-redis-64555c745-jx4kk            true    sha256:4df5c34dc41256fc4ed293482cb34281e17d133077e9aa3c6a87fda60a356c65\nphantom-sbom-service-6566454c47-54nz6    true    sha256:3245663b55e8e7fd4f603a20056c89c07586b463268d6592e4a707a18f62b8f4\nNAME                                     READY   IMAGE_ID\ncartservice-7958549c8f-685cr             true    sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7\nemailservice-fd75976b-plr66              true    sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7\nphantom-sink-5c8bbdfbf8-5ksmt            true    sha256:40af8f06feeab9ef73b2e964ee6af67566b4f24aa2d269d0298cb6343d3fa975\nrecommendationservice-5dc98bbcb9-xq42k   true    sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7\nNAME                          READY   IMAGE_ID\nprometheus-74d478976b-mzljg   true    sha256:e1fbd49323c628ccc8c11aea113eddc294c4bd1887dc627d175331c325df10fd\nNAME                    STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE\nphantom-evidence-data   Bound    pvc-8ed61432-d7f3-4cef-9926-d9da7fde63d3   2Gi        RWO            local-path     <unset>                 18m   Filesystem\n",
+  "StandardOutputUrl": "",
+  "StandardErrorContent": "",
+  "StandardErrorUrl": "",
+  "CloudWatchOutputConfig": {
+    "CloudWatchLogGroupName": "",
+    "CloudWatchOutputEnabled": false
+  }
+}

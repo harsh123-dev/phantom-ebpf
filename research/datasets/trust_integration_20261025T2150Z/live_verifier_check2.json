@@ -1,0 +1,6 @@
+{
+    "Status": "Success",
+    "ResponseCode": 0,
+    "Output": "{\"retrieval_status\": 200, \"sbom_id\": null, \"verification_status\": null, \"sbom_digest\": null}\n{\"unconfigured_trust_request_status\": 503, \"response\": \"{\\\"detail\\\":\\\"server signer identity and issuer trust policy is not configured\\\"}\"}\n",
+    "Error": ""
+}

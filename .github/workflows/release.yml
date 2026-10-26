@@ -2,53 +2,154 @@ name: Release
 
 on:
   push:
+    # GitHub filters are globs, not regular expressions. The job validates
+    # the complete semantic version before building or publishing anything.
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v*"
 
 jobs:
   build-sign-publish:
-    name: Build, sign, and publish images and versioned contract artifacts
+    name: Build, sign, and attest immutable release images
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       packages: write
-      id-token: write  # Required for cosign keyless signing
+      id-token: write
+    env:
+      REGISTRY: ghcr.io
+      OIDC_ISSUER: https://token.actions.githubusercontent.com
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate release reference and derive signer identity
+        id: trust
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "Release tag must match vMAJOR.MINOR.PATCH" >&2
+            exit 1
+          }
+          identity="https://github.com/${GITHUB_REPOSITORY}/.github/workflows/release.yml@${GITHUB_REF}"
+          echo "identity=$identity" >> "$GITHUB_OUTPUT"
+          echo "Expected Sigstore certificate identity: $identity"
+          echo "Expected OIDC issuer: $OIDC_ISSUER"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to container registry
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Build and push service images
+      - name: Install pinned Cosign
+        shell: bash
         run: |
-          for service in sbom-service causal-engine api-gateway report-generator; do
-            IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/phantom-${service}:${{ github.ref_name }}"
+          set -euo pipefail
+          curl -fsSL --retry 3 \
+            https://github.com/sigstore/cosign/releases/download/v3.1.4/cosign-linux-amd64 \
+            -o /usr/local/bin/cosign
+          echo '424e2c97d0b45fd7a6b608a87f090f35633f4c23ece5f092d48bba11aaf4bbfa  /usr/local/bin/cosign' | sha256sum -c -
+          chmod 0755 /usr/local/bin/cosign
+          cosign version
+
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Build, sign, SBOM-attest, and verify PHANTOM images
+        shell: bash
+        env:
+          EXPECTED_IDENTITY: ${{ steps.trust.outputs.identity }}
+        run: |
+          set -euo pipefail
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          mkdir -p release-evidence/sboms release-evidence/verification
+
+          publish_and_attest() {
+            local service="$1" dockerfile="$2" context="$3" platform="$4"
+            local image="${REGISTRY}/${owner}/phantom-${service}"
+            local tag_ref="${image}:${GITHUB_REF_NAME}"
+            local metadata="release-evidence/${service}-build-metadata.json"
+
             docker buildx build \
-              --platform linux/amd64,linux/arm64 \
+              --platform "$platform" \
               --push \
-              -t "$IMAGE" \
-              services/$service/
-          done
+              --metadata-file "$metadata" \
+              --file "$dockerfile" \
+              --tag "$tag_ref" \
+              "$context"
 
-      - name: Sign images with cosign (keyless)
-        run: |
+            local digest
+            digest="$(jq -er '.["containerimage.digest"]' "$metadata")"
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+            local image_ref="${image}@${digest}"
+            echo "${service} immutable image: ${image_ref}"
+
+            # Preserve the existing image signature, now bound to the digest.
+            cosign sign --yes "$image_ref"
+
+            local sbom="release-evidence/sboms/${service}.cyclonedx.json"
+            syft "$image_ref" --platform linux/amd64 -o cyclonedx-json > "$sbom"
+            local raw_sbom_sha canonical_sbom_sha syft_version
+            raw_sbom_sha="sha256:$(sha256sum "$sbom" | cut -d' ' -f1)"
+            canonical_sbom_sha="sha256:$(python3 - "$sbom" <<'PY'
+          import hashlib, json, pathlib, sys
+          document = json.loads(pathlib.Path(sys.argv[1]).read_text())
+          canonical = json.dumps(document, sort_keys=True, separators=(",", ":")).encode()
+          print(hashlib.sha256(canonical).hexdigest())
+          PY
+          )"
+            syft_version="$(syft version | head -n 1)"
+
+            cosign attest --yes --type cyclonedx --predicate "$sbom" "$image_ref"
+            cosign verify-attestation \
+              --type cyclonedx \
+              --certificate-identity "$EXPECTED_IDENTITY" \
+              --certificate-oidc-issuer "$OIDC_ISSUER" \
+              "$image_ref" > "release-evidence/verification/${service}.verified.jsonl"
+            python3 .github/scripts/verify_cyclonedx_attestation.py \
+              --attestation-file "release-evidence/verification/${service}.verified.jsonl" \
+              --sbom-file "$sbom" \
+              --image-digest "$digest"
+
+            jq -n \
+              --arg service "$service" \
+              --arg image_ref "$image_ref" \
+              --arg image_digest "$digest" \
+              --arg raw_sbom_sha256 "$raw_sbom_sha" \
+              --arg canonical_sbom_sha256 "$canonical_sbom_sha" \
+              --arg syft_version "$syft_version" \
+              --arg signer_identity "$EXPECTED_IDENTITY" \
+              --arg oidc_issuer "$OIDC_ISSUER" \
+              '{service:$service,image_ref:$image_ref,image_digest:$image_digest,
+                raw_sbom_sha256:$raw_sbom_sha256,canonical_sbom_sha256:$canonical_sbom_sha256,
+                syft_version:$syft_version,signer_identity:$signer_identity,oidc_issuer:$oidc_issuer}' \
+              > "release-evidence/${service}-attestation-metadata.json"
+          }
+
+          # All four service Dockerfiles require repository-root build context.
           for service in sbom-service causal-engine api-gateway report-generator; do
-            IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/phantom-${service}:${{ github.ref_name }}"
-            cosign sign --yes "$IMAGE"
+            publish_and_attest "$service" "services/$service/Dockerfile" . linux/amd64,linux/arm64
           done
+          # The CO-RE agent build currently supplies x86_64 vmlinux.h and is
+          # therefore published for the lab's amd64 architecture only.
+          publish_and_attest ebpf-agent services/ebpf-agent/Dockerfile services/ebpf-agent linux/amd64
+
+          sha256sum release-evidence/sboms/*.json > release-evidence/SHA256SUMS
+
+      - name: Upload release SBOM and verification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: phantom-release-evidence-${{ github.ref_name }}
+          path: release-evidence/
+          if-no-files-found: error
 
       - name: Publish versioned contract artifacts
         uses: actions/upload-artifact@v4
         with:
           name: contracts-${{ github.ref_name }}
           path: services/contracts/
+          if-no-files-found: error

@@ -1,0 +1,22 @@
+{
+    "CommandId": "f919cb0d-3d31-45f6-baa0-5f9acfd7275c",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T20:45:41.930Z",
+    "ExecutionElapsedTime": "PT4.977S",
+    "ExecutionEndDateTime": "2026-10-25T20:45:45.930Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "{\"retry_http_status\": 201, \"sbom_id\": \"f6ffce2a-50c1-4284-91f4-5d515e43da9e\", \"image_digest\": \"sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7\", \"sbom_digest\": \"sha256:65fc90d4219c3d53bf2ed82f365376f5433920309406d62af0f799f515daf5bb\", \"component_count\": 22823, \"verification_status\": \"pending\"}\n1|22823\ndeployment \"phantom-sbom-service\" successfully rolled out\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

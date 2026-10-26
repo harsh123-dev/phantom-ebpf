@@ -1,0 +1,23 @@
+[
+    {
+        "AllocationId": "eipalloc-02168c185217b1cf9",
+        "PublicIp": "13.206.14.201",
+        "AssociationId": "eipassoc-0f25db2259e930fbf",
+        "InstanceId": null,
+        "NetworkInterfaceId": "eni-0278c42abb2997910",
+        "Tags": [
+            {
+                "Key": "Environment",
+                "Value": "disposable-lab"
+            },
+            {
+                "Key": "Project",
+                "Value": "PHANTOM"
+            },
+            {
+                "Key": "Name",
+                "Value": "phantom-k3s-lab-nat-eip"
+            }
+        ]
+    }
+]

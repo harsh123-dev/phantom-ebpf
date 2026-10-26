@@ -1,0 +1,104 @@
+{
+  "recorded_at_utc": "2026-10-25T20:47:00Z",
+  "scope": "live SBOM ingestion/configuration and harmless pipeline smoke; no pilot scenarios",
+  "aws": {
+    "account": "253490771520",
+    "region": "ap-south-1",
+    "instance_id": "i-06bb29d253668fa5f",
+    "private_ip": "10.89.2.125",
+    "k3s_node": "ip-10-89-2-125",
+    "kubernetes_version": "v1.36.5+k3s1"
+  },
+  "deployment": {
+    "sbom_image": "phantom/sbom-service:sbomfix-idempotent-20261025T2045Z",
+    "image_id": "sha256:7f743d23ce37714e47e86bfe7ae6b12ef8c89c48c8c9b655a7d69175e49f3c53",
+    "ready_replicas": 1
+  },
+  "source_artifact": {
+    "generator": "Syft 1.55.0",
+    "bucket": "phantom-k3s-lab-253490771520-ap-south-1-evidence",
+    "key": "phantom/evidence/live_attribution_20261025T194226Z/evaluation-image.cdx.json",
+    "version_id": "SV8YOafJ8buQsqEpJiK7bgE6c0jezWIu",
+    "raw_sha256": "sha256:c5b3a412b3534cfb0647b639cbc3e2993bbd2b09797aff9b34ce5a3904e04c80",
+    "cyclonedx_canonical_sha256": "sha256:65fc90d4219c3d53bf2ed82f365376f5433920309406d62af0f799f515daf5bb",
+    "image_config_digest": "sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7",
+    "image_manifest_digest": "sha256:ec4370b0af44b4ba2ffe0247f1b1339c4f4debdba319d025d5753140ccec4184"
+  },
+  "ingestion": {
+    "http_status": 201,
+    "sbom_id": "f6ffce2a-50c1-4284-91f4-5d515e43da9e",
+    "indexed_component_count": 22823,
+    "db_sbom_count": 1,
+    "db_component_count": 22823,
+    "retrieval_http_status": 200,
+    "retrieved_document_digest_matches": true,
+    "verification_status": "pending",
+    "identical_retry_http_status": 201,
+    "identical_retry_reused_same_id": true,
+    "failed_hash_http_status": 503,
+    "failed_hash_left_db_unchanged": true,
+    "final_post_restart_retrieval": {
+      "http_status": 200,
+      "canonical_digest_matches": true,
+      "sbom_id": "f6ffce2a-50c1-4284-91f4-5d515e43da9e",
+      "component_count": 22823,
+      "verification_status": "pending"
+    }
+  },
+  "network_policy": {
+    "allowed": "cluster DNS, in-namespace Postgres TCP/5432, HTTPS to AWS-managed regional S3 address ranges",
+    "s3_artifact_download_succeeded": true,
+    "imds_probe": "blocked/unreachable from SBOM pod",
+    "reserved_test_net_192_0_2_1_443": "blocked/unreachable from SBOM pod",
+    "scope_note": "tested probes only; not proof of every public-egress path"
+  },
+  "runtime_smoke": {
+    "http_gets_to_evaluation_recommendationservice": 3,
+    "http_status": "200 OK",
+    "api_event_id": "b7869afd-36ce-423a-81e9-3f17e5331a07",
+    "event_kind": "kubectl-exec lifecycle; comm/executable_path runc:[2:INIT]",
+    "outbox_id": "ad4d771e-5145-41bc-9c38-c44fa0364d73",
+    "outbox_status": "published",
+    "redis_stream": "phantom:drift-events",
+    "redis_message_id": "1792960618952-0",
+    "consumer_group_entries_read": 49,
+    "consumer_group_pending": 0,
+    "consumer_group_lag": 0,
+    "event_run_id": null,
+    "event_scenario_id": null,
+    "event_executable_hash": null,
+    "binding_status": "insufficient_evidence",
+    "binding_reason": "matching SBOM exists but has not passed verification",
+    "sbom_id_in_binding": null,
+    "purl_in_binding": null
+  },
+  "oracle": {
+    "trusted_key_count": 0,
+    "revoked_key_count": 0,
+    "independent_live_observer_configured": false,
+    "signed_observation_produced": false
+  },
+  "pilot": {
+    "planned": 18,
+    "attempted": 0,
+    "valid": 0,
+    "status": "blocked"
+  },
+  "local_tests": {
+    "command": "PYTHONPATH=/tmp/phantom-sbom-testdeps:/root/phantom-ebpf/libs/phantom-core /root/.local/bin/python3.11 -m pytest -q",
+    "suite": "services/sbom-service",
+    "passed": 198,
+    "failed": 0,
+    "skipped": 0,
+    "warnings": 1,
+    "warning": "pre-existing Starlette multipart pending deprecation"
+  },
+  "ssm_command_ids": {
+    "first_successful_ingest": "50454944-4ad6-4a88-a0d6-71e74469324f",
+    "invalid_digest_and_pre-idempotent_duplicate": "703682af-c3e8-41a4-813e-31eafe02588c",
+    "idempotent_retry_after_deployment": "f919cb0d-3d31-45f6-baa0-5f9acfd7275c",
+    "final_cluster_state": "30398dee-e4d2-44a0-8cfa-044c97bfd65d",
+    "runtime_binding": "bf54b6df-c330-4ef3-bc48-3a4774c849bf",
+    "final_post_restart_retrieval": "8c178225-1d6c-426d-b64e-86a9a3d4cfe7"
+  }
+}

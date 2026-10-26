@@ -1,0 +1,13 @@
+{
+  "bucket": "phantom-transfer-253490771520",
+  "region": "ap-south-1",
+  "predelete_keys": [
+    "patches/phantom-attribution-fix.tar.gz"
+  ],
+  "predelete_version_ids": [
+    "null"
+  ],
+  "saved_local_copy": "s3-transfer/patches/phantom-attribution-fix.tar.gz",
+  "object_deleted": true,
+  "bucket_deleted": true
+}

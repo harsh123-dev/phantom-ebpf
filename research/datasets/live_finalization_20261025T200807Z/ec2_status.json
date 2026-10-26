@@ -1,0 +1,20 @@
+{
+    "InstanceId": "i-06bb29d253668fa5f",
+    "State": "running",
+    "Type": "t3.xlarge",
+    "PrivateIp": "10.89.2.125",
+    "PublicIp": null,
+    "Subnet": "subnet-0278abcd9a6702a4a",
+    "SecurityGroups": [
+        "sg-0dd69eccac1594f6f"
+    ],
+    "Profile": "arn:aws:iam::253490771520:instance-profile/phantom-k3s-lab-instance-profile",
+    "MetadataOptions": {
+        "State": "applied",
+        "HttpTokens": "required",
+        "HttpPutResponseHopLimit": 1,
+        "HttpEndpoint": "enabled",
+        "HttpProtocolIpv6": "disabled",
+        "InstanceMetadataTags": "disabled"
+    }
+}

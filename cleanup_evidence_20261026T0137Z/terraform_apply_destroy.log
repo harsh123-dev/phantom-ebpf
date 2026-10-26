@@ -1,0 +1,106 @@
+[0m[1maws_s3_bucket_policy.evidence_backups[0]: Destroying... [id=phantom-k3s-lab-253490771520-ap-south-1-evidence][0m[0m
+[0m[1maws_s3_bucket_ownership_controls.evidence_backups[0]: Destroying... [id=phantom-k3s-lab-253490771520-ap-south-1-evidence][0m[0m
+[0m[1maws_s3_bucket_versioning.evidence_backups[0]: Destroying... [id=phantom-k3s-lab-253490771520-ap-south-1-evidence][0m[0m
+[0m[1maws_vpc_endpoint.s3[0]: Destroying... [id=vpce-048c299d62a1d84fd][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssm"]: Destroying... [id=vpce-05ca745ed41b2bb43][0m[0m
+[0m[1maws_route_table_association.private: Destroying... [id=rtbassoc-0cbec5eb9b5f35003][0m[0m
+[0m[1maws_iam_role_policy_attachment.ssm[0]: Destroying... [id=phantom-k3s-lab-ssm-role-20261025190103519600000001][0m[0m
+[0m[1maws_s3_bucket_server_side_encryption_configuration.evidence_backups[0]: Destroying... [id=phantom-k3s-lab-253490771520-ap-south-1-evidence][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssmmessages"]: Destroying... [id=vpce-06b26a4c99933f440][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ec2messages"]: Destroying... [id=vpce-082f0c70b7a618732][0m[0m
+[0m[1maws_route_table_association.private: Destruction complete after 0s[0m
+[0m[1maws_s3_bucket_lifecycle_configuration.evidence_backups[0]: Destroying... [id=phantom-k3s-lab-253490771520-ap-south-1-evidence][0m[0m
+[0m[1maws_s3_bucket_versioning.evidence_backups[0]: Destruction complete after 1s[0m
+[0m[1maws_iam_role_policy.evidence_backups[0]: Destroying... [id=phantom-k3s-lab-ssm-role:phantom-k3s-lab-evidence-backups][0m[0m
+[0m[1maws_s3_bucket_policy.evidence_backups[0]: Destruction complete after 1s[0m
+[0m[1maws_instance.k3s_lab: Destroying... [id=i-06bb29d253668fa5f][0m[0m
+[0m[1maws_s3_bucket_server_side_encryption_configuration.evidence_backups[0]: Destruction complete after 1s[0m
+[0m[1maws_s3_bucket_public_access_block.evidence_backups[0]: Destroying... [id=phantom-k3s-lab-253490771520-ap-south-1-evidence][0m[0m
+[0m[1maws_iam_role_policy_attachment.ssm[0]: Destruction complete after 1s[0m
+[0m[1maws_s3_bucket_ownership_controls.evidence_backups[0]: Destruction complete after 1s[0m
+[0m[1maws_iam_role_policy.evidence_backups[0]: Destruction complete after 0s[0m
+[0m[1maws_s3_bucket_lifecycle_configuration.evidence_backups[0]: Destruction complete after 1s[0m
+[0m[1maws_s3_bucket_public_access_block.evidence_backups[0]: Destruction complete after 0s[0m
+[0m[1maws_s3_bucket.evidence_backups[0]: Destroying... [id=phantom-k3s-lab-253490771520-ap-south-1-evidence][0m[0m
+[0m[1maws_s3_bucket.evidence_backups[0]: Destruction complete after 1s[0m
+[0m[1maws_vpc_endpoint.s3[0]: Destruction complete after 5s[0m
+[0m[1maws_route_table.private: Destroying... [id=rtb-01bc55d51575705a3][0m[0m
+[0m[1maws_route_table.private: Destruction complete after 1s[0m
+[0m[1maws_nat_gateway.lab: Destroying... [id=nat-001088ed60b94cb8a][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssm"]: Still destroying... [id=vpce-05ca745ed41b2bb43, 00m10s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssmmessages"]: Still destroying... [id=vpce-06b26a4c99933f440, 00m10s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ec2messages"]: Still destroying... [id=vpce-082f0c70b7a618732, 00m10s elapsed][0m[0m
+[0m[1maws_instance.k3s_lab: Still destroying... [id=i-06bb29d253668fa5f, 00m10s elapsed][0m[0m
+[0m[1maws_nat_gateway.lab: Still destroying... [id=nat-001088ed60b94cb8a, 00m10s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssmmessages"]: Still destroying... [id=vpce-06b26a4c99933f440, 00m20s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssm"]: Still destroying... [id=vpce-05ca745ed41b2bb43, 00m20s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ec2messages"]: Still destroying... [id=vpce-082f0c70b7a618732, 00m20s elapsed][0m[0m
+[0m[1maws_instance.k3s_lab: Still destroying... [id=i-06bb29d253668fa5f, 00m20s elapsed][0m[0m
+[0m[1maws_nat_gateway.lab: Still destroying... [id=nat-001088ed60b94cb8a, 00m20s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssmmessages"]: Still destroying... [id=vpce-06b26a4c99933f440, 00m30s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssm"]: Still destroying... [id=vpce-05ca745ed41b2bb43, 00m30s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ec2messages"]: Still destroying... [id=vpce-082f0c70b7a618732, 00m30s elapsed][0m[0m
+[0m[1maws_instance.k3s_lab: Still destroying... [id=i-06bb29d253668fa5f, 00m30s elapsed][0m[0m
+[0m[1maws_nat_gateway.lab: Still destroying... [id=nat-001088ed60b94cb8a, 00m30s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssm"]: Still destroying... [id=vpce-05ca745ed41b2bb43, 00m40s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssmmessages"]: Still destroying... [id=vpce-06b26a4c99933f440, 00m40s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ec2messages"]: Still destroying... [id=vpce-082f0c70b7a618732, 00m40s elapsed][0m[0m
+[0m[1maws_instance.k3s_lab: Still destroying... [id=i-06bb29d253668fa5f, 00m40s elapsed][0m[0m
+[0m[1maws_nat_gateway.lab: Still destroying... [id=nat-001088ed60b94cb8a, 00m40s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssmmessages"]: Still destroying... [id=vpce-06b26a4c99933f440, 00m50s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssm"]: Still destroying... [id=vpce-05ca745ed41b2bb43, 00m50s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ec2messages"]: Still destroying... [id=vpce-082f0c70b7a618732, 00m50s elapsed][0m[0m
+[0m[1maws_instance.k3s_lab: Still destroying... [id=i-06bb29d253668fa5f, 00m50s elapsed][0m[0m
+[0m[1maws_nat_gateway.lab: Still destroying... [id=nat-001088ed60b94cb8a, 00m50s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssm"]: Still destroying... [id=vpce-05ca745ed41b2bb43, 01m00s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssmmessages"]: Still destroying... [id=vpce-06b26a4c99933f440, 01m00s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ec2messages"]: Still destroying... [id=vpce-082f0c70b7a618732, 01m00s elapsed][0m[0m
+[0m[1maws_instance.k3s_lab: Still destroying... [id=i-06bb29d253668fa5f, 01m00s elapsed][0m[0m
+[0m[1maws_instance.k3s_lab: Destruction complete after 1m0s[0m
+[0m[1maws_iam_instance_profile.ssm[0]: Destroying... [id=phantom-k3s-lab-instance-profile][0m[0m
+[0m[1maws_iam_instance_profile.ssm[0]: Destruction complete after 0s[0m
+[0m[1maws_iam_role.ssm[0]: Destroying... [id=phantom-k3s-lab-ssm-role][0m[0m
+[0m[1maws_iam_role.ssm[0]: Destruction complete after 1s[0m
+[0m[1maws_nat_gateway.lab: Still destroying... [id=nat-001088ed60b94cb8a, 01m00s elapsed][0m[0m
+[0m[1maws_nat_gateway.lab: Destruction complete after 1m0s[0m
+[0m[1maws_route_table_association.public_nat: Destroying... [id=rtbassoc-0a42d9a3207a711ef][0m[0m
+[0m[1maws_eip.nat: Destroying... [id=eipalloc-02168c185217b1cf9][0m[0m
+[0m[1maws_route_table_association.public_nat: Destruction complete after 0s[0m
+[0m[1maws_route_table.public_nat: Destroying... [id=rtb-06480a8da19eebfc0][0m[0m
+[0m[1maws_subnet.public_nat: Destroying... [id=subnet-0bea99244de645fbe][0m[0m
+[0m[1maws_route_table.public_nat: Destruction complete after 1s[0m
+[0m[1maws_internet_gateway.lab: Destroying... [id=igw-068504cb937ba4c19][0m[0m
+[0m[1maws_subnet.public_nat: Destruction complete after 1s[0m
+[0m[1maws_eip.nat: Destruction complete after 1s[0m
+[0m[1maws_internet_gateway.lab: Destruction complete after 0s[0m
+[0m[1maws_vpc_endpoint.ssm["ssmmessages"]: Still destroying... [id=vpce-06b26a4c99933f440, 01m10s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssm"]: Still destroying... [id=vpce-05ca745ed41b2bb43, 01m10s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ec2messages"]: Still destroying... [id=vpce-082f0c70b7a618732, 01m10s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssmmessages"]: Still destroying... [id=vpce-06b26a4c99933f440, 01m20s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssm"]: Still destroying... [id=vpce-05ca745ed41b2bb43, 01m20s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ec2messages"]: Still destroying... [id=vpce-082f0c70b7a618732, 01m20s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssm"]: Still destroying... [id=vpce-05ca745ed41b2bb43, 01m30s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssmmessages"]: Still destroying... [id=vpce-06b26a4c99933f440, 01m30s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ec2messages"]: Still destroying... [id=vpce-082f0c70b7a618732, 01m30s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssm"]: Still destroying... [id=vpce-05ca745ed41b2bb43, 01m40s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssmmessages"]: Still destroying... [id=vpce-06b26a4c99933f440, 01m40s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ec2messages"]: Still destroying... [id=vpce-082f0c70b7a618732, 01m40s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssmmessages"]: Still destroying... [id=vpce-06b26a4c99933f440, 01m50s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssm"]: Still destroying... [id=vpce-05ca745ed41b2bb43, 01m50s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ec2messages"]: Still destroying... [id=vpce-082f0c70b7a618732, 01m50s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssm"]: Destruction complete after 1m51s[0m
+[0m[1maws_vpc_endpoint.ssm["ssmmessages"]: Still destroying... [id=vpce-06b26a4c99933f440, 02m00s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ec2messages"]: Still destroying... [id=vpce-082f0c70b7a618732, 02m00s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ec2messages"]: Destruction complete after 2m1s[0m
+[0m[1maws_vpc_endpoint.ssm["ssmmessages"]: Still destroying... [id=vpce-06b26a4c99933f440, 02m10s elapsed][0m[0m
+[0m[1maws_vpc_endpoint.ssm["ssmmessages"]: Destruction complete after 2m11s[0m
+[0m[1maws_subnet.lab_private: Destroying... [id=subnet-0278abcd9a6702a4a][0m[0m
+[0m[1maws_security_group.ssm_endpoints: Destroying... [id=sg-025807cd0beca7d5c][0m[0m
+[0m[1maws_subnet.lab_private: Destruction complete after 0s[0m
+[0m[1maws_security_group.ssm_endpoints: Destruction complete after 0s[0m
+[0m[1maws_security_group.lab: Destroying... [id=sg-0dd69eccac1594f6f][0m[0m
+[0m[1maws_security_group.lab: Destruction complete after 1s[0m
+[0m[1maws_vpc.lab: Destroying... [id=vpc-08127443fa071e39a][0m[0m
+[0m[1maws_vpc.lab: Destruction complete after 0s[0m
+[0m[1m[32m
+Apply complete! Resources: 0 added, 0 changed, 28 destroyed.[0m

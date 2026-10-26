@@ -1,0 +1,22 @@
+{
+  "CommandId": "2c77280b-6261-4f71-b30a-bcacd10bccc8",
+  "InstanceId": "i-06bb29d253668fa5f",
+  "Comment": "",
+  "DocumentName": "AWS-RunShellScript",
+  "DocumentVersion": "$DEFAULT",
+  "PluginName": "aws:runShellScript",
+  "ResponseCode": 0,
+  "ExecutionStartDateTime": "2026-10-25T19:52:04.061Z",
+  "ExecutionElapsedTime": "PT5.527S",
+  "ExecutionEndDateTime": "2026-10-25T19:52:09.061Z",
+  "Status": "Success",
+  "StatusDetails": "Success",
+  "StandardOutputContent": "SBOM_UPLOAD {\"bucket\": \"phantom-k3s-lab-253490771520-ap-south-1-evidence\", \"caller_arn\": \"arn:aws:sts::253490771520:assumed-role/phantom-k3s-lab-ssm-role/i-06bb29d253668fa5f\", \"key\": \"phantom/evidence/live_attribution_20261025T194226Z/evaluation-image.cdx.json\", \"server_side_encryption\": \"AES256\", \"sha256\": \"sha256:c5b3a412b3534cfb0647b639cbc3e2993bbd2b09797aff9b34ce5a3904e04c80\", \"size_bytes\": 7887054, \"version_id\": \"SV8YOafJ8buQsqEpJiK7bgE6c0jezWIu\"}\nPYTHON_FILE_EVIDENCE [{\"hashes\": [{\"alg\": \"SHA-1\", \"content\": \"a81a7eb2b1b7a7994075efb90da609d6bf85cf7a\"}, {\"alg\": \"SHA-256\", \"content\": \"46d05ca7094b029959f0218e990a7f2737dbc87d5b2e783ecfc44e978937922a\"}], \"name\": \"/usr/local/bin/python3.11\", \"purl\": null, \"type\": \"file\"}]\n",
+  "StandardOutputUrl": "",
+  "StandardErrorContent": "WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv\n",
+  "StandardErrorUrl": "",
+  "CloudWatchOutputConfig": {
+    "CloudWatchLogGroupName": "",
+    "CloudWatchOutputEnabled": false
+  }
+}

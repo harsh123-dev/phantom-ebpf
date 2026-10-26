@@ -1,0 +1,125 @@
+name: Evaluation Image SBOM Attestation
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_image_digest:
+        description: Exact sha256 manifest digest recorded from the approved evaluation workload
+        required: true
+        type: string
+
+jobs:
+  mirror-sbom-attest:
+    name: Mirror the exact evaluation image and attest its CycloneDX SBOM
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    env:
+      SOURCE_IMAGE: docker.io/tiangolo/uwsgi-nginx-flask
+      OIDC_ISSUER: https://token.actions.githubusercontent.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate trust context and exact source digest
+        id: trust
+        shell: bash
+        env:
+          SOURCE_DIGEST: ${{ inputs.source_image_digest }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REF" == "refs/heads/main" ]]
+          [[ "$SOURCE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || {
+            echo "source_image_digest must be sha256:<64 lowercase hex>" >&2
+            exit 1
+          }
+          identity="https://github.com/${GITHUB_REPOSITORY}/.github/workflows/evaluation-sbom-attestation.yml@refs/heads/main"
+          echo "identity=$identity" >> "$GITHUB_OUTPUT"
+          echo "Expected signer identity: $identity"
+          echo "Expected issuer: $OIDC_ISSUER"
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install image copy tooling
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends skopeo
+
+      - name: Mirror the pinned third-party image without changing its manifest
+        id: mirror
+        shell: bash
+        env:
+          SOURCE_DIGEST: ${{ inputs.source_image_digest }}
+        run: |
+          set -euo pipefail
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          source_ref="${SOURCE_IMAGE}@${SOURCE_DIGEST}"
+          mirror_tag="ghcr.io/${owner}/phantom-evaluation-target:mirror-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          skopeo copy --all --preserve-digests \
+            "docker://${source_ref}" "docker://${mirror_tag}"
+          mirror_digest="$(skopeo inspect --no-tags --format '{{.Digest}}' "docker://${mirror_tag}")"
+          [[ "$mirror_digest" == "$SOURCE_DIGEST" ]] || {
+            echo "Registry mirror changed the manifest digest; refusing to attest a different image" >&2
+            exit 1
+          }
+          mirror_ref="ghcr.io/${owner}/phantom-evaluation-target@${mirror_digest}"
+          echo "digest=$mirror_digest" >> "$GITHUB_OUTPUT"
+          echo "reference=$mirror_ref" >> "$GITHUB_OUTPUT"
+          echo "Source is a third-party image; PHANTOM mirrors it unchanged and does not claim to build it."
+          echo "Exact mirrored image: $mirror_ref"
+
+      - name: Install pinned Cosign
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 \
+            https://github.com/sigstore/cosign/releases/download/v3.1.4/cosign-linux-amd64 \
+            -o /usr/local/bin/cosign
+          echo '424e2c97d0b45fd7a6b608a87f090f35633f4c23ece5f092d48bba11aaf4bbfa  /usr/local/bin/cosign' | sha256sum -c -
+          chmod 0755 /usr/local/bin/cosign
+          cosign version
+
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Generate SBOM from immutable mirrored image, attest, and verify
+        shell: bash
+        env:
+          IMAGE_REF: ${{ steps.mirror.outputs.reference }}
+          IMAGE_DIGEST: ${{ steps.mirror.outputs.digest }}
+          EXPECTED_IDENTITY: ${{ steps.trust.outputs.identity }}
+          SOURCE_DIGEST: ${{ inputs.source_image_digest }}
+        run: |
+          set -euo pipefail
+          mkdir -p evaluation-evidence
+          syft version | tee evaluation-evidence/syft-version.txt
+          syft "$IMAGE_REF" --platform linux/amd64 -o cyclonedx-json > evaluation-evidence/evaluation.cyclonedx.json
+          sha256sum evaluation-evidence/evaluation.cyclonedx.json | tee evaluation-evidence/sbom-raw-sha256.txt
+          cosign attest --yes --type cyclonedx \
+            --predicate evaluation-evidence/evaluation.cyclonedx.json "$IMAGE_REF"
+          cosign verify-attestation \
+            --type cyclonedx \
+            --certificate-identity "$EXPECTED_IDENTITY" \
+            --certificate-oidc-issuer "$OIDC_ISSUER" \
+            "$IMAGE_REF" > evaluation-evidence/evaluation.verified.jsonl
+          python3 .github/scripts/verify_cyclonedx_attestation.py \
+            --attestation-file evaluation-evidence/evaluation.verified.jsonl \
+            --sbom-file evaluation-evidence/evaluation.cyclonedx.json \
+            --image-digest "$IMAGE_DIGEST"
+          printf 'source_image=%s@%s\nattested_image=%s\n' \
+            "$SOURCE_IMAGE" "$SOURCE_DIGEST" "$IMAGE_REF" \
+            > evaluation-evidence/image-identity.txt
+          sha256sum evaluation-evidence/* > evaluation-evidence/SHA256SUMS
+
+      - name: Upload evaluation SBOM and verification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: phantom-evaluation-sbom-${{ github.run_id }}
+          path: evaluation-evidence/
+          if-no-files-found: error

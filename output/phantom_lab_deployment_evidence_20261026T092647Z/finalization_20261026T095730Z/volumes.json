@@ -1,0 +1,23 @@
+[
+    {
+        "VolumeId": "vol-00b487033c973d1d8",
+        "Size": 50,
+        "Type": "gp3",
+        "Encrypted": true,
+        "State": "in-use",
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "phantom-k3s-lab-root-vol"
+            },
+            {
+                "Key": "Environment",
+                "Value": "disposable-lab"
+            },
+            {
+                "Key": "Project",
+                "Value": "PHANTOM"
+            }
+        ]
+    }
+]

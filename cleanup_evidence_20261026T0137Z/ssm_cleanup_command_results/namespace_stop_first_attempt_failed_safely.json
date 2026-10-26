@@ -1,0 +1,12 @@
+{
+  "CommandId": "b1ea3ec7-8f57-4fb6-b67d-e0f178def69d",
+  "InstanceId": "i-06bb29d253668fa5f",
+  "DocumentName": "AWS-RunShellScript",
+  "Status": "Failed",
+  "StatusDetails": "Failed",
+  "ResponseCode": 2,
+  "ExecutionStartDateTime": "2026-10-26T01:41:47.007Z",
+  "ExecutionEndDateTime": "2026-10-26T01:41:47.007Z",
+  "StandardOutputContent": "",
+  "StandardErrorContent": "/var/lib/amazon/ssm/i-06bb29d253668fa5f/document/orchestration/b1ea3ec7-8f57-4fb6-b67d-e0f178def69d/awsrunShellScript/0.awsrunShellScript/_script.sh: 2: 3: parameter not set\nfailed to run commands: exit status 2"
+}

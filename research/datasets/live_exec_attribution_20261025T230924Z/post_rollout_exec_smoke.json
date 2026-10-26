@@ -1,0 +1,22 @@
+{
+    "CommandId": "2a623ca5-0948-4543-9c3f-c2eb3b05fbd8",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "phantom-cgroup-fallback-live-smoke",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T23:07:29.324Z",
+    "ExecutionElapsedTime": "PT4.601S",
+    "ExecutionEndDateTime": "2026-10-25T23:07:33.324Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "image=phantom/ebpf-agent:cgroupattr-20261025T2306Z ready=1/1\\\\nAGENT=phantom-ebpf-agent-cfmb2 TARGET=recommendationservice-5dc98bbcb9-xq42k\nBEFORE\nphantom_agent_events_total{event_type=\"exec\",stage=\"received\"} 87.0\nphantom_agent_events_total{event_type=\"exec\",stage=\"queued\"} 87.0\nphantom_agent_events_total{event_type=\"exec\",stage=\"identity_missing\"} 77.0\nphantom_agent_events_total{event_type=\"exec\",stage=\"namespace_filtered\"} 9.0\n\nHARMLESS_EXEC_RC=0\nAFTER\nphantom_agent_events_total{event_type=\"exec\",stage=\"received\"} 109.0\nphantom_agent_events_total{event_type=\"exec\",stage=\"queued\"} 109.0\nphantom_agent_events_total{event_type=\"exec\",stage=\"identity_missing\"} 83.0\nphantom_agent_events_total{event_type=\"exec\",stage=\"namespace_filtered\"} 10.0\nphantom_agent_events_total{event_type=\"exec\",stage=\"dispatched\"} 2.0\n\nRECENT_ERRORS\n2026-10-25 23:07:30 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=00000d6eb18fad220000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=165074 status=missing tgid=165074\n2026-10-25 23:07:30 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=00000d6eb18fb31e0000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=165074 status=missing tgid=165074\n2026-10-25 23:07:30 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=00000d6eb19bb0690000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=165074 status=missing tgid=165074\n2026-10-25 23:07:30 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=00000d6eb19d70660000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=165074 status=missing tgid=165074\n2026-10-25 23:07:30 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=00000d6eb19e1f470000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=165074 status=missing tgid=165074\n2026-10-25 23:07:30 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=00000d6eb1c34b380000000000000003 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=165074 status=missing tgid=165074\n2026-10-25 23:07:30 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sudo event_id=00000d6eb1d3f4c30000000000000000 event_type=6 executable_path=None has_container_id=False has_image_digest=False pid=165075 status=missing tgid=165075\n2026-10-25 23:07:30 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=iptables-restor event_id=00000d6eb736b1b70000000000000001 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=165089 status=missing tgid=165089\n2026-10-25 23:07:30 [warning  ] event_processor.identity_insufficient cgroup_id=5470 comm=runc event_id=00000d6ebb21330a0000000000000003 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=165090 status=missing tgid=165090\n2026-10-25 23:07:31 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sleep event_id=00000d6ebd1474cc0000000000000003 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=165109 status=missing tgid=165109\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

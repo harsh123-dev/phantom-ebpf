@@ -19,45 +19,51 @@ Error mapping follows the handoff contract:
 
 from __future__ import annotations
 
+import re
 import uuid
 from datetime import UTC, datetime
 from typing import Any, Literal
-import re
+from urllib.parse import urlsplit
 
 import structlog
-from fastapi import APIRouter, HTTPException, Request, status
-from pydantic import AnyUrl, BaseModel, Field, field_validator
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
+from pydantic import AnyUrl, BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from app.application.use_cases.get_sbom import GetSbomQuery
 from app.application.use_cases.ingest_sbom import IngestSbomCommand
 from app.application.use_cases.verify_sbom_signature import (
     EnqueueVerificationCommand,
     GetVerificationResultQuery,
+    RunVerificationCommand,
 )
+from app.domain.entities import VerificationStatus
 from app.domain.exceptions import (
     DigestMismatchError,
     DuplicateSbomError,
     InvalidSbomError,
     SbomNotFoundError,
     SbomStorageError,
+    SignatureVerificationError,
     VerificationAlreadyInProgressError,
     VerificationJobNotFoundError,
+    VerificationServiceUnavailableError,
 )
-from app.interface.dependencies import (
-    ComponentRepoDep,
-    EnqueueVerifyDep,
-    GetSbomDep,
-    GetVerifyDep,
-    IngestSbomDep,
-    SbomRepoDep,
-)
-from app.domain.entities import VerificationStatus
 from app.domain.mapping import (
     ContainerIdentity,
     ProcessIdentity,
     RuntimeEventRecord,
     RuntimeToSbomMapper,
     SbomIndex,
+)
+from app.interface.dependencies import (
+    ComponentRepoDep,
+    CosignClientDep,
+    EnqueueVerifyDep,
+    GetSbomDep,
+    GetVerifyDep,
+    IngestSbomDep,
+    RunVerifyDep,
+    SbomRepoDep,
 )
 
 log: structlog.BoundLogger = structlog.get_logger(__name__)
@@ -72,7 +78,12 @@ class SbomIngestRequestSchema(BaseModel):
 
     schema_version: Literal["v1"] = "v1"
     image_digest: str
+    image_reference: str | None = None
     artifact_uri: AnyUrl
+    artifact_download_url: AnyUrl | None = None
+    artifact_version_id: str | None = None
+    artifact_content_sha256: str | None = None
+    artifact_manifest_digest: str | None = None
     cyclonedx_document: dict[str, Any] = Field(..., min_length=1)
     declared_sbom_digest: str
     source: Literal["syft", "external"]
@@ -82,12 +93,60 @@ class SbomIngestRequestSchema(BaseModel):
 
     model_config = {"extra": "forbid"}
 
+    @field_validator("image_digest", "artifact_manifest_digest")
+    @classmethod
+    def _valid_image_digests(
+        cls, value: str | None, info: ValidationInfo
+    ) -> str | None:
+        if value is not None and not re.fullmatch(r"sha256:[0-9a-f]{64}", value):
+            raise ValueError(f"{info.field_name} must be sha256:<lowercase hex>")
+        return value
+
+    @field_validator("image_reference")
+    @classmethod
+    def _immutable_image_reference(cls, value: str | None, info: ValidationInfo) -> str | None:
+        if value is None:
+            return None
+        digest = info.data.get("image_digest")
+        if (
+            not isinstance(digest, str)
+            or not re.fullmatch(r"[A-Za-z0-9.-]+(?::[0-9]+)?/[A-Za-z0-9._/-]+@sha256:[0-9a-f]{64}", value)
+            or not value.endswith(f"@{digest}")
+        ):
+            raise ValueError("image_reference must be an immutable registry/repository@image_digest reference")
+        return value
+
+    @field_validator("artifact_content_sha256")
+    @classmethod
+    def _valid_artifact_sha256(cls, value: str | None) -> str | None:
+        if value is not None and not re.fullmatch(r"sha256:[0-9a-f]{64}", value):
+            raise ValueError("artifact_content_sha256 must be sha256:<lowercase hex>")
+        return value
+
+    @model_validator(mode="after")
+    def _external_artifact_fields_pair(self) -> SbomIngestRequestSchema:
+        external_fields = (
+            self.artifact_download_url,
+            self.artifact_version_id,
+            self.artifact_content_sha256,
+            self.artifact_manifest_digest,
+        )
+        if any(value is not None for value in external_fields) and any(
+            value is None for value in external_fields
+        ):
+            raise ValueError(
+                "external artifact URL, version, digest, and manifest digest "
+                "must be supplied together"
+            )
+        return self
+
 
 class SbomRecordSchema(BaseModel):
     """Response record for SBOM endpoints."""
 
     sbom_id: uuid.UUID
     image_digest: str
+    image_reference: str | None = None
     sbom_digest: str
     format: str
     spec_version: str
@@ -115,10 +174,27 @@ class SbomVerificationRequestSchema(BaseModel):
     """Request body for ``POST /api/v1/sboms/{sbom_id}/verification``."""
 
     expected_identity: str = Field(..., min_length=1, max_length=512)
-    expected_issuer: AnyUrl
+    expected_issuer: str = Field(..., min_length=1, max_length=512)
     rekor_required: bool = True
 
     model_config = {"extra": "forbid"}
+
+    @field_validator("expected_issuer")
+    @classmethod
+    def _exact_https_issuer(cls, value: str) -> str:
+        """Validate the issuer without rewriting its certificate-bound bytes."""
+        parsed = urlsplit(value)
+        if (
+            parsed.scheme != "https"
+            or not parsed.hostname
+            or parsed.username
+            or parsed.password
+            or parsed.query
+            or parsed.fragment
+            or value.strip() != value
+        ):
+            raise ValueError("expected_issuer must be an exact HTTPS issuer URI")
+        return value
 
 
 class RuntimeBindingRequestSchema(BaseModel):
@@ -402,6 +478,13 @@ async def ingest_sbom(
         source=body.source,
         generated_at=body.generated_at,
         signature_bundle_uri=str(body.signature_bundle_uri) if body.signature_bundle_uri else None,
+        artifact_download_url=(
+            str(body.artifact_download_url) if body.artifact_download_url else None
+        ),
+        artifact_version_id=body.artifact_version_id,
+        artifact_content_sha256=body.artifact_content_sha256,
+        artifact_manifest_digest=body.artifact_manifest_digest,
+        image_reference=body.image_reference,
     )
     try:
         result = await use_case.execute(command)
@@ -415,6 +498,7 @@ async def ingest_sbom(
     return SbomRecordSchema(
         sbom_id=result.sbom_id,
         image_digest=result.image_digest,
+        image_reference=result.image_reference,
         sbom_digest=result.sbom_digest,
         format=result.format,
         spec_version=result.spec_version,
@@ -455,6 +539,7 @@ async def get_sbom(
     record = SbomRecordSchema(
         sbom_id=result.sbom_id,
         image_digest=result.image_digest,
+        image_reference=result.image_reference,
         sbom_digest=result.sbom_digest,
         format=result.format,
         spec_version=result.spec_version,
@@ -483,6 +568,9 @@ async def enqueue_verification(
     body: SbomVerificationRequestSchema,
     tenant_id: uuid.UUID,
     use_case: EnqueueVerifyDep,
+    runner: RunVerifyDep,
+    verifier: CosignClientDep,
+    background_tasks: BackgroundTasks,
 ) -> VerificationJobResponseSchema:
     """Enqueue cosign verification (``POST /api/v1/sboms/{sbom_id}/verification``).
 
@@ -499,6 +587,15 @@ async def enqueue_verification(
         HTTPException 404: SBOM not found.
         HTTPException 409: Verification already in progress.
     """
+    try:
+        verifier.validate_trust_request(
+            body.expected_identity, str(body.expected_issuer), body.rekor_required
+        )
+    except VerificationServiceUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except SignatureVerificationError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+
     command = EnqueueVerificationCommand(
         sbom_id=sbom_id,
         tenant_id=tenant_id,
@@ -512,6 +609,14 @@ async def enqueue_verification(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except VerificationAlreadyInProgressError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    background_tasks.add_task(
+        runner.execute,
+        RunVerificationCommand(
+            verification_job_id=result.verification_job_id,
+            tenant_id=tenant_id,
+        ),
+    )
 
     return VerificationJobResponseSchema(
         verification_job_id=result.verification_job_id,

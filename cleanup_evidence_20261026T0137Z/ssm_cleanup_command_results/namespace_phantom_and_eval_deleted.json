@@ -1,0 +1,12 @@
+{
+  "CommandId": "92d5858e-9bc7-4369-9040-8274290b8e5b",
+  "InstanceId": "i-06bb29d253668fa5f",
+  "DocumentName": "AWS-RunShellScript",
+  "Status": "Success",
+  "StatusDetails": "Success",
+  "ResponseCode": 0,
+  "ExecutionStartDateTime": "2026-10-26T01:40:25.763Z",
+  "ExecutionEndDateTime": "2026-10-26T01:40:41.763Z",
+  "StandardOutputContent": "namespace \"phantom\" deleted\nnamespace \"phantom-eval\" deleted\nError from server (NotFound): namespaces \"phantom\" not found\nError from server (NotFound): namespaces \"phantom-eval\" not found\nNAMESPACE     NAME                                      READY   STATUS    RESTARTS   AGE     IP           NODE             NOMINATED NODE   READINESS GATES\nkube-system   coredns-7cfb7bc9c7-k24fd                  1/1     Running   0          6h35m   10.42.0.4    ip-10-89-2-125   <none>           <none>\nkube-system   local-path-provisioner-77b9867795-j7xkj   1/1     Running   0          6h35m   10.42.0.3    ip-10-89-2-125   <none>           <none>\nkube-system   metrics-server-6dc596dfb8-npcj7           1/1     Running   0          6h35m   10.42.0.2    ip-10-89-2-125   <none>           <none>\nmonitoring    prometheus-74d478976b-mzljg               1/1     Running   0          6h21m   10.42.0.18   ip-10-89-2-125   <none>           <none>\n",
+  "StandardErrorContent": ""
+}

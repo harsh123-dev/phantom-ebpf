@@ -1,0 +1,22 @@
+{
+    "CommandId": "2382764c-acec-462f-8dd0-e93e3eccde61",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T20:32:43.950Z",
+    "ExecutionElapsedTime": "PT0.964S",
+    "ExecutionEndDateTime": "2026-10-25T20:32:43.950Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "configmap/phantom-config patched\npolicy_bytes 1182\n2b5896173dbaa2ca2f8014caa6b1170225eb1ad112bf183350f1551a3d2bcdf1  /tmp/phantom-sbom-restricted-egress.yaml\nnetworkpolicy.networking.k8s.io/phantom-sbom-restricted-egress created\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  annotations:\n    kubectl.kubernetes.io/last-applied-configuration: |\n      {\"apiVersion\":\"networking.k8s.io/v1\",\"kind\":\"NetworkPolicy\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-sbom-restricted-egress\",\"namespace\":\"phantom\"},\"spec\":{\"egress\":[{\"ports\":[{\"port\":53,\"protocol\":\"UDP\"},{\"port\":53,\"protocol\":\"TCP\"}],\"to\":[{\"namespaceSelector\":{\"matchLabels\":{\"kubernetes.io/metadata.name\":\"kube-system\"}}}]},{\"ports\":[{\"port\":5432,\"protocol\":\"TCP\"}],\"to\":[{\"podSelector\":{\"matchLabels\":{\"app\":\"phantom-postgres\"}}}]},{\"ports\":[{\"port\":443,\"protocol\":\"TCP\"}],\"to\":[{\"ipBlock\":{\"cidr\":\"16.12.3.0/24\"}},{\"ipBlock\":{\"cidr\":\"16.12.36.0/22\"}},{\"ipBlock\":{\"cidr\":\"16.12.40.0/23\"}},{\"ipBlock\":{\"cidr\":\"3.5.208.0/22\"}},{\"ipBlock\":{\"cidr\":\"3.5.212.0/23\"}},{\"ipBlock\":{\"cidr\":\"52.219.156.0/22\"}},{\"ipBlock\":{\"cidr\":\"52.219.160.0/23\"}},{\"ipBlock\":{\"cidr\":\"52.219.62.0/23\"}},{\"ipBlock\":{\"cidr\":\"52.219.64.0/22\"}}]}],\"podSelector\":{\"matchLabels\":{\"app\":\"phantom-sbom-service\"}},\"policyTypes\":[\"Egress\"]}}\n  creationTimestamp: \"2026-10-25T20:32:44Z\"\n  generation: 1\n  name: phantom-sbom-restricted-egress\n  namespace: phantom\n  resourceVersion: \"3553\"\n  uid: c18c501d-dff9-4ad6-a1dd-028b8ccfd58a\nspec:\n  egress:\n  - ports:\n    - port: 53\n      protocol: UDP\n    - port: 53\n      protocol: TCP\n    to:\n    - namespaceSelector:\n        matchLabels:\n          kubernetes.io/metadata.name: kube-system\n  - ports:\n    - port: 5432\n      protocol: TCP\n    to:\n    - podSelector:\n        matchLabels:\n          app: phantom-postgres\n  - ports:\n    - port: 443\n      protocol: TCP\n    to:\n    - ipBlock:\n        cidr: 16.12.3.0/24\n    - ipBlock:\n        cidr: 16.12.36.0/22\n    - ipBlock:\n        cidr: 16.12.40.0/23\n    - ipBlock:\n        cidr: 3.5.208.0/22\n    - ipBlock:\n        cidr: 3.5.212.0/23\n    - ipBlock:\n        cidr: 52.219.156.0/22\n    - ipBlock:\n        cidr: 52.219.160.0/23\n    - ipBlock:\n        cidr: 52.219.62.0/23\n    - ipBlock:\n        cidr: 52.219.64.0/22\n  podSelector:\n    matchLabels:\n      app: phantom-sbom-service\n  policyTypes:\n  - Egress\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

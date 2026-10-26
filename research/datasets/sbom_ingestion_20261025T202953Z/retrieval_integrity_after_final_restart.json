@@ -1,0 +1,10 @@
+{
+  "http_status": 200,
+  "sbom_id": "f6ffce2a-50c1-4284-91f4-5d515e43da9e",
+  "image_digest": "sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7",
+  "sbom_digest": "sha256:65fc90d4219c3d53bf2ed82f365376f5433920309406d62af0f799f515daf5bb",
+  "retrieved_document_canonical_sha256": "sha256:65fc90d4219c3d53bf2ed82f365376f5433920309406d62af0f799f515daf5bb",
+  "digest_match": true,
+  "component_count": 22823,
+  "verification_status": "pending"
+}

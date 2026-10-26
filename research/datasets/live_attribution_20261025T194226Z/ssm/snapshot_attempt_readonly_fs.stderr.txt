@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<stdin>", line 5, in <module>
+OSError: [Errno 30] Read-only file system: '/tmp/phantom-live-evidence-snapshot.sqlite3'
+command terminated with exit code 1
+failed to run commands: exit status 1

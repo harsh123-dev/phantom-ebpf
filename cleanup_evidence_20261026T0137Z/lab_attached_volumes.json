@@ -1,0 +1,34 @@
+[
+    {
+        "VolumeId": "vol-059e997e6d7909b5f",
+        "State": "in-use",
+        "Encrypted": true,
+        "Size": 50,
+        "SnapshotId": "snap-09eeb6885e00b8443",
+        "Attachments": [
+            {
+                "DeleteOnTermination": true,
+                "EbsCardIndex": 0,
+                "VolumeId": "vol-059e997e6d7909b5f",
+                "InstanceId": "i-06bb29d253668fa5f",
+                "Device": "/dev/sda1",
+                "State": "attached",
+                "AttachTime": "2026-10-25T19:01:16+00:00"
+            }
+        ],
+        "Tags": [
+            {
+                "Key": "Project",
+                "Value": "PHANTOM"
+            },
+            {
+                "Key": "Environment",
+                "Value": "disposable-lab"
+            },
+            {
+                "Key": "Name",
+                "Value": "phantom-k3s-lab-root-vol"
+            }
+        ]
+    }
+]

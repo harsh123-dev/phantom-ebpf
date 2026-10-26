@@ -1,0 +1,46 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: phantom-sbom-restricted-egress
+  namespace: phantom
+spec:
+  podSelector:
+    matchLabels:
+      app: phantom-sbom-service
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - {protocol: UDP, port: 53}
+        - {protocol: TCP, port: 53}
+    - to:
+        - podSelector:
+            matchLabels:
+              app: phantom-postgres
+      ports:
+        - {protocol: TCP, port: 5432}
+    - to:
+        - ipBlock:
+            cidr: 16.12.3.0/24
+        - ipBlock:
+            cidr: 16.12.36.0/22
+        - ipBlock:
+            cidr: 16.12.40.0/23
+        - ipBlock:
+            cidr: 3.5.208.0/22
+        - ipBlock:
+            cidr: 3.5.212.0/23
+        - ipBlock:
+            cidr: 52.219.156.0/22
+        - ipBlock:
+            cidr: 52.219.160.0/23
+        - ipBlock:
+            cidr: 52.219.62.0/23
+        - ipBlock:
+            cidr: 52.219.64.0/22
+      ports:
+        - {protocol: TCP, port: 443}
+# AWS managed prefix list: pl-78a54011 (com.amazonaws.ap-south-1.s3); IPv4 CIDRs: 9

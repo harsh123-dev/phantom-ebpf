@@ -1,0 +1,6 @@
+{
+    "Status": "Failed",
+    "ResponseCode": 1,
+    "Output": "",
+    "Error": "failed to run commands: exit status 1"
+}

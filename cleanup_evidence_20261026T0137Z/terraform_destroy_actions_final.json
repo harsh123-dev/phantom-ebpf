@@ -1,0 +1,198 @@
+[
+  {
+    "address": "aws_eip.nat",
+    "type": "aws_eip",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_iam_instance_profile.ssm[0]",
+    "type": "aws_iam_instance_profile",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_iam_role.ssm[0]",
+    "type": "aws_iam_role",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_iam_role_policy.evidence_backups[0]",
+    "type": "aws_iam_role_policy",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_iam_role_policy_attachment.ssm[0]",
+    "type": "aws_iam_role_policy_attachment",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_instance.k3s_lab",
+    "type": "aws_instance",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_internet_gateway.lab",
+    "type": "aws_internet_gateway",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_nat_gateway.lab",
+    "type": "aws_nat_gateway",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_route_table.private",
+    "type": "aws_route_table",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_route_table.public_nat",
+    "type": "aws_route_table",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_route_table_association.private",
+    "type": "aws_route_table_association",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_route_table_association.public_nat",
+    "type": "aws_route_table_association",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_s3_bucket.evidence_backups[0]",
+    "type": "aws_s3_bucket",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_s3_bucket_lifecycle_configuration.evidence_backups[0]",
+    "type": "aws_s3_bucket_lifecycle_configuration",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_s3_bucket_ownership_controls.evidence_backups[0]",
+    "type": "aws_s3_bucket_ownership_controls",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_s3_bucket_policy.evidence_backups[0]",
+    "type": "aws_s3_bucket_policy",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_s3_bucket_public_access_block.evidence_backups[0]",
+    "type": "aws_s3_bucket_public_access_block",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_s3_bucket_server_side_encryption_configuration.evidence_backups[0]",
+    "type": "aws_s3_bucket_server_side_encryption_configuration",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_s3_bucket_versioning.evidence_backups[0]",
+    "type": "aws_s3_bucket_versioning",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_security_group.lab",
+    "type": "aws_security_group",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_security_group.ssm_endpoints",
+    "type": "aws_security_group",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_subnet.lab_private",
+    "type": "aws_subnet",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_subnet.public_nat",
+    "type": "aws_subnet",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_vpc.lab",
+    "type": "aws_vpc",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_vpc_endpoint.s3[0]",
+    "type": "aws_vpc_endpoint",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_vpc_endpoint.ssm[\"ec2messages\"]",
+    "type": "aws_vpc_endpoint",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_vpc_endpoint.ssm[\"ssm\"]",
+    "type": "aws_vpc_endpoint",
+    "actions": [
+      "delete"
+    ]
+  },
+  {
+    "address": "aws_vpc_endpoint.ssm[\"ssmmessages\"]",
+    "type": "aws_vpc_endpoint",
+    "actions": [
+      "delete"
+    ]
+  }
+]

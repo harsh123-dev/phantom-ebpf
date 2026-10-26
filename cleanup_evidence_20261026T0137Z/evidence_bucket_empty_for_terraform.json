@@ -1,0 +1,7 @@
+{
+  "bucket": "phantom-k3s-lab-253490771520-ap-south-1-evidence",
+  "region": "ap-south-1",
+  "downloaded_and_validated_versions": 28,
+  "deleted_versions_and_markers": 28,
+  "bucket_deletion_deferred_to_terraform": true
+}

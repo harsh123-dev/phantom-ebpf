@@ -1,0 +1,70 @@
+2026-10-26T08:47:37Z INFO __main__ SAFETY: Dry-run planning complete. Zero live operations executed. Zero dataset files written.
+
+===================================================================================================================
+PHANTOM Controlled Evaluation — Dry-Run Execution Plan
+===================================================================================================================
+Mode:                  DRY-RUN (Safe Planning Mode — No Cluster Execution)
+Campaign Profile:      PILOT (6 scenarios x 3 reps = 18 planned runs)
+Target Namespace:      phantom-eval
+Kubectl Context:       (default/current)
+Destination Dataset:   /tmp/phantom-safe-dryrun-20261026T084737Z
+Safety Verification:   No kubectl target calls made; No network sinks contacted; Zero records written to disk.
+-------------------------------------------------------------------------------------------------------------------
+Seq  Scenario ID            Rep Label Target Workload          Control / Sink Endpoint                Win(s)
+-------------------------------------------------------------------------------------------------------------------
+1    xzutils-001              1     1 recommendationservice    phantom-sink.phantom-eval.svc.cluster.local:8443   120s
+2    xzutils-001              2     1 recommendationservice    phantom-sink.phantom-eval.svc.cluster.local:8443   120s
+3    xzutils-001              3     1 recommendationservice    phantom-sink.phantom-eval.svc.cluster.local:8443   120s
+4    dep-confusion-001        1     1 emailservice             phantom-sink.phantom-eval.svc.cluster.local:4445   180s
+5    dep-confusion-001        2     1 emailservice             phantom-sink.phantom-eval.svc.cluster.local:4445   180s
+6    dep-confusion-001        3     1 emailservice             phantom-sink.phantom-eval.svc.cluster.local:4445   180s
+7    solarwinds-001           1     1 cartservice              phantom-sink.phantom-eval.svc.cluster.local:4446   120s
+8    solarwinds-001           2     1 cartservice              phantom-sink.phantom-eval.svc.cluster.local:4446   120s
+9    solarwinds-001           3     1 cartservice              phantom-sink.phantom-eval.svc.cluster.local:4446   120s
+10   benign-update-001        1     0 recommendationservice    (None - Benign control)                  120s
+11   benign-update-001        2     0 recommendationservice    (None - Benign control)                  120s
+12   benign-update-001        3     0 recommendationservice    (None - Benign control)                  120s
+13   benign-load-001          1     0 emailservice             (None - Benign control)                  120s
+14   benign-load-001          2     0 emailservice             (None - Benign control)                  120s
+15   benign-load-001          3     0 emailservice             (None - Benign control)                  120s
+16   benign-restart-001       1     0 cartservice              (None - Benign control)                  120s
+17   benign-restart-001       2     0 cartservice              (None - Benign control)                  120s
+18   benign-restart-001       3     0 cartservice              (None - Benign control)                  120s
+-------------------------------------------------------------------------------------------------------------------
+
+Total Planned Run IDs (18 total):
+  - PLAN_20261026T084737Z_xzutils-001_rep1
+  - PLAN_20261026T084737Z_xzutils-001_rep2
+  - PLAN_20261026T084737Z_xzutils-001_rep3
+  - PLAN_20261026T084737Z_dep-confusion-001_rep1
+  - PLAN_20261026T084737Z_dep-confusion-001_rep2
+  - PLAN_20261026T084737Z_dep-confusion-001_rep3
+  - PLAN_20261026T084737Z_solarwinds-001_rep1
+  - PLAN_20261026T084737Z_solarwinds-001_rep2
+  - PLAN_20261026T084737Z_solarwinds-001_rep3
+  - PLAN_20261026T084737Z_benign-update-001_rep1
+  - PLAN_20261026T084737Z_benign-update-001_rep2
+  - PLAN_20261026T084737Z_benign-update-001_rep3
+  - PLAN_20261026T084737Z_benign-load-001_rep1
+  - PLAN_20261026T084737Z_benign-load-001_rep2
+  - PLAN_20261026T084737Z_benign-load-001_rep3
+  - PLAN_20261026T084737Z_benign-restart-001_rep1
+  - PLAN_20261026T084737Z_benign-restart-001_rep2
+  - PLAN_20261026T084737Z_benign-restart-001_rep3
+
+Decoupled Ground-Truth Tracking:
+  - Dimensions: [inject_ok, behavior_verified, contract_drift_verified, phantom_alerted]
+  - Invariant:  PHANTOM alerts are strictly evaluated as detector outputs, NEVER as ground truth.
+  - Denominator: Runs where inject_ok=False are excluded from TPR sensitivity metrics.
+
+Execution Instructions:
+  To launch these runs in live mode against a verified disposable lab cluster, supply:
+    python research/evaluation/scenarios/run_all_scenarios.py \
+        --campaign pilot \
+        --namespace phantom-eval \
+        --kubectl-context <approved-disposable-context> \
+        --output-dir /tmp/phantom-safe-dryrun-20261026T084737Z \
+        --repetitions 3 \
+        --execute
+===================================================================================================================
+

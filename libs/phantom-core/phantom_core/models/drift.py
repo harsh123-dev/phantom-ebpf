@@ -99,6 +99,7 @@ class ProcessIdentity(_PhantomBaseModel):
     executable_path: str = Field(..., min_length=1, max_length=DRIFT_EXECUTABLE_PATH_MAX_LENGTH)
     start_time_ns: int = Field(..., ge=0)
     executable_hash: str | None = None
+    executable_hash_status: Literal["available", "unavailable", "ambiguous", "invalid"] | None = None
 
     @field_validator("executable_hash")
     @classmethod
@@ -106,6 +107,14 @@ class ProcessIdentity(_PhantomBaseModel):
         if value is not None and not re.fullmatch(r"(?:sha256:)?[0-9a-fA-F]{64}", value):
             raise ValueError("executable_hash must be a SHA-256 digest")
         return value
+
+    @model_validator(mode="after")
+    def _hash_status_matches_value(self) -> "ProcessIdentity":
+        if self.executable_hash_status == "available" and self.executable_hash is None:
+            raise ValueError("available executable hash status requires a hash")
+        if self.executable_hash_status in {"unavailable", "ambiguous", "invalid"} and self.executable_hash is not None:
+            raise ValueError("non-available executable hash status cannot include a hash")
+        return self
 
 
 class WorkloadIdentity(_PhantomBaseModel):
@@ -234,6 +243,8 @@ class RuntimeEvidence(_PhantomBaseModel):
     raw_event_digest: str
     resource_path: str | None = None
     resource_hash: str | None = None
+    run_id: str | None = Field(default=None, min_length=1, max_length=200)
+    scenario_id: str | None = Field(default=None, min_length=1, max_length=200)
 
     @field_validator("resource_hash")
     @classmethod

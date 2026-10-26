@@ -80,6 +80,7 @@ def _row_to_sbom(row: asyncpg.Record) -> Sbom:
         sbom_id=row["sbom_id"],
         tenant_id=row["tenant_id"],
         image_digest=ImageDigest(value=row["image_digest"]),
+        image_reference=row["image_reference"],
         sbom_digest=SbomDigest(value=row["sbom_digest"]),
         cyclonedx_document=doc,
         spec_version=row["spec_version"],
@@ -184,22 +185,24 @@ class PostgresSbomRepository(SbomRepositoryPort):
                     """
                     INSERT INTO sboms (
                         sbom_id, tenant_id, image_digest, sbom_digest,
+                        image_reference,
                         cyclonedx_document, spec_version, source,
                         artifact_uri, signature_bundle_uri,
                         verification_status, purl_count,
                         generated_at, created_at
                     ) VALUES (
-                        $1, $2, $3, $4,
-                        $5::jsonb, $6, $7,
-                        $8, $9,
-                        $10, $11,
-                        $12, $13
+                        $1, $2, $3, $4, $5,
+                        $6::jsonb, $7, $8,
+                        $9, $10,
+                        $11, $12,
+                        $13, $14
                     )
                     """,
                     sbom.sbom_id,
                     sbom.tenant_id,
                     sbom.image_digest.value,
                     sbom.sbom_digest.value,
+                    sbom.image_reference,
                     doc_json,
                     sbom.spec_version,
                     sbom.source.value,
@@ -219,6 +222,122 @@ class PostgresSbomRepository(SbomRepositoryPort):
             ) from exc
         except asyncpg.PostgresError as exc:
             raise SbomStorageError(f"Failed to persist SBOM: {exc}") from exc
+
+    async def save_with_components(
+        self, sbom: Sbom, components: list[Component]
+    ) -> None:
+        """Persist the SBOM and extracted components atomically."""
+        doc_json = json.dumps(sbom.cyclonedx_document, sort_keys=True)
+        try:
+            async with self._pool.acquire() as conn, conn.transaction():
+                await conn.execute(
+                        """
+                        INSERT INTO sboms (
+                            sbom_id, tenant_id, image_digest, sbom_digest,
+                            image_reference,
+                            cyclonedx_document, spec_version, source,
+                            artifact_uri, signature_bundle_uri,
+                            verification_status, purl_count,
+                            generated_at, created_at
+                        ) VALUES (
+                            $1, $2, $3, $4, $5, $6::jsonb, $7, $8,
+                            $9, $10, $11, $12, $13, $14
+                        )
+                        """,
+                        sbom.sbom_id,
+                        sbom.tenant_id,
+                        sbom.image_digest.value,
+                        sbom.sbom_digest.value,
+                        sbom.image_reference,
+                        doc_json,
+                        sbom.spec_version,
+                        sbom.source.value,
+                        sbom.artifact_uri,
+                        sbom.signature_bundle_uri,
+                        sbom.verification_status.value,
+                        sbom.purl_count,
+                        sbom.generated_at,
+                        sbom.created_at,
+                    )
+                if components:
+                    await conn.executemany(
+                            """
+                            INSERT INTO sbom_components (
+                                component_id, sbom_id, tenant_id,
+                                purl, name, version, component_type,
+                                binding_status, binding_confidence, created_at
+                            ) VALUES (
+                                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+                            )
+                            """,
+                            [
+                                (
+                                    component.component_id,
+                                    component.sbom_id,
+                                    sbom.tenant_id,
+                                    component.purl.value,
+                                    component.name,
+                                    component.version,
+                                    component.component_type,
+                                    component.binding_status.value,
+                                    component.binding_confidence,
+                                    component.created_at,
+                                )
+                                for component in components
+                            ],
+                        )
+        except asyncpg.UniqueViolationError as exc:
+            raise DuplicateSbomError(
+                sbom_digest=sbom.sbom_digest.value,
+                existing_image_digest="(see database)",
+                requested_image_digest=sbom.image_digest.value,
+            ) from exc
+        except asyncpg.PostgresError as exc:
+            raise SbomStorageError(
+                f"Failed to persist SBOM and components atomically: {exc}"
+            ) from exc
+
+    async def find_by_image_and_digest(
+        self, image_digest: str, sbom_digest: str, tenant_id: uuid.UUID
+    ) -> Sbom | None:
+        """Find the exact tenant-scoped identity for an idempotent retry."""
+        try:
+            async with self._pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    """SELECT * FROM sboms
+                       WHERE image_digest = $1 AND sbom_digest = $2 AND tenant_id = $3""",
+                    image_digest,
+                    sbom_digest,
+                    tenant_id,
+                )
+        except asyncpg.PostgresError as exc:
+            raise SbomStorageError(
+                f"Failed to check existing SBOM identity: {exc}"
+            ) from exc
+        return _row_to_sbom(row) if row is not None else None
+
+    async def bind_image_reference(
+        self, sbom_id: uuid.UUID, tenant_id: uuid.UUID, image_reference: str
+    ) -> None:
+        """Attach an immutable registry reference to a legacy digest-only row."""
+        try:
+            async with self._pool.acquire() as conn:
+                result = await conn.execute(
+                    "UPDATE sboms SET image_reference = $1 "
+                    "WHERE sbom_id = $2 AND tenant_id = $3 "
+                    "AND (image_reference IS NULL OR image_reference = $1)",
+                    image_reference,
+                    sbom_id,
+                    tenant_id,
+                )
+        except asyncpg.PostgresError as exc:
+            raise SbomStorageError(
+                f"Failed to bind immutable image reference for {sbom_id}: {exc}"
+            ) from exc
+        if result == "UPDATE 0":
+            raise SbomStorageError(
+                "SBOM missing or already bound to a different immutable image reference"
+            )
 
     async def get_by_id(
         self, sbom_id: uuid.UUID, tenant_id: uuid.UUID
@@ -438,6 +557,26 @@ class PostgresVerificationJobRepository(VerificationJobRepositoryPort):
             pool: The shared asyncpg connection pool.
         """
         self._pool = pool
+
+    async def get_by_id(
+        self, verification_job_id: uuid.UUID, tenant_id: uuid.UUID
+    ) -> VerificationJob:
+        """Read an exact job; never confuse its UUID with its parent SBOM UUID."""
+        try:
+            async with self._pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "SELECT * FROM verification_jobs "
+                    "WHERE verification_job_id = $1 AND tenant_id = $2",
+                    verification_job_id,
+                    tenant_id,
+                )
+        except asyncpg.PostgresError as exc:
+            raise SbomStorageError(
+                f"Failed to fetch verification job {verification_job_id}: {exc}"
+            ) from exc
+        if row is None:
+            raise VerificationJobNotFoundError(sbom_id=str(verification_job_id))
+        return _row_to_verification_job(row)
 
     async def save(self, job: VerificationJob) -> None:
         """Persist a new verification job.

@@ -1,0 +1,22 @@
+{
+  "CommandId": "9891258d-8b7c-438f-a6ec-b87ab104a9af",
+  "InstanceId": "i-06bb29d253668fa5f",
+  "Comment": "",
+  "DocumentName": "AWS-RunShellScript",
+  "DocumentVersion": "$DEFAULT",
+  "PluginName": "aws:runShellScript",
+  "ResponseCode": 0,
+  "ExecutionStartDateTime": "2026-10-25T19:35:18.609Z",
+  "ExecutionElapsedTime": "PT0.361S",
+  "ExecutionEndDateTime": "2026-10-25T19:35:18.609Z",
+  "Status": "Success",
+  "StatusDetails": "Success",
+  "StandardOutputContent": "{\"status\":\"success\",\"data\":{\"resultType\":\"vector\",\"result\":[{\"metric\":{\"pod\":\"phantom-api-gateway-64d4d745df-rlqgs\"},\"value\":[1792956918.788,\"65994752\"]},{\"metric\":{\"pod\":\"phantom-causal-engine-57576cd69c-b2mn9\"},\"value\":[1792956918.788,\"98312192\"]},{\"metric\":{\"pod\":\"phantom-ebpf-agent-4r68v\"},\"value\":[1792956918.788,\"95367168\"]},{\"metric\":{\"pod\":\"phantom-postgres-57dd79788f-8bfdx\"},\"value\":[1792956918.788,\"36855808\"]},{\"metric\":{\"pod\":\"phantom-redis-64555c745-jx4kk\"},\"value\":[1792956918.788,\"4182016\"]},{\"metric\":{\"pod\":\"phantom-sbom-service-5d676cc84f-qlrsq\"},\"value\":[1792956918.788,\"52928512\"]},{\"metric\":{\"pod\":\"phantom-sbom-service-6566454c47-54nz6\"},\"value\":[1792956918.788,\"51380224\"]}]}}{\"status\":\"success\",\"data\":{\"resultType\":\"vector\",\"result\":[{\"metric\":{\"pod\":\"phantom-api-gateway-64d4d745df-rlqgs\"},\"value\":[1792956918.960,\"0.0035234104572781904\"]},{\"metric\":{\"pod\":\"phantom-causal-engine-57576cd69c-b2mn9\"},\"value\":[1792956918.960,\"0.0023736810839863017\"]},{\"metric\":{\"pod\":\"phantom-ebpf-agent-4r68v\"},\"value\":[1792956918.960,\"0.012244124625095134\"]},{\"metric\":{\"pod\":\"phantom-postgres-57dd79788f-8bfdx\"},\"value\":[1792956918.960,\"0.006440504387448964\"]},{\"metric\":{\"pod\":\"phantom-redis-64555c745-jx4kk\"},\"value\":[1792956918.960,\"0.008615683158634604\"]},{\"metric\":{\"pod\":\"phantom-sbom-service-6566454c47-54nz6\"},\"value\":[1792956918.960,\"0.0014048565289319047\"]}]}}",
+  "StandardOutputUrl": "",
+  "StandardErrorContent": "",
+  "StandardErrorUrl": "",
+  "CloudWatchOutputConfig": {
+    "CloudWatchLogGroupName": "",
+    "CloudWatchOutputEnabled": false
+  }
+}

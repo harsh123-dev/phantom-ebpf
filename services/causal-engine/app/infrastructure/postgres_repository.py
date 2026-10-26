@@ -8,7 +8,8 @@ PCEPSRepository and DriftEventReadRepository for persistent storage of:
   - PCEPS scores (pceps_scores table)
   - Drift event read-path (drift_events table — written by api-gateway)
 
-Every public method emits ``phantom_postgres_operation_duration_seconds``
+Every public method emits
+``phantom_causal_engine_postgres_operation_duration_seconds``
 with ``operation`` and ``repository`` labels.
 
 Tables expected:
@@ -62,7 +63,7 @@ log: structlog.BoundLogger = structlog.get_logger(__name__)
 # ---------------------------------------------------------------------------
 
 _DB_DURATION = Histogram(
-    "phantom_postgres_operation_duration_seconds",
+    "phantom_causal_engine_postgres_operation_duration_seconds",
     "Duration of PostgreSQL operations in the causal-engine",
     labelnames=["operation", "repository"],
     buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0),

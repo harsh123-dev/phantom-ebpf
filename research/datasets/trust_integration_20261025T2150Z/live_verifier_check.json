@@ -1,0 +1,6 @@
+{
+    "Status": "Success",
+    "ResponseCode": 0,
+    "Output": "phantom/sbom-service:trustfix-20261025T2150Z\n{\"trusted-keys.json\":\"{\\\"schema_version\\\":\\\"1.0\\\",\\\"trust_store_id\\\":\\\"phantom-lab-oracle\\\",\\\"generation\\\":1,\\\"keys\\\":[],\\\"revoked_key_ids\\\":[]}\"}\n",
+    "Error": ""
+}

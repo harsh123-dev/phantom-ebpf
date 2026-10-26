@@ -1,0 +1,14 @@
+schema_version: "1.0"
+# Static harness policy only. These are expected states and names of direct
+# assertions; they are not ground-truth observations. A run remains unknown
+# until an independent collector supplies the assertion and contract evidence.
+scenarios:
+  xzutils-001: {target_service: recommendationservice, expected_state: violating, assertion_id: package_version_and_beacon_artifact, behavior: component_execution}
+  dep-confusion-001: {target_service: emailservice, expected_state: violating, assertion_id: installed_dependency_version, behavior: component_execution}
+  solarwinds-001: {target_service: cartservice, expected_state: violating, assertion_id: replacement_workload_identity, behavior: executable}
+  proc-spawn-001: {target_service: recommendationservice, expected_state: violating, assertion_id: unauthorized_worker_process, behavior: executable}
+  net-egress-001: {target_service: cartservice, expected_state: violating, assertion_id: internal_sink_probe_receipt, behavior: network_connect}
+  file-tamper-001: {target_service: recommendationservice, expected_state: violating, assertion_id: marker_file_digest, behavior: file_access}
+  benign-update-001: {target_service: recommendationservice, expected_state: conforming, assertion_id: deployment_annotation_and_images, behavior: executable}
+  benign-load-001: {target_service: emailservice, expected_state: conforming, assertion_id: correlated_access_log_receipts, behavior: network_connect}
+  benign-restart-001: {target_service: cartservice, expected_state: conforming, assertion_id: ready_replacement_pod_uid, behavior: executable}

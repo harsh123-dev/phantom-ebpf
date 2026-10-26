@@ -1,0 +1,22 @@
+{
+    "CommandId": "bd0e8d58-eb9f-4534-9f73-ccc3183824f6",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T20:43:05.955Z",
+    "ExecutionElapsedTime": "PT3.48S",
+    "ExecutionEndDateTime": "2026-10-25T20:43:08.955Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "  HTTP/1.1 200 OK\n  Server: nginx/1.29.3\n  HTTP/1.1 200 OK\n  Server: nginx/1.29.3\n  HTTP/1.1 200 OK\n  Server: nginx/1.29.3\n2026-10-25 20:43:06.753693+00|privilege_transition|runc:[2:INIT]|/usr/bin/dash|sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7|containerd://34da75370182e76d2e5cb0548a39cb530ebebbb74844d634f30ea4495c67b798|75226|6105029306199|b2bd127b-cb1a-4c2f-a988-d636a566ed0d\n2026-10-25 20:43:06.142098+00|namespace_change|runc:[1:CHILD]|runc:[1:CHILD]|sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7|containerd://34da75370182e76d2e5cb0548a39cb530ebebbb74844d634f30ea4495c67b798|75225|6105028788961|b9c4124f-9005-4522-9904-659919a5fec4\n2026-10-25 20:36:58.393878+00|privilege_transition|runc:[2:INIT]|runc:[2:INIT]|sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7|containerd://34da75370182e76d2e5cb0548a39cb530ebebbb74844d634f30ea4495c67b798|71197|5736606130520|b7869afd-36ce-423a-81e9-3f17e5331a07\n2026-10-25 20:36:57.721893+00|namespace_change|runc:[1:CHILD]|runc:[1:CHILD]|sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7|containerd://34da75370182e76d2e5cb0548a39cb530ebebbb74844d634f30ea4495c67b798|71196|5736605681577|bc62d635-9ad5-4c16-b869-13226b63da58\n2026-10-25 20:10:58.755004+00|privilege_transition|runc:[2:INIT]|runc:[2:INIT]|sha256:40af8f06feeab9ef73b2e964ee6af67566b4f24aa2d269d0298cb6343d3fa975|containerd://e98556e26dad9387182019e3f3cf22ae54762242a49e927d84bef45f69a051b8|56152|4177361970956|701f6b66-9c45-461e-9f27-a4196a7361ed\n2026-10-25 20:10:58.693188+00|privilege_transition|runc:[2:INIT]|runc:[2:INIT]|sha256:40af8f06feeab9ef73b2e964ee6af67566b4f24aa2d269d0298cb6343d3fa975|containerd://e98556e26dad9387182019e3f3cf22ae54762242a49e927d84bef45f69a051b8|56152|4177362344896|ad56920f-04e2-46d1-97ff-86b7b274ffc9\n2026-10-25 20:10:58.62546+00|privilege_transition|runc:[2:INIT]|runc:[2:INIT]|sha256:40af8f06feeab9ef73b2e964ee6af67566b4f24aa2d269d0298cb6343d3fa975|containerd://e98556e26dad9387182019e3f3cf22ae54762242a49e927d84bef45f69a051b8|56152|4177362075732|a8fb3fc5-97a1-480d-adf8-be8e4164e4c3\n2026-10-25 20:10:58.590481+00|privilege_transition|runc:[2:INIT]|runc:[2:INIT]|sha256:40af8f06feeab9ef73b2e964ee6af67566b4f24aa2d269d0298cb6343d3fa975|containerd://e98556e26dad9387182019e3f3cf22ae54762242a49e927d84bef45f69a051b8|56152|4177362303121|7aa1c3bb-e58c-4d70-85a8-1775fc588d59\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

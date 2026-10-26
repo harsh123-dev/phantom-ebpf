@@ -20,9 +20,13 @@ echo "=== [3/4] Building SBOM Service ==="
 docker build -f services/sbom-service/Dockerfile -t phantom/sbom-service:latest .
 docker save phantom/sbom-service:latest | k3s ctr -n k8s.io images import -
 
-echo "=== [4/4] Building eBPF Agent ==="
+echo "=== [4/5] Building eBPF Agent ==="
 docker build -f services/ebpf-agent/Dockerfile -t phantom/ebpf-agent:latest services/ebpf-agent
 docker save phantom/ebpf-agent:latest | k3s ctr -n k8s.io images import -
+
+echo "=== [5/5] Building Persistent Evidence Sink ==="
+docker build -f research/evaluation/Dockerfile.evidence-sink -t phantom/evidence-sink:latest .
+docker save phantom/evidence-sink:latest | k3s ctr -n k8s.io images import -
 
 echo ""
 echo "=== All PHANTOM service images built and imported into k3s containerd (k8s.io namespace)! ==="

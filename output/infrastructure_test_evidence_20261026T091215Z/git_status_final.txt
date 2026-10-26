@@ -1,0 +1,102 @@
+ M .github/workflows/release.yml
+ M .github/workflows/security-supply-chain.yml
+ M PAPER_COMPLETION_REPORT.md
+ M PAPER_EVIDENCE_MATRIX.md
+ M PHANTOM_DEPLOYMENT_VERIFICATION.md
+ M PHANTOM_EXECUTION_LOG.md
+ M PHANTOM_EXPERIMENT_RESULTS.md
+ M PHASE1_BLOCKER_RESOLUTION.md
+ M PILOT_BATCH01_ANALYSIS.md
+ M infra/k8s/api-gateway-deployment.yaml
+ M infra/k8s/configmaps.yaml
+ M infra/k8s/k3s-lab/02-phantom-configmaps-secrets.yaml
+ M infra/k8s/k3s-lab/03-phantom-services.yaml
+ M infra/k8s/k3s-lab/06-network-policies.yaml
+ M infra/k8s/k3s-lab/build-images.sh
+ M infra/terraform/environments/k3s-lab/main.tf
+ M infra/terraform/environments/k3s-lab/outputs.tf
+ M infra/terraform/environments/k3s-lab/terraform.tfvars.example
+ M infra/terraform/environments/k3s-lab/variables.tf
+ M libs/phantom-core/phantom_core/models/drift.py
+ M libs/phantom-core/tests/test_models.py
+ M research/evaluation/evidence_store.py
+ M research/evaluation/k8s/target-workloads.yaml
+ M research/evaluation/oracle.py
+ M research/evaluation/pyproject.toml
+ M research/evaluation/scenarios/run_all_scenarios.py
+ M research/evaluation/tests/test_oracle_receipts.py
+ M research/paper/manuscript_draft.md
+ M services/api-gateway/tests/test_authorization.py
+ M services/causal-engine/app/infrastructure/postgres_repository.py
+ M services/causal-engine/pyproject.toml
+ M services/causal-engine/requirements-causal-runtime.txt
+ M services/ebpf-agent/application/main.py
+ M services/ebpf-agent/bpf/syscall_events.bpf.c
+ M services/ebpf-agent/infrastructure/ebpf/loader.py
+ M services/ebpf-agent/infrastructure/k8s/attributor.py
+ M services/ebpf-agent/pyproject.toml
+ M services/ebpf-agent/tests/test_immutable_image_digest.py
+ M services/sbom-service/Dockerfile
+ M services/sbom-service/README.md
+ M services/sbom-service/app/application/use_cases/get_sbom.py
+ M services/sbom-service/app/application/use_cases/ingest_sbom.py
+ M services/sbom-service/app/application/use_cases/verify_sbom_signature.py
+ M services/sbom-service/app/domain/entities.py
+ M services/sbom-service/app/domain/ports.py
+ M services/sbom-service/app/infrastructure/cosign/client.py
+ M services/sbom-service/app/infrastructure/postgres/repository.py
+ M services/sbom-service/app/interface/dependencies.py
+ M services/sbom-service/app/interface/routers.py
+ M services/sbom-service/tests/test_router.py
+ M services/sbom-service/tests/test_use_cases.py
+ M tests/e2e/test_tier4_scenarios.py
+ M tests/verify_m4_adversarial.py
+?? .github/scripts/
+?? .github/workflows/evaluation-sbom-attestation.yml
+?? .venv-agent/
+?? .venv-evaluation/
+?? .venv-services/
+?? cleanup_evidence_20261026T0137Z/
+?? infra/k8s/k3s-lab/render-sbom-s3-egress.py
+?? output/infrastructure_test_evidence_20261026T085142Z/
+?? output/infrastructure_test_evidence_20261026T091215Z/
+?? output/infrastructure_test_report_20261026T085142Z.md
+?? output/infrastructure_test_report_20261026T091215Z.md
+?? output/phantom_lab_cost_options.md
+?? research/datasets/attribution_probe_20261025T2132Z/
+?? research/datasets/exec_telemetry_20261025T2209Z/
+?? research/datasets/live_attribution_20261025T194226Z/
+?? research/datasets/live_exec_attribution_20261025T230924Z/
+?? research/datasets/live_finalization_20261025T200807Z/
+?? research/datasets/live_smoke_20261025T193500Z/
+?? research/datasets/sbom_ingestion_20261025T202953Z/
+?? research/datasets/trust_attribution_20261025T2104Z/
+?? research/datasets/trust_integration_20261025T2150Z/
+?? research/evaluation/Dockerfile.evidence-sink
+?? research/evaluation/EVIDENCE_SINK.md
+?? research/evaluation/OBSERVER_PROVISIONING.md
+?? research/evaluation/evidence_backup.py
+?? research/evaluation/evidence_s3.py
+?? research/evaluation/evidence_sink_service.py
+?? research/evaluation/scenario_observer.py
+?? research/evaluation/scenario_oracle_policies.yaml
+?? research/evaluation/tests/test_evidence_backup.py
+?? research/evaluation/tests/test_evidence_s3.py
+?? research/evaluation/tests/test_evidence_sink_manifest.py
+?? research/evaluation/tests/test_evidence_sink_service.py
+?? research/evaluation/tests/test_run_summary_unknown.py
+?? research/evaluation/tests/test_scenario_observer.py
+?? services/api-gateway/app/infrastructure/migrations/007_allow_observations_without_violations.sql
+?? services/causal-engine/tests/test_authenticated_sink_composition.py
+?? services/causal-engine/tests/test_postgres_metric_registration.py
+?? services/ebpf-agent/tests/test_cgroup_inode_attribution.py
+?? services/ebpf-agent/tests/test_event_identity_handoff.py
+?? services/ebpf-agent/tests/test_event_time_identity.py
+?? services/ebpf-agent/tests/test_loader_ringbuf_maps.py
+?? services/ebpf-agent/tests/test_startup_failure_propagation.py
+?? services/sbom-service/app/infrastructure/postgres/migrations.py
+?? services/sbom-service/app/infrastructure/postgres/migrations/003_add_immutable_image_reference.sql
+?? services/sbom-service/tests/test_artifact_store_validation.py
+?? services/sbom-service/tests/test_atomic_repository.py
+?? services/sbom-service/tests/test_cosign_binding.py
+?? services/sbom-service/tests/test_migrations.py

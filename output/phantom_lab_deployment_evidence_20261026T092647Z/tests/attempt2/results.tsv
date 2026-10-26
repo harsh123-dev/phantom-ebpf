@@ -1,0 +1,9 @@
+phantom_core	0	48 passed, 1 warning in 0.24s
+causal_engine	0	376 passed, 1 skipped, 1030 warnings in 11.78s
+api_gateway	0	63 passed, 2 warnings in 1.43s
+sbom_service	0	211 passed, 1 warning in 0.65s
+report_generator	0	36 passed in 0.05s
+ebpf_agent	0	174 passed in 0.41s
+research_evaluation	0	267 passed, 1 warning in 11.50s
+end_to_end	0	387 passed, 1 skipped in 29.15s
+m4_artifact_checks	0	27 passed, 2 skipped in 0.44s

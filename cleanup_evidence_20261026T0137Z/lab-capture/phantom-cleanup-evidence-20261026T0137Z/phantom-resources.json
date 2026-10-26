@@ -1,0 +1,1142 @@
+{
+  "apiVersion": "v1",
+  "items": [
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "annotations": {
+          "deployment.kubernetes.io/revision": "2",
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-api-gateway\",\"namespace\":\"phantom\"},\"spec\":{\"replicas\":1,\"selector\":{\"matchLabels\":{\"app\":\"phantom-api-gateway\"}},\"template\":{\"metadata\":{\"labels\":{\"app\":\"phantom-api-gateway\"}},\"spec\":{\"containers\":[{\"env\":[{\"name\":\"DATABASE_URL\",\"valueFrom\":{\"secretKeyRef\":{\"key\":\"database_url\",\"name\":\"phantom-api-gateway-secret\"}}},{\"name\":\"REDIS_URL\",\"valueFrom\":{\"secretKeyRef\":{\"key\":\"redis_url\",\"name\":\"phantom-api-gateway-secret\"}}},{\"name\":\"SBOM_SERVICE_URL\",\"valueFrom\":{\"configMapKeyRef\":{\"key\":\"sbom_service_url\",\"name\":\"phantom-config\"}}},{\"name\":\"CAUSAL_ENGINE_URL\",\"valueFrom\":{\"configMapKeyRef\":{\"key\":\"causal_engine_url\",\"name\":\"phantom-config\"}}},{\"name\":\"PHANTOM_JWT_ISSUER\",\"valueFrom\":{\"secretKeyRef\":{\"key\":\"jwt_issuer\",\"name\":\"phantom-api-gateway-secret\"}}},{\"name\":\"PHANTOM_JWT_AUDIENCE\",\"valueFrom\":{\"secretKeyRef\":{\"key\":\"jwt_audience\",\"name\":\"phantom-api-gateway-secret\"}}},{\"name\":\"PHANTOM_JWKS_URI\",\"valueFrom\":{\"secretKeyRef\":{\"key\":\"jwks_uri\",\"name\":\"phantom-api-gateway-secret\"}}},{\"name\":\"AUTH_BYPASS_ENABLED\",\"value\":\"true\"},{\"name\":\"AUTH_BYPASS_TOKEN\",\"value\":\"dev-bypass-token-for-local-testing\"},{\"name\":\"CORS_ALLOW_ORIGINS\",\"value\":\"*\"},{\"name\":\"LOG_LEVEL\",\"value\":\"INFO\"}],\"image\":\"phantom/api-gateway:latest\",\"imagePullPolicy\":\"IfNotPresent\",\"name\":\"api-gateway\",\"ports\":[{\"containerPort\":8080,\"name\":\"http\",\"protocol\":\"TCP\"}],\"readinessProbe\":{\"httpGet\":{\"path\":\"/healthz\",\"port\":\"http\"},\"initialDelaySeconds\":5,\"periodSeconds\":5},\"resources\":{\"limits\":{\"cpu\":\"500m\",\"memory\":\"512Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"128Mi\"}}}],\"serviceAccountName\":\"phantom-api-gateway\"}}}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:17:05Z",
+        "generation": 2,
+        "name": "phantom-api-gateway",
+        "namespace": "phantom",
+        "resourceVersion": "1554",
+        "uid": "250dde7d-a1ab-429e-b3d3-17ea0463a095"
+      },
+      "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 10,
+        "selector": {
+          "matchLabels": {
+            "app": "phantom-api-gateway"
+          }
+        },
+        "strategy": {
+          "rollingUpdate": {
+            "maxSurge": "25%",
+            "maxUnavailable": "25%"
+          },
+          "type": "RollingUpdate"
+        },
+        "template": {
+          "metadata": {
+            "annotations": {
+              "kubectl.kubernetes.io/restartedAt": "2026-10-25T19:26:00Z"
+            },
+            "labels": {
+              "app": "phantom-api-gateway"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "env": [
+                  {
+                    "name": "DATABASE_URL",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "database_url",
+                        "name": "phantom-api-gateway-secret"
+                      }
+                    }
+                  },
+                  {
+                    "name": "REDIS_URL",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "redis_url",
+                        "name": "phantom-api-gateway-secret"
+                      }
+                    }
+                  },
+                  {
+                    "name": "SBOM_SERVICE_URL",
+                    "valueFrom": {
+                      "configMapKeyRef": {
+                        "key": "sbom_service_url",
+                        "name": "phantom-config"
+                      }
+                    }
+                  },
+                  {
+                    "name": "CAUSAL_ENGINE_URL",
+                    "valueFrom": {
+                      "configMapKeyRef": {
+                        "key": "causal_engine_url",
+                        "name": "phantom-config"
+                      }
+                    }
+                  },
+                  {
+                    "name": "PHANTOM_JWT_ISSUER",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "jwt_issuer",
+                        "name": "phantom-api-gateway-secret"
+                      }
+                    }
+                  },
+                  {
+                    "name": "PHANTOM_JWT_AUDIENCE",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "jwt_audience",
+                        "name": "phantom-api-gateway-secret"
+                      }
+                    }
+                  },
+                  {
+                    "name": "PHANTOM_JWKS_URI",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "jwks_uri",
+                        "name": "phantom-api-gateway-secret"
+                      }
+                    }
+                  },
+                  {
+                    "name": "AUTH_BYPASS_ENABLED",
+                    "value": "[REDACTED]"
+                  },
+                  {
+                    "name": "AUTH_BYPASS_TOKEN",
+                    "value": "[REDACTED]"
+                  },
+                  {
+                    "name": "CORS_ALLOW_ORIGINS",
+                    "value": "[REDACTED]"
+                  },
+                  {
+                    "name": "LOG_LEVEL",
+                    "value": "[REDACTED]"
+                  }
+                ],
+                "image": "phantom/api-gateway:latest",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "api-gateway",
+                "ports": [
+                  {
+                    "containerPort": 8080,
+                    "name": "http",
+                    "protocol": "TCP"
+                  }
+                ],
+                "readinessProbe": {
+                  "failureThreshold": 3,
+                  "httpGet": {
+                    "path": "/healthz",
+                    "port": "http",
+                    "scheme": "HTTP"
+                  },
+                  "initialDelaySeconds": 5,
+                  "periodSeconds": 5,
+                  "successThreshold": 1,
+                  "timeoutSeconds": 1
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "512Mi"
+                  },
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "128Mi"
+                  }
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File"
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {},
+            "serviceAccount": "phantom-api-gateway",
+            "serviceAccountName": "phantom-api-gateway",
+            "terminationGracePeriodSeconds": 30
+          }
+        }
+      },
+      "status": {
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-10-25T19:17:11Z",
+            "lastUpdateTime": "2026-10-25T19:17:11Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          },
+          {
+            "lastTransitionTime": "2026-10-25T19:17:05Z",
+            "lastUpdateTime": "2026-10-25T19:26:06Z",
+            "message": "ReplicaSet \"phantom-api-gateway-64d4d745df\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          }
+        ],
+        "observedGeneration": 2,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "terminatingReplicas": 0,
+        "updatedReplicas": 1
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "annotations": {
+          "deployment.kubernetes.io/revision": "2",
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-causal-engine\",\"namespace\":\"phantom\"},\"spec\":{\"replicas\":1,\"selector\":{\"matchLabels\":{\"app\":\"phantom-causal-engine\"}},\"template\":{\"metadata\":{\"labels\":{\"app\":\"phantom-causal-engine\"}},\"spec\":{\"containers\":[{\"env\":[{\"name\":\"DATABASE_URL\",\"valueFrom\":{\"secretKeyRef\":{\"key\":\"database_url\",\"name\":\"phantom-causal-engine-secret\"}}},{\"name\":\"REDIS_URL\",\"valueFrom\":{\"secretKeyRef\":{\"key\":\"redis_url\",\"name\":\"phantom-causal-engine-secret\"}}},{\"name\":\"HEALTH_PORT\",\"value\":\"8080\"},{\"name\":\"LOG_LEVEL\",\"value\":\"INFO\"}],\"image\":\"phantom/causal-engine:latest\",\"imagePullPolicy\":\"IfNotPresent\",\"name\":\"causal-engine\",\"ports\":[{\"containerPort\":8080,\"name\":\"health\",\"protocol\":\"TCP\"},{\"containerPort\":9090,\"name\":\"metrics\",\"protocol\":\"TCP\"}],\"readinessProbe\":{\"httpGet\":{\"path\":\"/readyz\",\"port\":\"health\"},\"initialDelaySeconds\":5,\"periodSeconds\":5},\"resources\":{\"limits\":{\"cpu\":\"1000m\",\"memory\":\"2Gi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"256Mi\"}}}],\"serviceAccountName\":\"phantom-causal-engine\"}}}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:17:05Z",
+        "generation": 2,
+        "name": "phantom-causal-engine",
+        "namespace": "phantom",
+        "resourceVersion": "1253",
+        "uid": "c0d91559-75be-4bb1-b909-ebc4b092e835"
+      },
+      "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 10,
+        "selector": {
+          "matchLabels": {
+            "app": "phantom-causal-engine"
+          }
+        },
+        "strategy": {
+          "rollingUpdate": {
+            "maxSurge": "25%",
+            "maxUnavailable": "25%"
+          },
+          "type": "RollingUpdate"
+        },
+        "template": {
+          "metadata": {
+            "annotations": {
+              "kubectl.kubernetes.io/restartedAt": "2026-10-25T19:19:27Z"
+            },
+            "labels": {
+              "app": "phantom-causal-engine"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "env": [
+                  {
+                    "name": "DATABASE_URL",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "database_url",
+                        "name": "phantom-causal-engine-secret"
+                      }
+                    }
+                  },
+                  {
+                    "name": "REDIS_URL",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "redis_url",
+                        "name": "phantom-causal-engine-secret"
+                      }
+                    }
+                  },
+                  {
+                    "name": "HEALTH_PORT",
+                    "value": "[REDACTED]"
+                  },
+                  {
+                    "name": "LOG_LEVEL",
+                    "value": "[REDACTED]"
+                  }
+                ],
+                "image": "phantom/causal-engine:latest",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "causal-engine",
+                "ports": [
+                  {
+                    "containerPort": 8080,
+                    "name": "health",
+                    "protocol": "TCP"
+                  },
+                  {
+                    "containerPort": 9090,
+                    "name": "metrics",
+                    "protocol": "TCP"
+                  }
+                ],
+                "readinessProbe": {
+                  "failureThreshold": 3,
+                  "httpGet": {
+                    "path": "/readyz",
+                    "port": "health",
+                    "scheme": "HTTP"
+                  },
+                  "initialDelaySeconds": 5,
+                  "periodSeconds": 5,
+                  "successThreshold": 1,
+                  "timeoutSeconds": 1
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "1",
+                    "memory": "2Gi"
+                  },
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "256Mi"
+                  }
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File"
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {},
+            "serviceAccount": "phantom-causal-engine",
+            "serviceAccountName": "phantom-causal-engine",
+            "terminationGracePeriodSeconds": 30
+          }
+        }
+      },
+      "status": {
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-10-25T19:19:33Z",
+            "lastUpdateTime": "2026-10-25T19:19:33Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          },
+          {
+            "lastTransitionTime": "2026-10-25T19:17:05Z",
+            "lastUpdateTime": "2026-10-25T19:19:33Z",
+            "message": "ReplicaSet \"phantom-causal-engine-57576cd69c\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          }
+        ],
+        "observedGeneration": 2,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "terminatingReplicas": 0,
+        "updatedReplicas": 1
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "annotations": {
+          "deployment.kubernetes.io/revision": "1",
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-postgres\",\"namespace\":\"phantom\"},\"spec\":{\"replicas\":1,\"selector\":{\"matchLabels\":{\"app\":\"phantom-postgres\"}},\"template\":{\"metadata\":{\"labels\":{\"app\":\"phantom-postgres\"}},\"spec\":{\"containers\":[{\"env\":[{\"name\":\"POSTGRES_DB\",\"value\":\"phantom\"},{\"name\":\"POSTGRES_USER\",\"value\":\"phantom\"},{\"name\":\"POSTGRES_PASSWORD\",\"value\":\"phantom_dev_password\"}],\"image\":\"postgres:15-alpine\",\"name\":\"postgres\",\"ports\":[{\"containerPort\":5432,\"name\":\"postgres\"}],\"readinessProbe\":{\"exec\":{\"command\":[\"pg_isready\",\"-U\",\"phantom\",\"-d\",\"phantom\"]},\"initialDelaySeconds\":5,\"periodSeconds\":5},\"resources\":{\"limits\":{\"cpu\":\"500m\",\"memory\":\"512Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"128Mi\"}}}]}}}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:16:42Z",
+        "generation": 1,
+        "name": "phantom-postgres",
+        "namespace": "phantom",
+        "resourceVersion": "842",
+        "uid": "a9636290-f5ae-4ec6-bc7a-5cb4fde9115f"
+      },
+      "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 10,
+        "selector": {
+          "matchLabels": {
+            "app": "phantom-postgres"
+          }
+        },
+        "strategy": {
+          "rollingUpdate": {
+            "maxSurge": "25%",
+            "maxUnavailable": "25%"
+          },
+          "type": "RollingUpdate"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "phantom-postgres"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "env": [
+                  {
+                    "name": "POSTGRES_DB",
+                    "value": "[REDACTED]"
+                  },
+                  {
+                    "name": "POSTGRES_USER",
+                    "value": "[REDACTED]"
+                  },
+                  {
+                    "name": "POSTGRES_PASSWORD",
+                    "value": "[REDACTED]"
+                  }
+                ],
+                "image": "postgres:15-alpine",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "postgres",
+                "ports": [
+                  {
+                    "containerPort": 5432,
+                    "name": "postgres",
+                    "protocol": "TCP"
+                  }
+                ],
+                "readinessProbe": {
+                  "exec": {
+                    "command": [
+                      "pg_isready",
+                      "-U",
+                      "phantom",
+                      "-d",
+                      "phantom"
+                    ]
+                  },
+                  "failureThreshold": 3,
+                  "initialDelaySeconds": 5,
+                  "periodSeconds": 5,
+                  "successThreshold": 1,
+                  "timeoutSeconds": 1
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "512Mi"
+                  },
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "128Mi"
+                  }
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File"
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {},
+            "terminationGracePeriodSeconds": 30
+          }
+        }
+      },
+      "status": {
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-10-25T19:16:48Z",
+            "lastUpdateTime": "2026-10-25T19:16:48Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          },
+          {
+            "lastTransitionTime": "2026-10-25T19:16:42Z",
+            "lastUpdateTime": "2026-10-25T19:16:48Z",
+            "message": "ReplicaSet \"phantom-postgres-57dd79788f\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "terminatingReplicas": 0,
+        "updatedReplicas": 1
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "annotations": {
+          "deployment.kubernetes.io/revision": "1",
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-redis\",\"namespace\":\"phantom\"},\"spec\":{\"replicas\":1,\"selector\":{\"matchLabels\":{\"app\":\"phantom-redis\"}},\"template\":{\"metadata\":{\"labels\":{\"app\":\"phantom-redis\"}},\"spec\":{\"containers\":[{\"command\":[\"redis-server\",\"--appendonly\",\"no\",\"--save\",\"\"],\"image\":\"redis:7-alpine\",\"name\":\"redis\",\"ports\":[{\"containerPort\":6379,\"name\":\"redis\"}],\"readinessProbe\":{\"exec\":{\"command\":[\"redis-cli\",\"ping\"]},\"initialDelaySeconds\":5,\"periodSeconds\":5},\"resources\":{\"limits\":{\"cpu\":\"200m\",\"memory\":\"256Mi\"},\"requests\":{\"cpu\":\"50m\",\"memory\":\"64Mi\"}}}]}}}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:16:42Z",
+        "generation": 1,
+        "name": "phantom-redis",
+        "namespace": "phantom",
+        "resourceVersion": "848",
+        "uid": "9896f449-b192-4508-bc3c-b9c521370176"
+      },
+      "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 10,
+        "selector": {
+          "matchLabels": {
+            "app": "phantom-redis"
+          }
+        },
+        "strategy": {
+          "rollingUpdate": {
+            "maxSurge": "25%",
+            "maxUnavailable": "25%"
+          },
+          "type": "RollingUpdate"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "phantom-redis"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "command": [
+                  "redis-server",
+                  "--appendonly",
+                  "no",
+                  "--save",
+                  ""
+                ],
+                "image": "redis:7-alpine",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "redis",
+                "ports": [
+                  {
+                    "containerPort": 6379,
+                    "name": "redis",
+                    "protocol": "TCP"
+                  }
+                ],
+                "readinessProbe": {
+                  "exec": {
+                    "command": [
+                      "redis-cli",
+                      "ping"
+                    ]
+                  },
+                  "failureThreshold": 3,
+                  "initialDelaySeconds": 5,
+                  "periodSeconds": 5,
+                  "successThreshold": 1,
+                  "timeoutSeconds": 1
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "200m",
+                    "memory": "256Mi"
+                  },
+                  "requests": {
+                    "cpu": "50m",
+                    "memory": "64Mi"
+                  }
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File"
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {},
+            "terminationGracePeriodSeconds": 30
+          }
+        }
+      },
+      "status": {
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-10-25T19:16:50Z",
+            "lastUpdateTime": "2026-10-25T19:16:50Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          },
+          {
+            "lastTransitionTime": "2026-10-25T19:16:42Z",
+            "lastUpdateTime": "2026-10-25T19:16:50Z",
+            "message": "ReplicaSet \"phantom-redis-64555c745\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "terminatingReplicas": 0,
+        "updatedReplicas": 1
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "annotations": {
+          "deployment.kubernetes.io/revision": "6",
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-sbom-service\",\"namespace\":\"phantom\"},\"spec\":{\"replicas\":1,\"selector\":{\"matchLabels\":{\"app\":\"phantom-sbom-service\"}},\"template\":{\"metadata\":{\"labels\":{\"app\":\"phantom-sbom-service\"}},\"spec\":{\"containers\":[{\"env\":[{\"name\":\"SBOM_SERVICE_DB_URL\",\"valueFrom\":{\"secretKeyRef\":{\"key\":\"database_url\",\"name\":\"phantom-sbom-service-secret\"}}},{\"name\":\"LOG_LEVEL\",\"value\":\"INFO\"}],\"image\":\"phantom/sbom-service:latest\",\"imagePullPolicy\":\"IfNotPresent\",\"name\":\"sbom-service\",\"ports\":[{\"containerPort\":8000,\"name\":\"http\",\"protocol\":\"TCP\"}],\"readinessProbe\":{\"httpGet\":{\"path\":\"/readyz\",\"port\":\"http\"},\"initialDelaySeconds\":5,\"periodSeconds\":5},\"resources\":{\"limits\":{\"cpu\":\"500m\",\"memory\":\"512Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"128Mi\"}}}],\"serviceAccountName\":\"phantom-sbom-service\"}}}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:17:05Z",
+        "generation": 6,
+        "name": "phantom-sbom-service",
+        "namespace": "phantom",
+        "resourceVersion": "5475",
+        "uid": "bb4c6654-4643-4840-9518-209a5b27cae5"
+      },
+      "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 10,
+        "selector": {
+          "matchLabels": {
+            "app": "phantom-sbom-service"
+          }
+        },
+        "strategy": {
+          "rollingUpdate": {
+            "maxSurge": "25%",
+            "maxUnavailable": "25%"
+          },
+          "type": "RollingUpdate"
+        },
+        "template": {
+          "metadata": {
+            "annotations": {
+              "kubectl.kubernetes.io/restartedAt": "2026-10-25T19:30:31Z"
+            },
+            "labels": {
+              "app": "phantom-sbom-service"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "env": [
+                  {
+                    "name": "SBOM_SERVICE_DB_URL",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "database_url",
+                        "name": "phantom-sbom-service-secret"
+                      }
+                    }
+                  },
+                  {
+                    "name": "LOG_LEVEL",
+                    "value": "[REDACTED]"
+                  },
+                  {
+                    "name": "SBOM_SERVICE_S3_BUCKET",
+                    "valueFrom": {
+                      "configMapKeyRef": {
+                        "key": "sbom_s3_bucket",
+                        "name": "phantom-config"
+                      }
+                    }
+                  },
+                  {
+                    "name": "SBOM_SERVICE_S3_REGION",
+                    "valueFrom": {
+                      "configMapKeyRef": {
+                        "key": "sbom_s3_region",
+                        "name": "phantom-config"
+                      }
+                    }
+                  },
+                  {
+                    "name": "SBOM_SERVICE_S3_KEY_PREFIX",
+                    "valueFrom": {
+                      "configMapKeyRef": {
+                        "key": "sbom_s3_key_prefix",
+                        "name": "phantom-config"
+                      }
+                    }
+                  },
+                  {
+                    "name": "SBOM_SERVICE_ALLOWED_ARTIFACT_PREFIX",
+                    "valueFrom": {
+                      "configMapKeyRef": {
+                        "key": "sbom_allowed_artifact_prefix",
+                        "name": "phantom-config"
+                      }
+                    }
+                  }
+                ],
+                "image": "phantom/sbom-service:trustfix-20261025T2150Z",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "sbom-service",
+                "ports": [
+                  {
+                    "containerPort": 8000,
+                    "name": "http",
+                    "protocol": "TCP"
+                  }
+                ],
+                "readinessProbe": {
+                  "failureThreshold": 3,
+                  "httpGet": {
+                    "path": "/readyz",
+                    "port": "http",
+                    "scheme": "HTTP"
+                  },
+                  "initialDelaySeconds": 5,
+                  "periodSeconds": 5,
+                  "successThreshold": 1,
+                  "timeoutSeconds": 1
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "512Mi"
+                  },
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "128Mi"
+                  }
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File"
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {},
+            "serviceAccount": "phantom-sbom-service",
+            "serviceAccountName": "phantom-sbom-service",
+            "terminationGracePeriodSeconds": 30
+          }
+        }
+      },
+      "status": {
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-10-25T19:17:11Z",
+            "lastUpdateTime": "2026-10-25T19:17:11Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          },
+          {
+            "lastTransitionTime": "2026-10-25T19:17:05Z",
+            "lastUpdateTime": "2026-10-25T21:43:20Z",
+            "message": "ReplicaSet \"phantom-sbom-service-749746494\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          }
+        ],
+        "observedGeneration": 6,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "terminatingReplicas": 0,
+        "updatedReplicas": 1
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-api-gateway\",\"namespace\":\"phantom\"},\"spec\":{\"ports\":[{\"name\":\"http\",\"port\":8080,\"protocol\":\"TCP\",\"targetPort\":\"http\"}],\"selector\":{\"app\":\"phantom-api-gateway\"},\"type\":\"ClusterIP\"}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:17:05Z",
+        "name": "phantom-api-gateway",
+        "namespace": "phantom",
+        "resourceVersion": "1023",
+        "uid": "a2b1672c-7f3f-486c-b8d2-7abef998919d"
+      },
+      "spec": {
+        "clusterIP": "10.43.89.167",
+        "clusterIPs": [
+          "10.43.89.167"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "name": "http",
+            "port": 8080,
+            "protocol": "TCP",
+            "targetPort": "http"
+          }
+        ],
+        "selector": {
+          "app": "phantom-api-gateway"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      },
+      "status": {
+        "loadBalancer": {}
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-causal-engine\",\"namespace\":\"phantom\"},\"spec\":{\"ports\":[{\"name\":\"health\",\"port\":8080,\"targetPort\":\"health\"},{\"name\":\"metrics\",\"port\":9090,\"targetPort\":\"metrics\"}],\"selector\":{\"app\":\"phantom-causal-engine\"},\"type\":\"ClusterIP\"}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:17:05Z",
+        "name": "phantom-causal-engine",
+        "namespace": "phantom",
+        "resourceVersion": "1041",
+        "uid": "06c2cd1a-af08-4d8a-aca7-0bbde87b13a2"
+      },
+      "spec": {
+        "clusterIP": "10.43.227.92",
+        "clusterIPs": [
+          "10.43.227.92"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "name": "health",
+            "port": 8080,
+            "protocol": "TCP",
+            "targetPort": "health"
+          },
+          {
+            "name": "metrics",
+            "port": 9090,
+            "protocol": "TCP",
+            "targetPort": "metrics"
+          }
+        ],
+        "selector": {
+          "app": "phantom-causal-engine"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      },
+      "status": {
+        "loadBalancer": {}
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-ebpf-agent\",\"namespace\":\"phantom\"},\"spec\":{\"ports\":[{\"name\":\"metrics\",\"port\":9101,\"targetPort\":\"metrics\"}],\"selector\":{\"app\":\"phantom-ebpf-agent\"},\"type\":\"ClusterIP\"}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:17:05Z",
+        "name": "phantom-ebpf-agent",
+        "namespace": "phantom",
+        "resourceVersion": "1070",
+        "uid": "c01269b9-8642-4d28-9438-566ff42eb5a7"
+      },
+      "spec": {
+        "clusterIP": "10.43.249.198",
+        "clusterIPs": [
+          "10.43.249.198"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "name": "metrics",
+            "port": 9101,
+            "protocol": "TCP",
+            "targetPort": "metrics"
+          }
+        ],
+        "selector": {
+          "app": "phantom-ebpf-agent"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      },
+      "status": {
+        "loadBalancer": {}
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-postgres\",\"namespace\":\"phantom\"},\"spec\":{\"ports\":[{\"name\":\"postgres\",\"port\":5432,\"targetPort\":5432}],\"selector\":{\"app\":\"phantom-postgres\"},\"type\":\"ClusterIP\"}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:16:42Z",
+        "name": "phantom-postgres",
+        "namespace": "phantom",
+        "resourceVersion": "787",
+        "uid": "1cd6040c-5af9-4100-ac9f-69fb769baafc"
+      },
+      "spec": {
+        "clusterIP": "10.43.171.116",
+        "clusterIPs": [
+          "10.43.171.116"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "name": "postgres",
+            "port": 5432,
+            "protocol": "TCP",
+            "targetPort": 5432
+          }
+        ],
+        "selector": {
+          "app": "phantom-postgres"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      },
+      "status": {
+        "loadBalancer": {}
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-redis\",\"namespace\":\"phantom\"},\"spec\":{\"ports\":[{\"name\":\"redis\",\"port\":6379,\"targetPort\":6379}],\"selector\":{\"app\":\"phantom-redis\"},\"type\":\"ClusterIP\"}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:16:42Z",
+        "name": "phantom-redis",
+        "namespace": "phantom",
+        "resourceVersion": "797",
+        "uid": "45098dad-5cad-4f9e-b9f7-af85fd2c5187"
+      },
+      "spec": {
+        "clusterIP": "10.43.221.65",
+        "clusterIPs": [
+          "10.43.221.65"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "name": "redis",
+            "port": 6379,
+            "protocol": "TCP",
+            "targetPort": 6379
+          }
+        ],
+        "selector": {
+          "app": "phantom-redis"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      },
+      "status": {
+        "loadBalancer": {}
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-sbom-service\",\"namespace\":\"phantom\"},\"spec\":{\"ports\":[{\"name\":\"http\",\"port\":8080,\"protocol\":\"TCP\",\"targetPort\":\"http\"}],\"selector\":{\"app\":\"phantom-sbom-service\"},\"type\":\"ClusterIP\"}}\n"
+        },
+        "creationTimestamp": "2026-10-25T19:17:05Z",
+        "name": "phantom-sbom-service",
+        "namespace": "phantom",
+        "resourceVersion": "1063",
+        "uid": "7b90e9ba-4682-48ac-a85b-f863adc84549"
+      },
+      "spec": {
+        "clusterIP": "10.43.204.1",
+        "clusterIPs": [
+          "10.43.204.1"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "name": "http",
+            "port": 8080,
+            "protocol": "TCP",
+            "targetPort": "http"
+          }
+        ],
+        "selector": {
+          "app": "phantom-sbom-service"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      },
+      "status": {
+        "loadBalancer": {}
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"networking.k8s.io/v1\",\"kind\":\"NetworkPolicy\",\"metadata\":{\"annotations\":{},\"name\":\"phantom-sbom-restricted-egress\",\"namespace\":\"phantom\"},\"spec\":{\"egress\":[{\"ports\":[{\"port\":53,\"protocol\":\"UDP\"},{\"port\":53,\"protocol\":\"TCP\"}],\"to\":[{\"namespaceSelector\":{\"matchLabels\":{\"kubernetes.io/metadata.name\":\"kube-system\"}}}]},{\"ports\":[{\"port\":5432,\"protocol\":\"TCP\"}],\"to\":[{\"podSelector\":{\"matchLabels\":{\"app\":\"phantom-postgres\"}}}]},{\"ports\":[{\"port\":443,\"protocol\":\"TCP\"}],\"to\":[{\"ipBlock\":{\"cidr\":\"16.12.3.0/24\"}},{\"ipBlock\":{\"cidr\":\"16.12.36.0/22\"}},{\"ipBlock\":{\"cidr\":\"16.12.40.0/23\"}},{\"ipBlock\":{\"cidr\":\"3.5.208.0/22\"}},{\"ipBlock\":{\"cidr\":\"3.5.212.0/23\"}},{\"ipBlock\":{\"cidr\":\"52.219.156.0/22\"}},{\"ipBlock\":{\"cidr\":\"52.219.160.0/23\"}},{\"ipBlock\":{\"cidr\":\"52.219.62.0/23\"}},{\"ipBlock\":{\"cidr\":\"52.219.64.0/22\"}}]}],\"podSelector\":{\"matchLabels\":{\"app\":\"phantom-sbom-service\"}},\"policyTypes\":[\"Egress\"]}}\n"
+        },
+        "creationTimestamp": "2026-10-25T20:32:44Z",
+        "generation": 1,
+        "name": "phantom-sbom-restricted-egress",
+        "namespace": "phantom",
+        "resourceVersion": "3553",
+        "uid": "c18c501d-dff9-4ad6-a1dd-028b8ccfd58a"
+      },
+      "spec": {
+        "egress": [
+          {
+            "ports": [
+              {
+                "port": 53,
+                "protocol": "UDP"
+              },
+              {
+                "port": 53,
+                "protocol": "TCP"
+              }
+            ],
+            "to": [
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "kubernetes.io/metadata.name": "kube-system"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "ports": [
+              {
+                "port": 5432,
+                "protocol": "TCP"
+              }
+            ],
+            "to": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app": "phantom-postgres"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "ports": [
+              {
+                "port": 443,
+                "protocol": "TCP"
+              }
+            ],
+            "to": [
+              {
+                "ipBlock": {
+                  "cidr": "16.12.3.0/24"
+                }
+              },
+              {
+                "ipBlock": {
+                  "cidr": "16.12.36.0/22"
+                }
+              },
+              {
+                "ipBlock": {
+                  "cidr": "16.12.40.0/23"
+                }
+              },
+              {
+                "ipBlock": {
+                  "cidr": "3.5.208.0/22"
+                }
+              },
+              {
+                "ipBlock": {
+                  "cidr": "3.5.212.0/23"
+                }
+              },
+              {
+                "ipBlock": {
+                  "cidr": "52.219.156.0/22"
+                }
+              },
+              {
+                "ipBlock": {
+                  "cidr": "52.219.160.0/23"
+                }
+              },
+              {
+                "ipBlock": {
+                  "cidr": "52.219.62.0/23"
+                }
+              },
+              {
+                "ipBlock": {
+                  "cidr": "52.219.64.0/22"
+                }
+              }
+            ]
+          }
+        ],
+        "podSelector": {
+          "matchLabels": {
+            "app": "phantom-sbom-service"
+          }
+        },
+        "policyTypes": [
+          "Egress"
+        ]
+      }
+    }
+  ],
+  "kind": "List",
+  "metadata": {
+    "resourceVersion": ""
+  }
+}

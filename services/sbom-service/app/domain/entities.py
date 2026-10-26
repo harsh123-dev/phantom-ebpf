@@ -70,6 +70,11 @@ class BindingStatus(str, Enum):
 _DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 """Pattern for validating sha256:<64 hex chars> digest fields."""
 
+_IMAGE_DIGEST_REFERENCE_RE = re.compile(
+    r"^[A-Za-z0-9.-]+(?::[0-9]+)?/[A-Za-z0-9._/-]+@sha256:[0-9a-f]{64}$"
+)
+"""Pattern for immutable registry/repository references used for OCI lookup."""
+
 _CYCLONEDX_FORMAT_FIELD = "bomFormat"
 """Required top-level field in a CycloneDX JSON document."""
 
@@ -391,6 +396,9 @@ class Sbom:
     verified_at: datetime | None = None
     """UTC timestamp of successful verification; None if pending or failed."""
 
+    image_reference: str | None = None
+    """Fully qualified immutable registry/repository@digest reference, if known."""
+
     def __post_init__(self) -> None:
         """Enforce SBOM domain invariants.
 
@@ -399,6 +407,13 @@ class Sbom:
         """
         if not self.spec_version:
             raise ValueError("Sbom.spec_version must not be empty")
+        if self.image_reference is not None:
+            if not _IMAGE_DIGEST_REFERENCE_RE.fullmatch(self.image_reference):
+                raise ValueError(
+                    "Sbom.image_reference must be an immutable registry/repository@sha256 reference"
+                )
+            if not self.image_reference.endswith(f"@{self.image_digest.value}"):
+                raise ValueError("Sbom.image_reference digest must equal image_digest")
         if self.purl_count < 0:
             raise ValueError(
                 f"Sbom.purl_count must be >= 0, got {self.purl_count}"

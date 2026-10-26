@@ -1,0 +1,6 @@
+{
+    "Status": "Success",
+    "ResponseCode": 0,
+    "Output": "{\"record\": {\"sbom_id\": \"f6ffce2a-50c1-4284-91f4-5d515e43da9e\", \"image_digest\": \"sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7\", \"sbom_digest\": \"sha256:65fc90d4219c3d53bf2ed82f365376f5433920309406d62af0f799f515daf5bb\", \"format\": \"CycloneDX\", \"spec_version\": \"1.7\", \"component_count\": 22823, \"verification_status\": \"pending\", \"created_at\": \"2026-10-25T20:34:57.936418Z\"}, \"component_count\": 22823}\n",
+    "Error": ""
+}

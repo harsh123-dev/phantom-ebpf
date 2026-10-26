@@ -1,0 +1,22 @@
+{
+  "CommandId": "5a67fd2e-320d-45a7-a59b-f46fabc38b08",
+  "InstanceId": "i-06bb29d253668fa5f",
+  "Comment": "",
+  "DocumentName": "AWS-RunShellScript",
+  "DocumentVersion": "$DEFAULT",
+  "PluginName": "aws:runShellScript",
+  "ResponseCode": 0,
+  "ExecutionStartDateTime": "2026-10-25T19:31:56.798Z",
+  "ExecutionElapsedTime": "PT0.892S",
+  "ExecutionEndDateTime": "2026-10-25T19:31:56.798Z",
+  "Status": "Success",
+  "StatusDetails": "Success",
+  "StandardOutputContent": "{\"integrity_verification\": {\"authenticity\": \"unverified\", \"independence\": \"unverified\", \"integrity\": \"valid\", \"receipt_id\": \"5ce90608-0117-5836-95dc-01f37543ab38\", \"sha256\": \"sha256:325c19543aeea1f39527dd98c9cad298f6b8c3171f9a6ff35a686315b7aaace0\"}, \"posted\": {\"created_at\": \"2026-10-25T19:31:57.625383+00:00\", \"event_id\": \"cc13c9ad-d541-4814-ae3e-9aa15e57e044\", \"evidence_references\": [], \"integrity_sha256\": \"sha256:325c19543aeea1f39527dd98c9cad298f6b8c3171f9a6ff35a686315b7aaace0\", \"oracle_result\": {\"assessed_at\": \"2026-10-25T19:31:57.625248+00:00\", \"authenticity_status\": \"unverified\", \"contract_id\": null, \"contract_version\": null, \"evidence_references\": [], \"expected_state\": \"contract_state_unavailable\", \"independence_basis\": [], \"independence_status\": \"unverified\", \"observation_ids\": [], \"observed_state\": \"unknown\", \"outcome\": \"unknown\", \"reasons\": [\"no authenticated independent signed oracle observation was supplied\"], \"run_id\": \"live-smoke-20261025T193500Z\", \"scenario_id\": \"harmless-telemetry-smoke\", \"signature_key_ids\": [], \"workload\": {\"cluster\": \"phantom-k3s-lab\", \"image_digest\": \"sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7\", \"name\": \"recommendationservice-5dc98bbcb9-xq42k\", \"namespace\": \"phantom-eval\"}}, \"processing_outcome\": \"runtime_event_processed_smoke_only\", \"provenance\": {\"causal_stream\": \"phantom:drift-events\", \"contract_ground_truth\": \"unknown\", \"sbom_binding\": \"insufficient_evidence\", \"source\": \"live-kernel-smoke\"}, \"receipt_id\": \"5ce90608-0117-5836-95dc-01f37543ab38\", \"run_id\": \"live-smoke-20261025T193500Z\", \"scenario_id\": \"harmless-telemetry-smoke\", \"schema_version\": \"1.0\", \"workload\": {\"cluster\": \"phantom-k3s-lab\", \"image_digest\": \"sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7\", \"name\": \"recommendationservice-5dc98bbcb9-xq42k\", \"namespace\": \"phantom-eval\"}}, \"retrieved_receipt_id\": \"5ce90608-0117-5836-95dc-01f37543ab38\"}\n",
+  "StandardOutputUrl": "",
+  "StandardErrorContent": "",
+  "StandardErrorUrl": "",
+  "CloudWatchOutputConfig": {
+    "CloudWatchLogGroupName": "",
+    "CloudWatchOutputEnabled": false
+  }
+}

@@ -1,0 +1,9 @@
+{
+    "CommandId": "b215948a-4f76-44e5-83f5-3fcbf96edb37",
+    "Status": "Success",
+    "ExitCode": 0,
+    "Start": "2026-10-26T09:32:28.752Z",
+    "End": "2026-10-26T09:32:28.752Z",
+    "Stdout": "REMOTE_ARCHIVE_SHA256=18f0ac9b88534e2879409037d8cabf0028fa63384c183f58b1f5a7800a44e70d\n18f0ac9b88534e2879409037d8cabf0028fa63384c183f58b1f5a7800a44e70d  /opt/phantom-source-snapshots/20261026T092647Z/phantom-source-snapshot.tar.gz\nEXTRACTED_ROOT=/opt/phantom-ebpf\nBOOTSTRAP_COMPLETE=yes\n",
+    "Stderr": ""
+}

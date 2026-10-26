@@ -22,6 +22,7 @@ Security decisions:
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import re
@@ -65,6 +66,50 @@ _REKOR_UUID_RE = re.compile(r"[0-9a-f]{64}", re.IGNORECASE)
 """Pattern used to extract a Rekor entry UUID from cosign output."""
 
 
+def _matching_cyclonedx_attestation(stdout: str, sbom: Sbom) -> bool:
+    """Require a verified DSSE statement for these exact SBOM bytes and image.
+
+    Cosign emits one JSON object per line. Its successful exit status verifies
+    the signatures; the application must still bind the signed predicate and
+    subject to the indexed record. Unrecognized output is never trusted.
+    """
+    for line in stdout.splitlines():
+        try:
+            envelope = json.loads(line)
+            if not isinstance(envelope, dict):
+                continue
+            encoded = envelope.get("payload")
+            if not isinstance(encoded, str):
+                continue
+            statement = json.loads(base64.b64decode(encoded, validate=True))
+            if not isinstance(statement, dict):
+                continue
+            if statement.get("_type") not in {
+                "https://in-toto.io/Statement/v0.1",
+                "https://in-toto.io/Statement/v1",
+            }:
+                continue
+            if statement.get("predicateType") != "https://cyclonedx.org/bom":
+                continue
+            predicate = statement.get("predicate")
+            if not isinstance(predicate, dict):
+                continue
+            if predicate != sbom.cyclonedx_document:
+                continue
+            subjects = statement.get("subject")
+            if not isinstance(subjects, list) or len(subjects) != 1:
+                continue
+            digest = subjects[0].get("digest") if isinstance(subjects[0], dict) else None
+            if not isinstance(digest, dict) or digest != {"sha256": sbom.image_digest.value[7:]}:
+                continue
+            if sbom.sbom_digest.value != type(sbom.sbom_digest).compute(predicate).value:
+                continue
+            return True
+        except (ValueError, TypeError, KeyError, UnicodeDecodeError):
+            continue
+    return False
+
+
 class CosignClient(SbomVerifierPort):
     """Cosign CLI adapter implementing the SbomVerifierPort.
 
@@ -84,6 +129,8 @@ class CosignClient(SbomVerifierPort):
         timeout_seconds: float = _DEFAULT_TIMEOUT_SECONDS,
         rekor_url: str = "https://rekor.sigstore.dev",
         fulcio_url: str = "https://fulcio.sigstore.dev",
+        trusted_identity: str | None = None,
+        trusted_issuer: str | None = None,
     ) -> None:
         """Initialise the cosign client.
 
@@ -97,6 +144,8 @@ class CosignClient(SbomVerifierPort):
         self._timeout_seconds = timeout_seconds
         self._rekor_url = rekor_url
         self._fulcio_url = fulcio_url
+        self._trusted_identity = trusted_identity
+        self._trusted_issuer = trusted_issuer
 
     def _resolve_cosign_binary(self) -> str:
         """Resolve the cosign binary path.
@@ -114,6 +163,26 @@ class CosignClient(SbomVerifierPort):
                 f"ensure cosign is installed and on PATH"
             )
         return resolved
+
+    def validate_trust_request(
+        self, expected_identity: str, expected_issuer: str, rekor_required: bool
+    ) -> None:
+        """Reject caller-selected trust or transparency settings before queueing."""
+        if not self._trusted_identity or not self._trusted_issuer:
+            raise VerificationServiceUnavailableError(
+                "server signer identity and issuer trust policy is not configured"
+            )
+        if (
+            expected_identity != self._trusted_identity
+            or expected_issuer != self._trusted_issuer
+        ):
+            raise SignatureVerificationError(
+                message="requested signer identity and issuer do not match server trust policy"
+            )
+        if not rekor_required:
+            raise SignatureVerificationError(
+                message="keyless SBOM verification requires transparency-log verification"
+            )
 
     def _build_env(self) -> dict[str, str]:
         """Build a safe environment dict for the cosign subprocess.
@@ -170,6 +239,17 @@ class CosignClient(SbomVerifierPort):
             SignatureVerificationError: If the signature is definitively bad.
             VerificationServiceUnavailableError: If cosign/Sigstore is unreachable.
         """
+        self.validate_trust_request(expected_identity, expected_issuer, rekor_required)
+        if not sbom.image_reference:
+            raise VerificationServiceUnavailableError(
+                "immutable registry/repository@digest reference is required; "
+                "a bare image digest cannot locate the attached attestation"
+            )
+        if not sbom.image_reference.endswith(f"@{sbom.image_digest.value}"):
+            raise SignatureVerificationError(
+                message="stored immutable image reference does not match image digest",
+                sbom_id=str(sbom.sbom_id),
+            )
         resolved_binary = self._resolve_cosign_binary()
 
         # Build the argument list. Each flag-value pair is a discrete element
@@ -185,7 +265,7 @@ class CosignClient(SbomVerifierPort):
             "cyclonedx",
             "--rekor-url",
             self._rekor_url,
-            sbom.image_digest.value,     # target: the image digest
+            sbom.image_reference,        # registry/repository@digest locates the attestation
         ]
 
         if not rekor_required:
@@ -195,6 +275,7 @@ class CosignClient(SbomVerifierPort):
         bound_log = log.bind(
             sbom_id=str(sbom.sbom_id),
             image_digest=sbom.image_digest.value,
+            image_reference=sbom.image_reference,
             expected_identity=expected_identity,
             expected_issuer=expected_issuer,
         )
@@ -247,11 +328,27 @@ class CosignClient(SbomVerifierPort):
                 sbom_id=str(sbom.sbom_id),
             )
 
+        if not _matching_cyclonedx_attestation(stdout_text, sbom):
+            raise SignatureVerificationError(
+                message=(
+                    "verified attestation does not bind the indexed CycloneDX "
+                    "SBOM and image digest"
+                ),
+                sbom_id=str(sbom.sbom_id),
+            )
+
         # Parse cosign JSON output to extract identity/issuer/Rekor details.
         signing_identity, issuer, rekor_entry_uuid = self._extract_verification_details(
             stdout=stdout_text,
             stderr=stderr_text,
         )
+        # verify-attestation emits JSONL DSSE envelopes, which need not carry
+        # certificate metadata. The exact identity and issuer were checked by
+        # cosign's required CLI flags; persist those rather than "unknown".
+        if signing_identity == "unknown":
+            signing_identity = expected_identity
+        if issuer == "unknown":
+            issuer = expected_issuer
 
         updated_sbom = sbom.mark_verified(
             signing_identity=signing_identity,

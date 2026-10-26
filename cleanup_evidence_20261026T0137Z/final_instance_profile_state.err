@@ -1,0 +1,2 @@
+
+aws: [ERROR]: An error occurred (NoSuchEntity) when calling the GetInstanceProfile operation: Instance Profile phantom-k3s-lab-instance-profile cannot be found.

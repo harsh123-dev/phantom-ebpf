@@ -1,0 +1,29 @@
+captured_at=2026-10-26T01:39:25Z
+ip-10-89-2-125
+Linux ip-10-89-2-125 6.8.0-1066-aws #69~22.04.1-Ubuntu SMP Mon Sep 21 16:20:15 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        49G   32G   18G  65% /
+BTF_PRESENT
+NAME             STATUS   ROLES           AGE     VERSION        INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION           CONTAINER-RUNTIME
+ip-10-89-2-125   Ready    control-plane   6h34m   v1.36.5+k3s1   10.89.2.125   <none>        Ubuntu 22.04.5 LTS   6.8.0-1066-aws (amd64)   containerd://2.3.4-k3s1.36
+IMAGE                                        TAG                                 IMAGE ID            SIZE
+docker.io/phantom/api-gateway                latest                              f963a42fac74a       76.9MB
+docker.io/phantom/causal-engine              latest                              30a9e66b61664       892MB
+docker.io/phantom/ebpf-agent                 all-rings-20261025T2245Z            761569fb8de52       90.5MB
+docker.io/phantom/ebpf-agent                 attrfix-20261026-verified           4b42a6f923cf9       90.5MB
+docker.io/phantom/ebpf-agent                 cgroupattr-20261025T2306Z           6eb1ddb424635       90.6MB
+docker.io/phantom/ebpf-agent                 diag-20261025T2132Z                 2245de0986f79       90.5MB
+docker.io/phantom/ebpf-agent                 execdebug-20261025T2320Z            1b7cea1bc9316       90.5MB
+docker.io/phantom/ebpf-agent                 execfix-20261025T2255Z              3b5818c0636fd       90.5MB
+docker.io/phantom/ebpf-agent                 execfix-20261025T2305Z              f89bdb8a882bb       90.5MB
+docker.io/phantom/ebpf-agent                 latest                              2693620eba1c7       90.5MB
+docker.io/phantom/ebpf-agent                 racefix-20261025T2140Z              ed11590fd94fe       90.5MB
+docker.io/phantom/ebpf-agent                 schedexec-20261025T2215Z            d4fdecec92e9e       90.5MB
+docker.io/phantom/ebpf-agent                 startupdiag-20261026T0040Z          8b8b717d59e7b       90.5MB
+docker.io/phantom/ebpf-agent                 telemetry-20261025T2209Z            ae41422440326       90.5MB
+docker.io/phantom/evidence-sink              latest                              40af8f06feeab       80.9MB
+docker.io/phantom/sbom-service               latest                              3245663b55e8e       93.2MB
+docker.io/phantom/sbom-service               sbomfix-idempotent-20261025T2045Z   d47a1b518381e       93.2MB
+docker.io/phantom/sbom-service               trustfix-20261025T2150Z             cee36939f8c3e       154MB
+docker.io/phantom/sbom-service               sbomfix-20261025T202953Z            5ccf539861db1       93.2MB
+candidate=sha256:12ba221275baa228cc2d8e6044a5a15fcc512f6f8d089fe53fd282cb033190bd size=459482918 entrypoint=["python3","-m","application.main"]

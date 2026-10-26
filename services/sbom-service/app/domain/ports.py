@@ -42,6 +42,36 @@ class SbomRepositoryPort(ABC):
         """
 
     @abstractmethod
+    async def save_with_components(
+        self, sbom: Sbom, components: list[Component]
+    ) -> None:
+        """Persist an SBOM and all extracted components in one DB transaction.
+
+        A failed component insert must roll back the SBOM row so downstream
+        lookups never observe a partially indexed document.
+        """
+
+    @abstractmethod
+    async def find_by_image_and_digest(
+        self, image_digest: str, sbom_digest: str, tenant_id: uuid.UUID
+    ) -> Sbom | None:
+        """Return an exact previously indexed image/SBOM identity, if present.
+
+        Used to make identical ingestion retries idempotent. A same-image
+        record with a different SBOM digest is not considered the same request.
+        """
+
+    @abstractmethod
+    async def bind_image_reference(
+        self, sbom_id: uuid.UUID, tenant_id: uuid.UUID, image_reference: str
+    ) -> None:
+        """Fill a missing immutable registry reference without changing identity.
+
+        Existing references are never replaced. An attempt to bind a different
+        reference is a storage/identity conflict and must fail.
+        """
+
+    @abstractmethod
     async def get_by_id(
         self, sbom_id: uuid.UUID, tenant_id: uuid.UUID
     ) -> Sbom:
@@ -98,6 +128,12 @@ class VerificationJobRepositoryPort(ABC):
         Raises:
             VerificationJobNotFoundError: If no job exists.
         """
+
+    @abstractmethod
+    async def get_by_id(
+        self, verification_job_id: uuid.UUID, tenant_id: uuid.UUID
+    ) -> VerificationJob:
+        """Retrieve the exact tenant-scoped verification job by job ID."""
 
     @abstractmethod
     async def update(self, job: VerificationJob) -> None:
@@ -187,6 +223,23 @@ class ArtifactStorePort(ABC):
 
         Raises:
             SbomStorageError: If the upload fails.
+        """
+
+    @abstractmethod
+    async def verify_external_sbom(
+        self,
+        artifact_uri: str,
+        download_url: str,
+        artifact_version_id: str,
+        content_sha256: str,
+        image_digest: str,
+        artifact_manifest_digest: str,
+        cyclonedx_document: dict,
+    ) -> None:
+        """Fetch and verify an already stored artifact using a scoped URL.
+
+        The method verifies exact object identity, raw SHA-256, and parsed
+        CycloneDX content before any database row is created.
         """
 
     @abstractmethod

@@ -1,0 +1,2 @@
+
+aws: [ERROR]: An error occurred (InvalidAllocationID.NotFound) when calling the DescribeAddresses operation: The allocation ID 'eipalloc-02168c185217b1cf9' does not exist

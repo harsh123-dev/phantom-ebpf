@@ -1,0 +1,6 @@
+{
+    "Status": "Failed",
+    "ResponseCode": 1,
+    "Output": "/tmp/phantom-exec-telemetry.7DwnLa/agent-source.tar.gz: OK\nsha256:d54d31297b7c365394f4218b153c104fbc2c1cda75a8ccb7d204728b56f8e2d2\ndocker.io/phantom/ebpf agent:telemetry 2\tsaved\t\napplication/vnd.oci.image.index.v1+json sha256:d54d31297b7c365394f4218b153c104fbc2c1cda75a8ccb7d204728b56f8e2d2\nImporting\telapsed: 5.9 s\ttotal:   0.0 B\t(0.0 B/s)\t\n",
+    "Error": "error: unable to find container named \"ebpf-agent\"\nfailed to run commands: exit status 1"
+}

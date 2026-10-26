@@ -208,13 +208,9 @@ spec:
       ports:
         - protocol: TCP
           port: 6379
-    # Sigstore/Rekor transparency log external access
-    - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
-      ports:
-        - protocol: TCP
-          port: 443
+    # The k3s lab applies a separately rendered egress allowlist containing
+    # the AWS-managed regional S3 prefix-list CIDRs and current Sigstore A
+    # records. Refresh that generated policy when AWS ranges or DNS change.
     - to:
         - namespaceSelector:
             matchLabels:

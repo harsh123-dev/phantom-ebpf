@@ -1,0 +1,22 @@
+{
+    "CommandId": "9d95de49-7047-49d5-a45c-d3253d1a33b8",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "phantom-check-container-id-reader",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T23:03:13.281Z",
+    "ExecutionElapsedTime": "PT10.528S",
+    "ExecutionEndDateTime": "2026-10-25T23:03:23.281Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "SLEEP_PIDS ['161963']\nHELPER 161963 34da75370182e76d2e5cb0548a39cb530ebebbb74844d634f30ea4495c67b798 CGROUP 0::/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod3b5831cc_199c_4d7a_b862_d6289acc8619.slice/cri-containerd-34da75370182e76d2e5cb0548a39cb530ebebbb74844d634f30ea4495c67b798.scope\nSLEEP_DONE=0\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

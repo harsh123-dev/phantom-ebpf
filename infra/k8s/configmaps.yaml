@@ -20,3 +20,7 @@ data:
   metrics_port: "9090"
   health_port: "8080"
   report_store_backend: "s3"
+  sbom_s3_bucket: "REPLACE_WITH_S3_BUCKET"
+  sbom_s3_region: "REPLACE_WITH_AWS_REGION"
+  sbom_s3_key_prefix: "phantom/evidence/sboms"
+  sbom_allowed_artifact_prefix: "phantom/evidence/"

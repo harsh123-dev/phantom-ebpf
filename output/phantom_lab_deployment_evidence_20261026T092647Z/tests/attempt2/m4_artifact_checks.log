@@ -1,0 +1,5 @@
+................s.....s......                                            [100%]
+=========================== short test summary info ============================
+SKIPPED [1] tests/verify_m4_adversarial.py:283: Historical table contains FP/hour but no observation-duration denominator; preserve the artifact and leave this rate unverified.
+SKIPPED [1] tests/verify_m4_adversarial.py:349: Historical FP/hour value has no recorded duration denominator; its matching LaTeX cell is not treated as verified evidence.
+27 passed, 2 skipped in 0.44s

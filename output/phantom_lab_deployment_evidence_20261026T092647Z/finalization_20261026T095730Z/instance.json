@@ -1,0 +1,31 @@
+{
+    "InstanceId": "i-071309f235077647e",
+    "State": "running",
+    "Type": "t3.xlarge",
+    "PrivateIp": "10.89.1.98",
+    "PublicIp": "35.154.215.122",
+    "Subnet": "subnet-0d8fb3679e0931ddb",
+    "Vpc": "vpc-01df6bcd62aa7a73e",
+    "SecurityGroups": [
+        "sg-0717df3a8b373f320"
+    ],
+    "Iam": "arn:aws:iam::253490771520:instance-profile/phantom-k3s-lab-instance-profile",
+    "Tags": [
+        {
+            "Key": "Project",
+            "Value": "PHANTOM"
+        },
+        {
+            "Key": "Environment",
+            "Value": "disposable-lab"
+        },
+        {
+            "Key": "Name",
+            "Value": "phantom-k3s-lab"
+        },
+        {
+            "Key": "AutoTeardown",
+            "Value": "true"
+        }
+    ]
+}

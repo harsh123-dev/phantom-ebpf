@@ -1,0 +1,22 @@
+{
+    "CommandId": "0381d728-3d4a-49ca-b0ba-379ae5c1f711",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "phantom-exec-proc-identity-20261025",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T23:02:16.828Z",
+    "ExecutionElapsedTime": "PT8.975S",
+    "ExecutionEndDateTime": "2026-10-25T23:02:24.828Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "LIVE_SLEEP_PROCESSES\nPID /host/proc/161320 COMM sleep CGROUP 0::/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod3b5831cc_199c_4d7a_b862_d6289acc8619.slice/cri-containerd-34da75370182e76d2e5cb0548a39cb530ebebbb74844d634f30ea4495c67b798.scope EXE /usr/bin/sleep\nSLEEP_EXEC_RC=0\nTARGET_AGENT_METRICS\nphantom_agent_events_total{event_type=\"exec\",stage=\"received\"} 687.0\nphantom_agent_events_total{event_type=\"exec\",stage=\"queued\"} 687.0\nphantom_agent_events_total{event_type=\"exec\",stage=\"identity_missing\"} 635.0\nphantom_agent_events_total{event_type=\"exec\",stage=\"namespace_filtered\"} 50.0\nphantom_agent_events_total{event_type=\"exec\",stage=\"dispatched\"} 1.0\nphantom_agent_events_total{event_type=\"privilege\",stage=\"dispatched\"} 2.0\n\nEXEC_LOGS\n2026-10-25 23:02:17 [warning  ] event_processor.identity_insufficient cgroup_id=4390 comm=sleep event_id=00000d25ce93ab810000000000000000 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=161292 status=missing tgid=161292\n2026-10-25 23:02:17 [warning  ] event_processor.identity_insufficient cgroup_id=10148 comm=6 event_id=00000d25d83586790000000000000000 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=161317 status=missing tgid=161317\n2026-10-25 23:02:17 [warning  ] event_processor.identity_insufficient cgroup_id=10148 comm=sleep event_id=00000d25d8eaea3b0000000000000000 event_type=1 executable_path=unknown has_container_id=False has_image_digest=False pid=161320 status=missing tgid=161320\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

@@ -1,0 +1,6 @@
+{
+  "Status": "Success",
+  "ResponseCode": 0,
+  "Provenance": "Captured from successful SSM command response before instance termination",
+  "StandardOutputContent": "namespace \"monitoring\" deleted\nNAMESPACE     NAME                                      READY   STATUS    RESTARTS   AGE     IP          NODE             NOMINATED NODE   READINESS GATES\nkube-system   coredns-7cfb7bc9c7-k24fd                  1/1     Running   0          6h36m   10.42.0.4   ip-10-89-2-125   <none>           <none>\nkube-system   local-path-provisioner-77b9867795-j7xkj   1/1     Running   0          6h36m   10.42.0.3   ip-10-89-2-125   <none>           <none>\nkube-system   metrics-server-6dc596dfb8-npcj7           1/1     Running   0          6h36m   10.42.0.2   ip-10-89-2-125   <none>           <none>\n"
+}

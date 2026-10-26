@@ -1,0 +1,4 @@
+/var/backups/phantom-startupfix-before-build-20261026T0033Z/build.log 18727 bytes
+/var/backups/phantom-startupfix-before-build-20261026T0033Z/loader.py 12736 bytes
+/var/backups/phantom-startupfix-before-build-20261026T0033Z/main.py 24586 bytes
+/var/backups/phantom-startupfix-before-build-20261026T0033Z/syscall_events.bpf.c 7181 bytes

@@ -12,7 +12,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import pytest_asyncio
@@ -27,14 +27,18 @@ from app.domain.entities import (
 from app.domain.exceptions import (
     DuplicateSbomError,
     SbomNotFoundError,
+    SignatureVerificationError,
     VerificationAlreadyInProgressError,
     VerificationJobNotFoundError,
+    VerificationServiceUnavailableError,
 )
 from app.interface.dependencies import (
+    _get_cosign_client,
     get_enqueue_verification_use_case,
     get_get_sbom_use_case,
     get_get_verification_result_use_case,
     get_ingest_sbom_use_case,
+    get_run_verification_use_case,
 )
 
 # ---------------------------------------------------------------------------
@@ -98,12 +102,26 @@ def mock_get_verify_use_case() -> AsyncMock:
     return AsyncMock()
 
 
+@pytest.fixture()
+def mock_run_verify_use_case() -> AsyncMock:
+    """Mock only the background verification runner, not the enqueue call."""
+    return AsyncMock()
+
+
+@pytest.fixture()
+def mock_cosign_client() -> MagicMock:
+    """Test double for the independently configured server trust policy."""
+    return MagicMock()
+
+
 @pytest_asyncio.fixture()
 async def client(
     mock_ingest_use_case: AsyncMock,
     mock_get_sbom_use_case: AsyncMock,
     mock_enqueue_verify_use_case: AsyncMock,
     mock_get_verify_use_case: AsyncMock,
+    mock_run_verify_use_case: AsyncMock,
+    mock_cosign_client: MagicMock,
 ) -> AsyncClient:
     """Build an httpx AsyncClient with overridden use-case dependencies."""
     # Import app here to avoid module-level side effects.
@@ -117,6 +135,10 @@ async def client(
     app.dependency_overrides[
         get_get_verification_result_use_case
     ] = lambda: mock_get_verify_use_case
+    app.dependency_overrides[
+        get_run_verification_use_case
+    ] = lambda: mock_run_verify_use_case
+    app.dependency_overrides[_get_cosign_client] = lambda: mock_cosign_client
 
     # Stub lifespan so we don't need a real database.
     from contextlib import asynccontextmanager
@@ -294,6 +316,8 @@ class TestEnqueueVerificationEndpoint:
         self,
         client: AsyncClient,
         mock_enqueue_verify_use_case: AsyncMock,
+        mock_run_verify_use_case: AsyncMock,
+        mock_cosign_client: MagicMock,
     ) -> None:
         """Successful enqueue returns 202 with job details."""
         from app.application.use_cases.verify_sbom_signature import (
@@ -318,6 +342,49 @@ class TestEnqueueVerificationEndpoint:
         )
         assert response.status_code == 202
         assert response.json()["status"] == "queued"
+        mock_run_verify_use_case.execute.assert_awaited_once()
+        scheduled = mock_run_verify_use_case.execute.await_args.args[0]
+        assert scheduled.verification_job_id == response.json()["verification_job_id"] or str(
+            scheduled.verification_job_id
+        ) == response.json()["verification_job_id"]
+        assert scheduled.tenant_id == _UUID
+        mock_cosign_client.validate_trust_request.assert_called_once_with(
+            "user@example.com", "https://accounts.google.com", True
+        )
+
+    @pytest.mark.asyncio
+    async def test_missing_server_trust_rejects_before_enqueue(
+        self, client: AsyncClient, mock_cosign_client: MagicMock,
+        mock_enqueue_verify_use_case: AsyncMock,
+    ) -> None:
+        mock_cosign_client.validate_trust_request.side_effect = (
+            VerificationServiceUnavailableError("trust policy missing")
+        )
+        response = await client.post(
+            f"/api/v1/sboms/{uuid.uuid4()}/verification",
+            json={"expected_identity": "user@example.com",
+                  "expected_issuer": "https://accounts.google.com"},
+            params={"tenant_id": str(_UUID)},
+        )
+        assert response.status_code == 503
+        mock_enqueue_verify_use_case.execute.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_untrusted_signer_rejects_before_enqueue(
+        self, client: AsyncClient, mock_cosign_client: MagicMock,
+        mock_enqueue_verify_use_case: AsyncMock,
+    ) -> None:
+        mock_cosign_client.validate_trust_request.side_effect = (
+            SignatureVerificationError("untrusted signer")
+        )
+        response = await client.post(
+            f"/api/v1/sboms/{uuid.uuid4()}/verification",
+            json={"expected_identity": "other@example.com",
+                  "expected_issuer": "https://accounts.google.com"},
+            params={"tenant_id": str(_UUID)},
+        )
+        assert response.status_code == 403
+        mock_enqueue_verify_use_case.execute.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_already_in_progress_returns_409(

@@ -1,0 +1,29 @@
+{
+  "backup": {
+    "bucket": "phantom-k3s-lab-253490771520-ap-south-1-evidence",
+    "evidence_receipts": 2,
+    "key": "phantom/evidence/live_attribution_20261025T194226Z/sink-receipts-20261025T194226Z.sqlite3",
+    "server_side_encryption": "AES256",
+    "sha256": "cf0c27fb9c1b9a0f05e82d56a3dcca69605e2ef99d787f8e7686a67c3837de3d",
+    "size_bytes": 36864,
+    "tcp_receipts": 0,
+    "version_id": "Mq1rr2Ry6Ko1P9a3Zx91DYAG.d_JvSqy"
+  },
+  "restore": {
+    "bucket": "phantom-k3s-lab-253490771520-ap-south-1-evidence",
+    "key": "phantom/evidence/live_attribution_20261025T194226Z/sink-receipts-20261025T194226Z.sqlite3",
+    "restored_evidence_receipts": 2,
+    "restored_path": "/tmp/phantom-live-attribution-restored.sqlite3",
+    "sha256": "cf0c27fb9c1b9a0f05e82d56a3dcca69605e2ef99d787f8e7686a67c3837de3d",
+    "source_evidence_receipts": 2,
+    "sqlite_integrity": "ok",
+    "version_id": "Mq1rr2Ry6Ko1P9a3Zx91DYAG.d_JvSqy"
+  },
+  "verified_restored_database": {
+    "database_sha256": "sha256:cf0c27fb9c1b9a0f05e82d56a3dcca69605e2ef99d787f8e7686a67c3837de3d",
+    "evidence_receipts": 2,
+    "path": "/tmp/phantom-live-attribution-restored.sqlite3",
+    "sqlite_integrity": "ok",
+    "tcp_receipts": 0
+  }
+}

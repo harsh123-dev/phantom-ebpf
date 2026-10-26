@@ -1,0 +1,11 @@
+{
+    "Versions": [
+        {
+            "Key": "patches/phantom-attribution-fix.tar.gz",
+            "VersionId": "null",
+            "Size": 14038,
+            "IsLatest": true
+        }
+    ],
+    "DeleteMarkers": null
+}

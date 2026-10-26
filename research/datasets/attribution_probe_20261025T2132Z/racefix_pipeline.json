@@ -1,0 +1,22 @@
+{
+    "CommandId": "0b281767-fa52-40a3-9d7f-72ca3c660d24",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 0,
+    "ExecutionStartDateTime": "2026-10-25T21:39:26.237Z",
+    "ExecutionElapsedTime": "PT0.54S",
+    "ExecutionEndDateTime": "2026-10-25T21:39:26.237Z",
+    "Status": "Success",
+    "StatusDetails": "Success",
+    "StandardOutputContent": "f344d15a-5260-478c-9025-022ebe955f56|published|1792964344284-0|1|runc:[2:INIT]|unknown|sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7||\nname\ncausal-engine-bdg-updater\nconsumers\n1\npending\n0\nlast-delivered-id\n1792964344284-0\nentries-read\n56\nlag\n0\n{\"count\": 0, \"event\": \"redis_consumer.acked\", \"timestamp\": \"2026-10-25T21:39:04.285572Z\", \"level\": \"debug\"}\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

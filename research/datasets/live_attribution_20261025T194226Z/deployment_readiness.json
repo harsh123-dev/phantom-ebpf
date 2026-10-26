@@ -1,0 +1,38 @@
+{
+  "attack_or_control_scenarios_run": false,
+  "aws_account": "253490771520",
+  "aws_resources_created_this_check": false,
+  "existing_instance_id": "i-06bb29d253668fa5f",
+  "gates": {
+    "automated_backup_schedule": "NOT_CONFIGURED",
+    "causal_consumer_smoke_processing": "PASS_WITH_LIMITS",
+    "cross_namespace_isolation_probe": "PASS_FOR_TESTED_REDIS_DESTINATION",
+    "evaluation_image_identity_verified": "PASS",
+    "executable_to_package_purl_binding": "FAIL",
+    "existing_ec2_running": "PASS",
+    "independent_live_contract_observer": "FAIL",
+    "k3s_node_ready": "PASS",
+    "live_event_executable_hash_associated": "FAIL",
+    "manual_actual_s3_backup_restore": "PASS",
+    "pilot_gate": "CLOSED",
+    "pilot_runs_attempted": 0,
+    "production_oracle_trust_anchor": "FAIL",
+    "public_egress_probe": "NOT_RUN",
+    "sbom_artifact_preserved_in_s3": "PASS",
+    "sbom_indexed_in_live_service": "FAIL",
+    "sink_restart_persistence": "PASS",
+    "syft_sbom_generated_for_exact_platform_manifest": "PASS"
+  },
+  "notes": [
+    "The live SBOM service DB contains zero documents. It lacks configured artifact-store bucket/region and workload credentials; its default artifact path is outside the existing role policy prefix.",
+    "The Python file SHA from the generated image SBOM matches a direct hash of that file in the running container, but the event carries no executable hash and the interpreter file has no supported package PURL mapping.",
+    "The oracle trusted-key ConfigMap is empty and the repository reports no live independent assertion collector.",
+    "The S3 restore used the actual versioned/encrypted bucket and project backup client from the authenticated controller. It was manual; the sink pod has no automated backup integration."
+  ],
+  "pilot_planned_runs": 18,
+  "pilot_valid_runs": 0,
+  "region": "ap-south-1",
+  "source_code_changes_this_check": false,
+  "terraform_apply_this_check": false,
+  "updated_at_utc": "2026-10-25T19:56:13Z"
+}

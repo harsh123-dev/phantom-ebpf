@@ -1,0 +1,2 @@
+receipt_id,created_at_utc,run_id,scenario_id,event_id,oracle_outcome,authenticity,independence,receipt_integrity_sha256,retrieved_after_sink_restart,verify_endpoint,note
+0956698a-668c-55e8-9033-e61de20f677c,2026-10-25T19:46:14.185107+00:00,smoke-persistence-20261025T194800Z,harmless-sink-restart-smoke,,unknown,unverified,unverified,sha256:c0b61d991288437dd5407b9863eb853db2fd66229e4afe902b3a9eb74a29d6aa,true,HTTP 200; integrity valid,run_id is an operator smoke label; its embedded 194800Z text is not the server creation timestamp

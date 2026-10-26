@@ -1,0 +1,1 @@
+{"commands": ["iptables -nvxL KUBE-NWPLCY-B7IUBOMNMTISOCJ5 2>&1 | tail -25\necho FULL_CHAIN\niptables-save -c | grep -E 'isolate-phantom-eval-egress|KUBE-NWPLCY-B7IUBOMNMTISOCJ5' | tail -20\n"]}

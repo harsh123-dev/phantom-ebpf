@@ -1,0 +1,22 @@
+{
+    "CommandId": "703682af-c3e8-41a4-813e-31eafe02588c",
+    "InstanceId": "i-06bb29d253668fa5f",
+    "Comment": "",
+    "DocumentName": "AWS-RunShellScript",
+    "DocumentVersion": "$DEFAULT",
+    "PluginName": "aws:runShellScript",
+    "ResponseCode": 1,
+    "ExecutionStartDateTime": "2026-10-25T20:35:29.928Z",
+    "ExecutionElapsedTime": "PT6.877S",
+    "ExecutionEndDateTime": "2026-10-25T20:35:35.928Z",
+    "Status": "Failed",
+    "StatusDetails": "Failed",
+    "StandardOutputContent": "{\"retrieval_status\": 200, \"retrieval_integrity\": \"valid\", \"retrieved_document_sha256\": \"sha256:65fc90d4219c3d53bf2ed82f365376f5433920309406d62af0f799f515daf5bb\", \"duplicate_status\": 409, \"duplicate_error\": \"SBOM digest 'sha256:65fc90d4219c3d53bf2ed82f365376f5433920309406d62af0f799f515daf5bb' is already bound to image '(see database)'; cannot rebind to 'sha256:149440c61b866ba5265959ea4ce2eb8864be9e4c8e0f6d5cc88546f899ecb8e7'\", \"failed_checksum_status\": 503, \"failed_checksum_error\": \"SBOM artifact SHA-256 mismatch: expected sha256:0000000000000000000000000000000000000000000000000000000000000000, got sha256:c5b3a412b3534cfb0647b639cbc3e2993bbd2b09797aff9b34ce5a3904e04c80\", \"raw_artifact_sha256\": \"sha256:c5b3a412b3534cfb0647b639cbc3e2993bbd2b09797aff9b34ce5a3904e04c80\", \"canonical_sbom_sha256\": \"sha256:65fc90d4219c3d53bf2ed82f365376f5433920309406d62af0f799f515daf5bb\", \"source_object_version\": \"SV8YOafJ8buQsqEpJiK7bgE6c0jezWIu\"}\n",
+    "StandardOutputUrl": "",
+    "StandardErrorContent": "ERROR:  function chr(text) does not exist\nLINE 1: ...3)||chr(49)||chr(53)||chr(101)||chr(52)||chr(51)||chr(chr(10...\n                                                             ^\nHINT:  No function matches the given name and argument types. You might need to add explicit type casts.\ncommand terminated with exit code 1\nfailed to run commands: exit status 1",
+    "StandardErrorUrl": "",
+    "CloudWatchOutputConfig": {
+        "CloudWatchLogGroupName": "",
+        "CloudWatchOutputEnabled": false
+    }
+}

@@ -1,0 +1,22 @@
+{
+  "CommandId": "45f6b66c-18bc-4eca-b42c-dc489fca11b1",
+  "InstanceId": "i-06bb29d253668fa5f",
+  "Comment": "",
+  "DocumentName": "AWS-RunShellScript",
+  "DocumentVersion": "$DEFAULT",
+  "PluginName": "aws:runShellScript",
+  "ResponseCode": 0,
+  "ExecutionStartDateTime": "2026-10-25T19:55:49.186Z",
+  "ExecutionElapsedTime": "PT0.374S",
+  "ExecutionEndDateTime": "2026-10-25T19:55:49.186Z",
+  "Status": "Success",
+  "StatusDetails": "Success",
+  "StandardOutputContent": "phantom_redis_stream_messages_total{result=\"success\",stream=\"phantom:drift-events\"} 28.0\nCAUSAL_POD=phantom-causal-engine-57576cd69c-b2mn9\n",
+  "StandardOutputUrl": "",
+  "StandardErrorContent": "",
+  "StandardErrorUrl": "",
+  "CloudWatchOutputConfig": {
+    "CloudWatchLogGroupName": "",
+    "CloudWatchOutputEnabled": false
+  }
+}

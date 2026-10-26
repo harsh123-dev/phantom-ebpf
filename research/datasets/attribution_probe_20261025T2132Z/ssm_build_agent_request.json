@@ -1,0 +1,20 @@
+{
+  "DocumentName": "AWS-RunShellScript",
+  "InstanceIds": ["i-06bb29d253668fa5f"],
+  "TimeoutSeconds": 1800,
+  "Parameters": {
+    "commands": [
+      "set -e",
+      "mkdir -p /tmp/phantom-agent-diag-20261025T2132Z",
+      "aws s3api get-object --region ap-south-1 --bucket phantom-k3s-lab-253490771520-ap-south-1-evidence --key phantom/evidence/attribution_probe_20261025T2132Z/agent-source.tar.gz --version-id m.RQIXsDmYoyt0EkyXcYlzemaSNIVp2x /tmp/phantom-agent-diag-20261025T2132Z/source.tar.gz >/dev/null",
+      "cd /tmp/phantom-agent-diag-20261025T2132Z",
+      "echo '622d4e1116a904c3ffe42864176108873a31cf9192f66b2e205b60348de76bd9  source.tar.gz' | sha256sum -c -",
+      "tar -xzf source.tar.gz",
+      "docker build -f services/ebpf-agent/Dockerfile -t phantom/ebpf-agent:diag-20261025T2132Z services/ebpf-agent",
+      "docker save phantom/ebpf-agent:diag-20261025T2132Z | k3s ctr -n k8s.io images import -",
+      "k3s kubectl -n phantom set image daemonset/phantom-ebpf-agent phantom-agent=phantom/ebpf-agent:diag-20261025T2132Z",
+      "k3s kubectl -n phantom rollout status daemonset/phantom-ebpf-agent --timeout=180s",
+      "k3s kubectl -n phantom get pod -l app=phantom-ebpf-agent -o wide"
+    ]
+  }
+}

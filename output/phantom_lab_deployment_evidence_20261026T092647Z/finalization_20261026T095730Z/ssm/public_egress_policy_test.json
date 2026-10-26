@@ -1,0 +1,9 @@
+{
+    "CommandId": "bb3d8707-18bd-414d-bcc0-4805e2ecc5af",
+    "Status": "Success",
+    "ExitCode": 0,
+    "Start": "2026-10-26T10:00:59.354Z",
+    "End": "2026-10-26T10:01:00.354Z",
+    "Stdout": "POLICY_DROP_COUNTER_BEFORE=0 0\nTARGET=203.0.113.1 RFC5737 TEST-NET-3\nDENIED=ConnectionRefusedError\nPOLICY_DROP_COUNTER_AFTER=1 60\n",
+    "Stderr": ""
+}

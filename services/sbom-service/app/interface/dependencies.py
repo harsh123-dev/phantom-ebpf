@@ -11,10 +11,14 @@ All settings are read from environment variables only; no hardcoded values.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
+import re
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Annotated
+from urllib.parse import parse_qs, unquote, urlparse
 
 import asyncpg
 import structlog
@@ -25,8 +29,10 @@ from app.application.use_cases.ingest_sbom import IngestSbomUseCase
 from app.application.use_cases.verify_sbom_signature import (
     EnqueueVerificationUseCase,
     GetVerificationResultUseCase,
+    RunVerificationUseCase,
 )
 from app.infrastructure.cosign.client import CosignClient
+from app.infrastructure.postgres.migrations import run_migrations
 from app.infrastructure.postgres.repository import (
     PostgresComponentRepository,
     PostgresSbomRepository,
@@ -56,7 +62,14 @@ class _S3ArtifactStore(ArtifactStorePort):
         endpoint_url: Optional endpoint override (for MinIO/LocalStack).
     """
 
-    def __init__(self, bucket: str, endpoint_url: str | None = None) -> None:
+    def __init__(
+        self,
+        bucket: str,
+        region: str,
+        endpoint_url: str | None = None,
+        key_prefix: str = "phantom/evidence/sboms",
+        allowed_artifact_prefix: str = "phantom/evidence/",
+    ) -> None:
         """Initialise the S3 store.
 
         Args:
@@ -64,7 +77,85 @@ class _S3ArtifactStore(ArtifactStorePort):
             endpoint_url: Optional S3-compatible endpoint override.
         """
         self._bucket = bucket
+        self._region = region
         self._endpoint_url = endpoint_url
+        self._key_prefix = key_prefix.strip("/")
+        self._allowed_artifact_prefix = allowed_artifact_prefix.strip("/") + "/"
+
+    def _object_key(self, sbom_id: uuid.UUID) -> str:
+        return f"{self._key_prefix}/{sbom_id}/cyclonedx.json"
+
+    def _validate_external_object(
+        self, artifact_uri: str, download_url: str, artifact_version_id: str
+    ) -> None:
+        uri = urlparse(artifact_uri)
+        signed = urlparse(download_url)
+        key = unquote(uri.path.lstrip("/"))
+        expected_host = f"{self._bucket}.s3.{self._region}.amazonaws.com"
+        if (
+            uri.scheme != "s3"
+            or uri.netloc != self._bucket
+            or not key.startswith(self._allowed_artifact_prefix)
+            or ".." in key.split("/")
+            or signed.scheme != "https"
+            or signed.hostname != expected_host
+            or unquote(signed.path.lstrip("/")) != key
+            or not signed.query
+            or "X-Amz-Signature=" not in signed.query
+            or parse_qs(signed.query).get("versionId") != [artifact_version_id]
+        ):
+            raise SbomStorageError(
+                "signed artifact URL must identify the configured bucket and allowed prefix"
+            )
+
+    async def verify_external_sbom(
+        self,
+        artifact_uri: str,
+        download_url: str,
+        artifact_version_id: str,
+        content_sha256: str,
+        image_digest: str,
+        artifact_manifest_digest: str,
+        cyclonedx_document: dict[str, object],
+    ) -> None:
+        """Verify the existing S3 artifact using a short-lived presigned GET URL."""
+        self._validate_external_object(artifact_uri, download_url, artifact_version_id)
+        if not all(
+            re.fullmatch(r"sha256:[0-9a-f]{64}", value)
+            for value in (content_sha256, image_digest, artifact_manifest_digest)
+        ):
+            raise SbomStorageError("artifact, image, and manifest digests must be sha256 values")
+        try:
+            import httpx
+
+            async with httpx.AsyncClient(timeout=60.0, follow_redirects=False) as client:
+                response = await client.get(download_url)
+                response.raise_for_status()
+            content = response.content
+            if response.headers.get("x-amz-version-id") != artifact_version_id:
+                raise SbomStorageError("retrieved S3 artifact version does not match the request")
+            if response.headers.get("x-amz-meta-image-config") != image_digest:
+                raise SbomStorageError(
+                    "S3 artifact image-config metadata does not match the workload"
+                )
+            if response.headers.get("x-amz-meta-image-manifest") != artifact_manifest_digest:
+                raise SbomStorageError(
+                    "S3 artifact manifest metadata does not match the supplied digest"
+                )
+            actual = "sha256:" + hashlib.sha256(content).hexdigest()
+            if actual != content_sha256:
+                raise SbomStorageError(
+                    f"SBOM artifact SHA-256 mismatch: expected {content_sha256}, got {actual}"
+                )
+            parsed = json.loads(content)
+            if parsed != cyclonedx_document:
+                raise SbomStorageError(
+                    "retrieved SBOM artifact content differs from the submitted CycloneDX document"
+                )
+        except SbomStorageError:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            raise SbomStorageError(f"SBOM artifact verification failed: {exc}") from exc
 
     async def upload_sbom(
         self,
@@ -85,7 +176,7 @@ class _S3ArtifactStore(ArtifactStorePort):
         Raises:
             SbomStorageError: If the upload fails.
         """
-        key = f"sboms/{sbom_id}/cyclonedx.json"
+        key = self._object_key(sbom_id)
         try:
             import aiobotocore.session
 
@@ -93,9 +184,7 @@ class _S3ArtifactStore(ArtifactStorePort):
             async with session.create_client(
                 "s3",
                 endpoint_url=self._endpoint_url,
-                aws_access_key_id=os.environ.get("SBOM_SERVICE_S3_ACCESS_KEY_ID"),
-                aws_secret_access_key=os.environ.get("SBOM_SERVICE_S3_SECRET_ACCESS_KEY"),
-                region_name=os.environ.get("SBOM_SERVICE_S3_REGION", "us-east-1"),
+                region_name=self._region,
             ) as client:
                 await client.put_object(
                     Bucket=self._bucket,
@@ -120,7 +209,7 @@ class _S3ArtifactStore(ArtifactStorePort):
             SbomNotFoundError: If the object does not exist.
             SbomStorageError: If the download fails.
         """
-        key = f"sboms/{sbom_id}/cyclonedx.json"
+        key = self._object_key(sbom_id)
         try:
             import aiobotocore.session
 
@@ -128,9 +217,7 @@ class _S3ArtifactStore(ArtifactStorePort):
             async with session.create_client(
                 "s3",
                 endpoint_url=self._endpoint_url,
-                aws_access_key_id=os.environ.get("SBOM_SERVICE_S3_ACCESS_KEY_ID"),
-                aws_secret_access_key=os.environ.get("SBOM_SERVICE_S3_SECRET_ACCESS_KEY"),
-                region_name=os.environ.get("SBOM_SERVICE_S3_REGION", "us-east-1"),
+                region_name=self._region,
             ) as client:
                 resp = await client.get_object(Bucket=self._bucket, Key=key)
                 return bytes(await resp["Body"].read())
@@ -161,12 +248,31 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         Nothing; state is attached to ``app.state``.
     """
     db_url = os.environ["SBOM_SERVICE_DB_URL"]
+    s3_bucket = os.environ.get("SBOM_SERVICE_S3_BUCKET")
+    s3_region = os.environ.get("SBOM_SERVICE_S3_REGION")
+    if not s3_bucket or not s3_region:
+        raise RuntimeError("SBOM_SERVICE_S3_BUCKET and SBOM_SERVICE_S3_REGION are required")
+    # The API gateway and SBOM service share the Postgres server but maintain
+    # separate schemas and migration histories. This prevents one service's
+    # schema_migrations versions from causing the other service to skip DDL.
+    migration_conn = await asyncpg.connect(dsn=db_url, command_timeout=30)
+    try:
+        await migration_conn.execute("CREATE SCHEMA IF NOT EXISTS phantom_sbom")
+    finally:
+        await migration_conn.close()
+
     pool = await asyncpg.create_pool(
         dsn=db_url,
         min_size=2,
         max_size=int(os.environ.get("SBOM_SERVICE_DB_POOL_MAX", "10")),
         command_timeout=30,
+        server_settings={"search_path": "phantom_sbom,public"},
     )
+    try:
+        await run_migrations(pool)
+    except Exception:
+        await pool.close()
+        raise
     app.state.db_pool = pool
 
     # Build shared infrastructure adapters.
@@ -174,12 +280,21 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.component_repo = PostgresComponentRepository(pool=pool)
     app.state.job_repo = PostgresVerificationJobRepository(pool=pool)
     app.state.artifact_store = _S3ArtifactStore(
-        bucket=os.environ.get("SBOM_SERVICE_S3_BUCKET", "phantom-sbom-artifacts"),
+        bucket=s3_bucket,
+        region=s3_region,
         endpoint_url=os.environ.get("SBOM_SERVICE_S3_ENDPOINT_URL") or None,
+        key_prefix=os.environ.get(
+            "SBOM_SERVICE_S3_KEY_PREFIX", "phantom/evidence/sboms"
+        ),
+        allowed_artifact_prefix=os.environ.get(
+            "SBOM_SERVICE_ALLOWED_ARTIFACT_PREFIX", "phantom/evidence/"
+        ),
     )
     app.state.cosign_client = CosignClient(
         cosign_path=os.environ.get("COSIGN_PATH", "cosign"),
         timeout_seconds=float(os.environ.get("COSIGN_TIMEOUT_SECONDS", "120")),
+        trusted_identity=os.environ.get("COSIGN_TRUSTED_IDENTITY"),
+        trusted_issuer=os.environ.get("COSIGN_TRUSTED_ISSUER"),
     )
 
     log.info("sbom_service.startup_complete")
@@ -334,6 +449,20 @@ def get_get_verification_result_use_case(
         A ready-to-use GetVerificationResultUseCase instance.
     """
     return GetVerificationResultUseCase(sbom_repo=sbom_repo, job_repo=job_repo)
+
+
+def get_run_verification_use_case(
+    sbom_repo: SbomRepoDep,
+    job_repo: JobRepoDep,
+    verifier: CosignClientDep,
+) -> RunVerificationUseCase:
+    """Build the job runner against the same persistent repositories."""
+    return RunVerificationUseCase(
+        sbom_repo=sbom_repo, job_repo=job_repo, verifier=verifier
+    )
+
+
+RunVerifyDep = Annotated[RunVerificationUseCase, Depends(get_run_verification_use_case)]
 
 
 IngestSbomDep = Annotated[IngestSbomUseCase, Depends(get_ingest_sbom_use_case)]

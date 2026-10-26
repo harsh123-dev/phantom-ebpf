@@ -1,0 +1,22 @@
+{
+  "CommandId": "ac5a002b-55cb-468d-8188-ed176a32237a",
+  "InstanceId": "i-06bb29d253668fa5f",
+  "Comment": "",
+  "DocumentName": "AWS-RunShellScript",
+  "DocumentVersion": "$DEFAULT",
+  "PluginName": "aws:runShellScript",
+  "ResponseCode": 0,
+  "ExecutionStartDateTime": "2026-10-25T19:46:56.785Z",
+  "ExecutionElapsedTime": "PT0.59S",
+  "ExecutionEndDateTime": "2026-10-25T19:46:56.785Z",
+  "Status": "Success",
+  "StatusDetails": "Success",
+  "StandardOutputContent": "SNAPSHOT {\"counts\": {\"evidence_receipts\": 2, \"tcp_receipts\": 0}, \"integrity\": \"ok\", \"sha256\": \"sha256:b5227c187ac81cadd7ff52e5f09a112c556003e9621810e7b4ffdf4931333724\", \"size_bytes\": 36864}\nSNAPSHOT_GZIP_B64=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\n",
+  "StandardOutputUrl": "",
+  "StandardErrorContent": "",
+  "StandardErrorUrl": "",
+  "CloudWatchOutputConfig": {
+    "CloudWatchLogGroupName": "",
+    "CloudWatchOutputEnabled": false
+  }
+}

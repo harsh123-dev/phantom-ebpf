@@ -1,0 +1,4 @@
+Fresh plan using default enable_nat_gateway=true (not applied): 3 to add, 3 to change, 1 to destroy. Adds included aws_eip.nat[0] and aws_nat_gateway.lab[0]; aws_instance.k3s_lab replacement was required to move from public subnet to private subnet; private route changed to NAT. Rejected because this adds NAT/EIP and destroys/replaces the live lab.
+Fresh plan with explicit -var='enable_nat_gateway=false': exit 0, No changes. This matches the currently deployed no-NAT/public-egress/SSM-only architecture.
+Terraform fmt -check -recursive: pass. terraform init -backend=false: pass. terraform validate: pass.
+Previously reviewed no-NAT plan apply result in this execution: 17 added, 0 changed, 0 destroyed. Current AWS inventory confirms the live resource set; no apply was run during finalization.

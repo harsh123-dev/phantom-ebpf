@@ -1,0 +1,13 @@
+{
+  "DocumentName": "AWS-RunShellScript",
+  "InstanceIds": ["i-06bb29d253668fa5f"],
+  "Parameters": {
+    "commands": [
+      "date -u +%Y-%m-%dT%H:%M:%SZ",
+      "sudo k3s kubectl -n phantom-eval exec deploy/recommendationservice -- python -c \"import os,time; print('PHANTOM_HARMLESS_PROCESS_PID='+str(os.getpid()),flush=True); time.sleep(5)\"",
+      "sudo k3s kubectl -n phantom exec deploy/phantom-postgres -- psql -U phantom -d phantom -Atc \"SELECT event_id, observed_at, event_type, comm, executable_path, image_digest, binding_status FROM drift_events WHERE observed_at > now() - interval '1 minute' AND namespace = 'phantom-eval' ORDER BY observed_at DESC LIMIT 12\"",
+      "sudo k3s kubectl -n phantom logs daemonset/phantom-ebpf-agent --since=25s --tail=400 2>&1 | grep -E 'dispatcher.success|comm=python' | tail -20",
+      "sudo k3s kubectl -n phantom get pod -l app=phantom-ebpf-agent -o jsonpath=\"{.items[0].status.containerStatuses[0].imageID}\"; echo"
+    ]
+  }
+}

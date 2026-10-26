@@ -24,6 +24,7 @@ from unittest.mock import patch
 
 import pytest
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.serialization import NoEncryption
 from cryptography.hazmat.primitives.asymmetric import rsa
 from jose import jwt
 
@@ -54,8 +55,13 @@ _PUBLIC_KEY_PEM = _PUBLIC_KEY.public_bytes(
     format=serialization.PublicFormat.SubjectPublicKeyInfo,
 ).decode()
 
-# python-jose accepts raw RSA public key objects in the JWKS "keys" list.
+# python-jose accepts PEM-encoded public keys in the mocked JWKS response.
 _MOCK_KEYS = [_PUBLIC_KEY_PEM]
+_PRIVATE_KEY_PEM = _PRIVATE_KEY.private_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PrivateFormat.PKCS8,
+    encryption_algorithm=NoEncryption(),
+).decode()
 
 # ---------------------------------------------------------------------------
 # Test constants
@@ -120,7 +126,7 @@ def _make_token(
         payload["tenant_id"] = tenant_id
     if extra_claims:
         payload.update(extra_claims)
-    return jwt.encode(payload, _PRIVATE_KEY, algorithm="RS256")
+    return jwt.encode(payload, _PRIVATE_KEY_PEM, algorithm="RS256")
 
 
 def _patch_jwks(keys: list = _MOCK_KEYS):

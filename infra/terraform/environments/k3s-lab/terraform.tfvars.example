@@ -2,13 +2,17 @@
 # Copy this file to terraform.tfvars and fill in your values before running 'terraform apply'.
 
 aws_region       = "ap-south-1"
-instance_type    = "t3.xlarge"   # 4 vCPU, 16 GiB RAM (~$0.1664/hr in ap-south-1)
-root_volume_size = 50            # 50 GB gp3 EBS root disk (~$0.0055/hr)
+instance_type    = "t3.xlarge"   # 4 vCPU, 16 GiB RAM ($0.1792/hr On-Demand in ap-south-1 at 2026-10-26)
+root_volume_size = 50            # 50 GB gp3 EBS ($4.56 per 30-day month at current regional rate)
 
-# Set to your workstation's public IPv4 address (e.g., from 'curl -s https://ifconfig.me')
-# Inbound SSH is strictly restricted to this single IP (/32).
-# If left empty, SSH ingress is disabled and connection is made via AWS SSM Session Manager.
-operator_ip      = "203.0.113.50"
+# Lower fixed cost: no NAT Gateway; the instance has a public IPv4 address but
+# no inbound security-group rules. Host egress is limited to HTTP/HTTPS, VPC DNS,
+# and Amazon Time Sync. Evaluation pod egress remains restricted by NetworkPolicy.
+# Use true for a private-address instance behind a NAT Gateway instead.
+enable_nat_gateway = false
+
+# Deprecated compatibility input. SSM is used; SSH is not exposed.
+operator_ip      = ""
 
 # Optional: Name of an existing AWS Key Pair. If left empty, Terraform generates a new keypair
 # and saves the private key to .ssh/phantom-lab-key.pem
@@ -16,3 +20,11 @@ key_name         = ""
 
 # Enable AWS Systems Manager for zero-inbound-port access
 enable_ssm       = true
+enable_evidence_backups = false # Set true only after reviewing the S3 bucket/IAM plan.
+evidence_backup_prefix  = "phantom/evidence"
+
+# Disabled by default. Enable only after reviewing the role and source-role
+# AssumeRole statements and deploying the token-review credential broker.
+enable_s3_workload_identity = false
+sbom_workload_bucket_name   = "" # Required when the backup bucket is not Terraform-managed.
+sbom_workload_prefix        = "phantom/evidence/sboms"
