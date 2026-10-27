@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { BdgNode, BdgEdge, UUID, SubgraphResponse } from "../../../types/phantom";
 import { usePhantomClient } from "../../../hooks/usePhantomClient";
+import { useDriftStreamState } from "../../../state/driftStreamState";
 import { MOCK_BDG_SUBGRAPH } from "../../../api/mockClient";
 import { ApiError } from "../../../api/apiError";
 
@@ -27,10 +28,14 @@ export interface UseGraphDataOptions {
 
 export const useGraphData = ({ snapshotId }: UseGraphDataOptions = {}) => {
   const client = usePhantomClient();
+  const driftEvents = useDriftStreamState((state) => state.events);
   const [data, setData] = useState<GraphData>({ nodes: [], links: [] });
+  const [rawGraph, setRawGraph] = useState<{ nodes: BdgNode[]; edges: BdgEdge[] }>({ nodes: [], edges: [] });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<GraphMode>("full");
+  const rawGraphRef = useRef(rawGraph);
+  rawGraphRef.current = rawGraph;
 
   const processGraphData = useCallback((nodes: BdgNode[], edges: BdgEdge[]) => {
     // Group nodes by tier
@@ -78,8 +83,75 @@ export const useGraphData = ({ snapshotId }: UseGraphDataOptions = {}) => {
     setData({ nodes: graphNodes, links: graphLinks });
   }, []);
 
-  const loadFullGraph = useCallback(async () => {
-    setIsLoading(true);
+  // Merge base graph with live streaming drift events
+  useEffect(() => {
+    const baseNodes = rawGraph.nodes;
+    const baseEdges = rawGraph.edges;
+    if (baseNodes.length === 0) return;
+
+    if (driftEvents.length === 0) {
+      processGraphData(baseNodes, baseEdges);
+      return;
+    }
+
+    const mergedNodes = [...baseNodes];
+    const mergedEdges = [...baseEdges];
+    const existingNodeIds = new Set(baseNodes.map((n) => n.node_id));
+    const existingEdgeIds = new Set(baseEdges.map((e) => e.edge_id));
+
+    // Find candidate parent nodes to connect drift events (process > container > workload)
+    const processParent = baseNodes.find((n) => n.node_type === "process")
+      ?? baseNodes.find((n) => n.node_type === "container")
+      ?? baseNodes[0];
+
+    // Take recent live drift events (up to 10)
+    for (const ev of driftEvents.slice(0, 10)) {
+      if (!existingNodeIds.has(ev.drift_event_id)) {
+        existingNodeIds.add(ev.drift_event_id);
+        const driftNode: BdgNode = {
+          node_id: ev.drift_event_id,
+          node_type: "drift_event",
+          label: `Drift: ${ev.violation_types[0] || ev.event_type} (${ev.severity})`,
+          attributes: {
+            causal_tier: 4,
+            severity: ev.severity,
+            namespace: ev.namespace,
+            pod_name: ev.pod_name,
+            event_type: ev.event_type,
+            image_digest: ev.image_digest,
+            observed_at: ev.published_at,
+          },
+          first_seen_at: ev.published_at,
+          last_seen_at: ev.published_at,
+          confidence: 0.99,
+        };
+        mergedNodes.push(driftNode);
+
+        if (processParent) {
+          const edgeId = `violates-${ev.drift_event_id}`;
+          if (!existingEdgeIds.has(edgeId)) {
+            existingEdgeIds.add(edgeId);
+            mergedEdges.push({
+              edge_id: edgeId,
+              source_node_id: processParent.node_id,
+              target_node_id: ev.drift_event_id,
+              edge_type: "violates",
+              attributes: { severity: ev.severity },
+              first_seen_at: ev.published_at,
+              last_seen_at: ev.published_at,
+              observation_count: 1,
+              confidence: 0.99,
+            });
+          }
+        }
+      }
+    }
+
+    processGraphData(mergedNodes, mergedEdges);
+  }, [rawGraph, driftEvents, processGraphData]);
+
+  const loadFullGraph = useCallback(async (isPolling: boolean = false) => {
+    if (!isPolling) setIsLoading(true);
     setError(null);
     setMode("full");
     try {
@@ -98,17 +170,17 @@ export const useGraphData = ({ snapshotId }: UseGraphDataOptions = {}) => {
           max_nodes: 500,
         });
       }
-      processGraphData(response.nodes, response.edges);
+      setRawGraph({ nodes: response.nodes, edges: response.edges });
     } catch (err: unknown) {
       if (err instanceof ApiError && err.status === 404) {
-        setData({ nodes: [], links: [] });
-      } else {
+        setRawGraph({ nodes: [], edges: [] });
+      } else if (!isPolling) {
         setError(err instanceof Error ? err.message : "Failed to load full graph");
       }
     } finally {
-      setIsLoading(false);
+      if (!isPolling) setIsLoading(false);
     }
-  }, [client, snapshotId, processGraphData]);
+  }, [client, snapshotId]);
 
   const querySubgraph = useCallback(
     async (rootNodeId: UUID, maxHops: number = 3) => {
@@ -131,10 +203,10 @@ export const useGraphData = ({ snapshotId }: UseGraphDataOptions = {}) => {
             max_nodes: 500,
           });
         }
-        processGraphData(response.nodes, response.edges);
+        setRawGraph({ nodes: response.nodes, edges: response.edges });
       } catch (err: unknown) {
         if (err instanceof ApiError && err.status === 404) {
-          setData({ nodes: [], links: [] });
+          setRawGraph({ nodes: [], edges: [] });
         } else {
           setError(err instanceof Error ? err.message : "Failed to query subgraph");
         }
@@ -142,18 +214,26 @@ export const useGraphData = ({ snapshotId }: UseGraphDataOptions = {}) => {
         setIsLoading(false);
       }
     },
-    [client, snapshotId, processGraphData]
+    [client, snapshotId],
   );
 
   useEffect(() => {
-    loadFullGraph();
-  }, [loadFullGraph]);
+    loadFullGraph(false);
+    const interval = setInterval(() => {
+      if (mode === "full") {
+        loadFullGraph(true);
+      }
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [loadFullGraph, mode]);
 
   useEffect(() => {
     if (!isLoading) return;
     const timeout = setTimeout(() => {
       setIsLoading(false);
-      setError("Request timed out. Is the API running?");
+      if (rawGraphRef.current.nodes.length === 0) {
+        setError("Request timed out. Is the API running?");
+      }
     }, 15000);
     return () => clearTimeout(timeout);
   }, [isLoading]);
@@ -163,7 +243,7 @@ export const useGraphData = ({ snapshotId }: UseGraphDataOptions = {}) => {
     isLoading,
     error,
     mode,
-    loadFullGraph,
+    loadFullGraph: () => loadFullGraph(false),
     querySubgraph,
   };
 };
