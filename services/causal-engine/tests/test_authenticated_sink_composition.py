@@ -30,6 +30,9 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "libs/phantom-core"))
 sys.path.insert(0, str(ROOT / "services/causal-engine"))
+# research.evaluation lives at ROOT/research/evaluation and is not installed as a
+# package; add the repo root to sys.path so `research.evaluation` is importable.
+sys.path.insert(0, str(ROOT))
 
 publisher_path = ROOT / "services/api-gateway/app/infrastructure/redis_publisher.py"
 spec = importlib.util.spec_from_file_location("authenticated_test_publisher", publisher_path)

@@ -100,3 +100,50 @@ def test_context_entry_failure_closes_previously_loaded_objects(monkeypatch, tmp
     assert fake_lib.closed == ["process_events.bpf.o", "syscall_events.bpf.o"]
     assert loader._handles == []
     assert loader.ringbuf_fds == ()
+
+def test_partial_program_attach_failure_fails_fast_and_cleans_up(monkeypatch, tmp_path: Path) -> None:
+    """If any BPF program fails to attach, loader must raise and clean up all resources."""
+    import pytest
+
+    class AttachFailLib(_FakeLib):
+        def __init__(self) -> None:
+            super().__init__()
+            self.attached_links: list[int] = []
+            self.destroyed_links: list[int] = []
+
+        def bpf_object__next_program(self, _obj: object, previous: object) -> object:
+            if previous is None:
+                return "prog1"
+            elif previous == "prog1":
+                return "prog2"
+            return None
+
+        def bpf_program__name(self, prog: object) -> bytes:
+            return str(prog).encode()
+
+        def bpf_program__attach(self, prog: object) -> object:
+            if prog == "prog1":
+                link_id = 42
+                self.attached_links.append(link_id)
+                return link_id
+            # prog2 fails to attach
+            return None
+
+        def bpf_link__destroy(self, link: object) -> None:
+            self.destroyed_links.append(link)
+
+    for name in ("syscall_events.bpf.o",):
+        (tmp_path / name).touch()
+
+    fake_lib = AttachFailLib()
+    monkeypatch.setattr(loader_module, "_get_libbpf", lambda: fake_lib)
+    loader = PhantomBpfLoader(tmp_path)
+
+    with pytest.raises(RuntimeError, match="Failed to attach 1 program.*prog2"):
+        loader.load_all()
+
+    # Verify link destroyed and object closed
+    assert fake_lib.destroyed_links == [42]
+    assert "syscall_events.bpf.o" in fake_lib.closed
+    assert loader._handles == []
+    assert loader.ringbuf_fds == ()
