@@ -97,6 +97,14 @@ AGENT_EVENTS_TOTAL = Counter(
     "Kernel records received and agent processing stages by event type.",
     labelnames=("event_type", "stage"),
 )
+AGENT_IDENTITY_DROP_TOTAL = Counter(
+    "phantom_agent_identity_drop_total",
+    "Events dropped at the identity gate, broken down by root cause. "
+    "capture_reason reflects the /proc read outcome (proc_exited_before_read "
+    "for a timing race with a short-lived process); attribution_status reflects "
+    "the attributor verdict when capture itself succeeded.",
+    labelnames=("event_type", "capture_reason", "attribution_status"),
+)
 
 
 def _count_event(event_type: int, stage: str) -> None:
@@ -104,6 +112,20 @@ def _count_event(event_type: int, stage: str) -> None:
     AGENT_EVENTS_TOTAL.labels(
         event_type=EventType(event_type).name.lower(), stage=stage
     ).inc()
+
+
+def _normalize_capture_reason(reason: str) -> str:
+    """Map a raw ProcessIdentityCapture reason to a fixed-cardinality Prometheus label.
+
+    The raw reason for a /proc timing race includes the Python exception class name
+    (e.g. ``proc_or_cgroup_unavailable:FileNotFoundError``). Normalise that entire
+    family to a single ``proc_exited_before_read`` label so the counter remains
+    low-cardinality. All other reason strings are fixed enumeration values defined
+    in ``_read_container_id_sync`` and are forwarded unchanged.
+    """
+    if reason.startswith("proc_or_cgroup_unavailable:"):
+        return "proc_exited_before_read"
+    return reason
 
 
 def _observe_event_delivery_lag(
@@ -349,7 +371,33 @@ async def event_processor(
                 or not identity.image_digest
                 or not (identity.container_id or container_id)
             ):
+                # --- Identity gate: strict drop policy ---
+                # Events are dropped here when workload identity cannot be
+                # fully resolved. This is an intentional security boundary:
+                # no event is attributed without a validated cgroup inode,
+                # a matching TGID, a running container_id from Kubernetes,
+                # a pod UID, a namespace, and an image digest.
+                #
+                # When a short-lived process (e.g. /bin/true) exits before
+                # the ring-buffer callback reads /proc, the /proc entry is
+                # gone and capture fails with proc_or_cgroup_unavailable.
+                # There is no safe fallback: attributing on cgroup ID alone
+                # (without the inode cross-check) risks misattribution to a
+                # different workload reusing the same PID or cgroup slot.
+                # The event is therefore dropped and counted below.
+                #
+                # NOTE: the namespace filter at the bottom of this function
+                # applies to events that PASS this gate with a resolved but
+                # unrecognised namespace. It does not apply here.
                 _count_event(event.header.event_type, "identity_missing")
+                _capture_reason = _normalize_capture_reason(
+                    capture.reason if capture is not None else "missing_capture"
+                )
+                AGENT_IDENTITY_DROP_TOTAL.labels(
+                    event_type=EventType(event.header.event_type).name.lower(),
+                    capture_reason=_capture_reason,
+                    attribution_status=identity.status.value,
+                ).inc()
                 event_exec_path = (
                     _event_time_executable_path(event)
                     if event.header.event_type == EventType.EXEC

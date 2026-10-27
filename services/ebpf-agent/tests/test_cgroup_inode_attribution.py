@@ -77,3 +77,28 @@ def test_unmatched_cgroup_does_not_guess_a_workload(tmp_path) -> None:
 
     assert result.status is AttributionStatus.MISSING
     attributor._core_v1.list_namespaced_pod.assert_not_called()
+
+
+def test_attributor_abstains_without_cgroup_validation(tmp_path) -> None:
+    """When event_cgroup_validated=False the attributor must return MISSING immediately.
+
+    This is the code path exercised by a short-lived process: /proc was gone
+    before _read_container_id_sync ran, so cgroup_inode_matches_event is False
+    and no container_id is passed to _query_k8s. The strict policy requires
+    the attributor to abstain without issuing any Kubernetes API call.
+    """
+    attributor = _attributor(tmp_path, "e" * 64)
+
+    result = asyncio.run(
+        attributor._query_k8s(
+            12345,
+            attributor._core_v1,
+            event_cgroup_validated=False,
+        )
+    )
+
+    assert result.status is AttributionStatus.MISSING
+    # No container_id was supplied and event_cgroup_validated=False, so the
+    # attributor must have returned immediately without calling the k8s API.
+    attributor._core_v1.list_namespaced_pod.assert_not_called()
+    attributor._core_v1.list_pod_for_all_namespaces.assert_not_called()
