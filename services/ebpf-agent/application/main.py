@@ -117,14 +117,16 @@ def _count_event(event_type: int, stage: str) -> None:
 def _normalize_capture_reason(reason: str) -> str:
     """Map a raw ProcessIdentityCapture reason to a fixed-cardinality Prometheus label.
 
-    The raw reason for a /proc timing race includes the Python exception class name
-    (e.g. ``proc_or_cgroup_unavailable:FileNotFoundError``). Normalise that entire
-    family to a single ``proc_exited_before_read`` label so the counter remains
-    low-cardinality. All other reason strings are fixed enumeration values defined
-    in ``_read_container_id_sync`` and are forwarded unchanged.
+    Only FileNotFoundError (indicating /host/proc/<pid> or /status is absent
+    because the process has already terminated) maps to proc_exited_before_read.
+    Any other OS or filesystem exception maps to proc_or_cgroup_unavailable to
+    avoid overstating the exit race. All other reason strings are fixed enumeration
+    values defined in _read_container_id_sync and are forwarded unchanged.
     """
-    if reason.startswith("proc_or_cgroup_unavailable:"):
+    if reason == "proc_or_cgroup_unavailable:FileNotFoundError":
         return "proc_exited_before_read"
+    if reason.startswith("proc_or_cgroup_unavailable:"):
+        return "proc_or_cgroup_unavailable"
     return reason
 
 
