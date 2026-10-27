@@ -11,6 +11,7 @@ Implements:
 
 from __future__ import annotations
 
+import hashlib
 import uuid
 from datetime import datetime
 from typing import Annotated, Any
@@ -122,6 +123,47 @@ async def get_incident(
             return await query.execute(incident_id, principal.tenant_id)
         except Exception as exc:
             log.warning("incident_router.get_failed", error=str(exc))
+
+    if pool is not None:
+        try:
+            async with pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "SELECT drift_event_id, event_type, observed_at, namespace, pod_name, comm, executable_path, violations, raw_event_digest "
+                    "FROM drift_events WHERE drift_event_id = $1 AND tenant_id = $2",
+                    incident_id, principal.tenant_id,
+                )
+                if row:
+                    v_list = row["violations"] or []
+                    v_type = v_list[0].get("violation_type") if v_list and isinstance(v_list[0], dict) else row["event_type"]
+                    sev = v_list[0].get("severity", "high") if v_list and isinstance(v_list[0], dict) else "high"
+                    target_name = row["pod_name"] or row["namespace"] or "workload"
+                    rep = {
+                        "incident_id": str(row["drift_event_id"]),
+                        "title": f"Runtime Drift: {v_type} in {target_name}",
+                        "summary": f"Detected {sev} runtime drift ({row['comm']} -> {row['executable_path']}). Causal attribution in progress.",
+                        "status": "open",
+                        "classification": "confirmed" if sev == "critical" else "suspected",
+                        "revision": 1,
+                        "snapshot_id": "b0000000-0000-4000-8000-000000000000",
+                        "evidence_hash": row.get("raw_event_digest") or ("sha256:" + "0" * 64),
+                        "created_by": "phantom-sensor",
+                        "created_at": row["observed_at"].isoformat() if hasattr(row["observed_at"], "isoformat") else str(row["observed_at"]),
+                        "updated_at": row["observed_at"].isoformat() if hasattr(row["observed_at"], "isoformat") else str(row["observed_at"]),
+                        "archived_at": None,
+                        "resolution_notes": None,
+                    }
+                    return {
+                        "report": rep,
+                        "incident": rep,
+                        "drift_event_ids": [str(row["drift_event_id"])],
+                        "attribution_ids": [],
+                        "score_ids": [],
+                        "tags": ["runtime-drift", str(row["event_type"]), str(row["namespace"])],
+                        "resolution_notes": None,
+                    }
+        except Exception as exc:
+            log.warning("incident_router.drift_get_failed", error=str(exc))
+
     if str(incident_id) == str(_EVAL_INCIDENT["incident_id"]):
         return {
             "report": _EVAL_INCIDENT,
@@ -197,6 +239,38 @@ async def list_incidents(
             )
         except Exception as exc:
             log.warning("incident_router.list_failed", error=str(exc))
+
+    if not items and pool is not None:
+        try:
+            async with pool.acquire() as conn:
+                drifts = await conn.fetch(
+                    "SELECT drift_event_id, event_type, observed_at, namespace, pod_name, comm, executable_path, violations "
+                    "FROM drift_events WHERE tenant_id = $1 ORDER BY observed_at DESC LIMIT 10",
+                    principal.tenant_id,
+                )
+                for row in drifts:
+                    v_list = row["violations"] or []
+                    v_type = v_list[0].get("violation_type") if v_list and isinstance(v_list[0], dict) else row["event_type"]
+                    sev = v_list[0].get("severity", "high") if v_list and isinstance(v_list[0], dict) else "high"
+                    target_name = row["pod_name"] or row["namespace"] or "workload"
+                    items.append({
+                        "incident_id": str(row["drift_event_id"]),
+                        "title": f"Runtime Drift: {v_type} in {target_name}",
+                        "summary": f"Detected {sev} runtime drift ({row['comm']} -> {row['executable_path']}). Causal attribution in progress.",
+                        "status": "open",
+                        "classification": "confirmed" if sev == "critical" else "suspected",
+                        "revision": 1,
+                        "snapshot_id": "b0000000-0000-4000-8000-000000000000",
+                        "evidence_hash": "sha256:" + hashlib.sha256(str(row["drift_event_id"]).encode()).hexdigest(),
+                        "created_by": "phantom-sensor",
+                        "created_at": row["observed_at"].isoformat() if hasattr(row["observed_at"], "isoformat") else str(row["observed_at"]),
+                        "updated_at": row["observed_at"].isoformat() if hasattr(row["observed_at"], "isoformat") else str(row["observed_at"]),
+                        "archived_at": None,
+                        "resolution_notes": None,
+                    })
+        except Exception as exc:
+            log.warning("incident_router.drift_query_failed", error=str(exc))
+
     if not items:
         items = [_EVAL_INCIDENT]
     return {"items": items, "next_cursor": next_cursor}

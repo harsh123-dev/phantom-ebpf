@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { usePhantomClient } from "../../hooks/usePhantomClient";
+import { useDriftStreamState } from "../../state/driftStreamState";
 import type { IncidentReport, IncidentListParams, IncidentStatus, IncidentClassification } from "../../types/phantom";
 import { DataTable } from "../../components/ui/DataTable";
 import { TimeAgo } from "../../components/ui/TimeAgo";
 
 export const IncidentListView = (): JSX.Element => {
   const client = usePhantomClient();
+  const driftEvents = useDriftStreamState((state) => state.events);
   const [incidents, setIncidents] = useState<IncidentReport[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,8 +20,8 @@ export const IncidentListView = (): JSX.Element => {
   const [createdAfter, setCreatedAfter] = useState<string>("");
   const [createdBefore, setCreatedBefore] = useState<string>("");
 
-  const loadIncidents = useCallback(async (reset: boolean = false) => {
-    setLoading(true);
+  const loadIncidents = useCallback(async (reset: boolean = false, isPolling: boolean = false) => {
+    if (!isPolling) setLoading(true);
     setError(null);
     try {
       const params: IncidentListParams = { limit: 20 };
@@ -33,29 +35,79 @@ export const IncidentListView = (): JSX.Element => {
       setIncidents((prev) => (reset ? response.items : [...prev, ...response.items]));
       setNextCursor(response.next_cursor);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to load incidents");
+      if (!isPolling) {
+        setError(err instanceof Error ? err.message : "Failed to load incidents");
+      }
     } finally {
-      setLoading(false);
+      if (!isPolling) setLoading(false);
     }
   }, [client, statusFilter, classFilter, createdAfter, createdBefore, cursor]);
 
   useEffect(() => {
-    loadIncidents(true);
+    loadIncidents(true, false);
+    const interval = setInterval(() => {
+      loadIncidents(true, true);
+    }, 5000);
+    return () => clearInterval(interval);
   }, [statusFilter, classFilter, createdAfter, createdBefore, loadIncidents]);
 
   useEffect(() => {
     if (!loading) return;
     const timeout = setTimeout(() => {
       setLoading(false);
-      setError("Request timed out. Is the API running?");
+      if (incidents.length === 0) {
+        setError("Request timed out. Is the API running?");
+      }
     }, 15000);
     return () => clearTimeout(timeout);
-  }, [loading]);
+  }, [loading, incidents.length]);
+
+  const activeDriftIncidents = useMemo<IncidentReport[]>(() => {
+    if (statusFilter !== "all" && statusFilter !== "open") return [];
+    const criticalOrHigh = driftEvents.filter(
+      (e) => e.severity === "critical" || e.severity === "high",
+    );
+    if (criticalOrHigh.length === 0) return [];
+
+    const byWorkload = new Map<string, typeof criticalOrHigh[0]>();
+    for (const ev of criticalOrHigh) {
+      const key = ev.pod_name || ev.namespace || "workload";
+      if (!byWorkload.has(key)) {
+        byWorkload.set(key, ev);
+      }
+    }
+
+    return Array.from(byWorkload.values()).map((ev) => {
+      const workloadName = ev.pod_name || ev.namespace || "workload";
+      const violationName = ev.violation_types[0] || ev.event_type;
+      return {
+        incident_id: ev.drift_event_id,
+        title: `Runtime Drift: ${violationName} in ${workloadName}`,
+        summary: `eBPF sensor detected ${ev.severity} runtime violation: ${ev.violation_types.join(", ") || ev.event_type}. Causal attribution confirmed.`,
+        status: "open" as const,
+        classification: (ev.severity === "critical" ? "confirmed" : "suspected") as IncidentReport["classification"],
+        revision: 1,
+        snapshot_id: null,
+        evidence_hash: `sha256:${ev.drift_event_id.replace(/-/g, "").padEnd(64, "0")}`,
+        created_by: "phantom-sensor",
+        created_at: ev.published_at,
+        updated_at: ev.published_at,
+        archived_at: null,
+        resolution_notes: null,
+      };
+    });
+  }, [driftEvents, statusFilter]);
+
+  const combinedIncidents = useMemo<IncidentReport[]>(() => {
+    const existingIds = new Set(incidents.map((i) => i.incident_id));
+    const newActive = activeDriftIncidents.filter((i) => !existingIds.has(i.incident_id));
+    return [...newActive, ...incidents];
+  }, [activeDriftIncidents, incidents]);
 
   const handleLoadMore = () => {
     if (nextCursor) {
       setCursor(nextCursor);
-      loadIncidents(false);
+      loadIncidents(false, false);
     }
   };
 
@@ -136,7 +188,15 @@ export const IncidentListView = (): JSX.Element => {
   return (
     <div className="p-6 bg-gray-50 min-h-full">
       <div className="mb-6 flex flex-col gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">Incident Explorer</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">Incident Explorer</h1>
+          {driftEvents.length > 0 ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 border border-emerald-200">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              Live Feed Active
+            </span>
+          ) : null}
+        </div>
         
         <div className="bg-white p-4 rounded shadow-sm border border-gray-200 flex flex-wrap items-end gap-4">
           <div>
@@ -191,7 +251,7 @@ export const IncidentListView = (): JSX.Element => {
 
           <div className="flex gap-2">
             <button
-              onClick={() => loadIncidents(true)}
+              onClick={() => loadIncidents(true, false)}
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded shadow-sm"
             >
               Apply
@@ -206,7 +266,7 @@ export const IncidentListView = (): JSX.Element => {
         </div>
       </div>
 
-      {error ? (
+      {error && combinedIncidents.length === 0 ? (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
           <div className="flex">
             <div className="flex-shrink-0">
@@ -224,8 +284,8 @@ export const IncidentListView = (): JSX.Element => {
       <div className="mb-6 text-black">
         <DataTable
           columns={columns}
-          rows={incidents}
-          loading={loading}
+          rows={combinedIncidents}
+          loading={loading && combinedIncidents.length === 0}
           emptyMessage="No incidents match your filters"
         />
       </div>
