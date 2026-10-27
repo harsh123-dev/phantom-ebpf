@@ -1,0 +1,171 @@
+{
+  "input": "D:\\downloads\\BCSE497J Project I Report - Template FINAlL Updated  (2).docx",
+  "fonts_by_char_count": {
+    "Symbol": 2,
+    "Verdana": 1
+  },
+  "direct_run_formatting_runs": 362,
+  "direct_paragraph_formatting_paragraphs": 286,
+  "heading_like_paragraphs_not_heading_style": [
+    {
+      "para_index": 1,
+      "text": "B.Tech. BCSE497J - Project-I",
+      "style": "Normal"
+    },
+    {
+      "para_index": 3,
+      "text": "<Title of the Project>",
+      "style": "Normal"
+    },
+    {
+      "para_index": 4,
+      "text": "(Times New Roman 18, Bold, Upper Case, Line spacing 1.5)",
+      "style": "Normal"
+    },
+    {
+      "para_index": 9,
+      "text": "Bachelor of Technology",
+      "style": "Normal"
+    },
+    {
+      "para_index": 13,
+      "text": "Programme",
+      "style": "Normal"
+    },
+    {
+      "para_index": 17,
+      "text": "(mention names of team members sorted on Register number)",
+      "style": "Normal"
+    },
+    {
+      "para_index": 26,
+      "text": "DECLARATION",
+      "style": "Body Text"
+    },
+    {
+      "para_index": 38,
+      "text": "Signature of the Candidate",
+      "style": "Normal"
+    },
+    {
+      "para_index": 46,
+      "text": "CERTIFICATE",
+      "style": "Body Text"
+    },
+    {
+      "para_index": 59,
+      "text": "\t\t\tSignature of the Guide",
+      "style": "Normal"
+    },
+    {
+      "para_index": 67,
+      "text": "\t\t\t\t\t\t\t      Examiner(s)",
+      "style": "Normal"
+    },
+    {
+      "para_index": 74,
+      "text": "<< Head of the Department >>",
+      "style": "Normal"
+    },
+    {
+      "para_index": 75,
+      "text": "<< Programme >>\t",
+      "style": "Normal"
+    },
+    {
+      "para_index": 76,
+      "text": "ACKNOWLEDGEMENTS",
+      "style": "Body Text"
+    },
+    {
+      "para_index": 92,
+      "text": "Name of the Candidate",
+      "style": "Normal"
+    },
+    {
+      "para_index": 94,
+      "text": "TABLE OF CONTENTS",
+      "style": "Normal"
+    },
+    {
+      "para_index": 108,
+      "text": "List of Tables",
+      "style": "Body Text"
+    },
+    {
+      "para_index": 131,
+      "text": "Symbols and Notations",
+      "style": "Normal"
+    },
+    {
+      "para_index": 187,
+      "text": "(Times New Roman 16, Bold, Upper Case, Line spacing 1.5)",
+      "style": "Normal"
+    },
+    {
+      "para_index": 227,
+      "text": "CHAPTER 1",
+      "style": "Normal"
+    }
+  ],
+  "examples": {
+    "direct_paragraph_formatting": [
+      {
+        "para_index": 1,
+        "text": "B.Tech. BCSE497J - Project-I",
+        "style": "Normal"
+      },
+      {
+        "para_index": 2,
+        "text": "",
+        "style": "Normal"
+      },
+      {
+        "para_index": 3,
+        "text": "<Title of the Project>",
+        "style": "Normal"
+      },
+      {
+        "para_index": 4,
+        "text": "(Times New Roman 18, Bold, Upper Case, Line spacing 1.5)",
+        "style": "Normal"
+      },
+      {
+        "para_index": 6,
+        "text": "",
+        "style": "Body Text"
+      }
+    ],
+    "direct_run_formatting": [
+      {
+        "para_index": 1,
+        "run_text": "B.Tech. ",
+        "style": "Normal"
+      },
+      {
+        "para_index": 1,
+        "run_text": "BCSE497J - Project-I",
+        "style": "Normal"
+      },
+      {
+        "para_index": 3,
+        "run_text": "<",
+        "style": "Normal"
+      },
+      {
+        "para_index": 3,
+        "run_text": "Title",
+        "style": "Normal"
+      },
+      {
+        "para_index": 3,
+        "run_text": " ",
+        "style": "Normal"
+      }
+    ]
+  },
+  "notes": [
+    "Direct formatting is not always wrong, but it often causes inconsistent output when templates change.",
+    "Heading-like paragraphs not using Heading styles can break TOC and accessibility."
+  ]
+}
