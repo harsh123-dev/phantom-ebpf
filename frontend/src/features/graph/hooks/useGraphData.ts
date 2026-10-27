@@ -52,19 +52,21 @@ export const useGraphData = ({ snapshotId }: UseGraphDataOptions = {}) => {
       if (tier > maxTier) maxTier = tier;
     });
 
-    const TIER_HEIGHT = 150;
-    const CANVAS_WIDTH = 1200; // Virtual width for even distribution
+    const START_Y = 60;
+    const TIER_HEIGHT = 100;
+    const CANVAS_WIDTH = 1000;
+    const PADDING_X = 60;
 
     const graphNodes: GraphNode[] = [];
     const nodeMap = new Map<UUID, GraphNode>();
 
     Object.entries(nodesByTier).forEach(([tierStr, tierNodes]) => {
       const tier = parseInt(tierStr, 10);
-      const y = tier * TIER_HEIGHT;
+      const y = START_Y + tier * TIER_HEIGHT;
       const spacing = CANVAS_WIDTH / (tierNodes.length + 1);
 
       tierNodes.forEach((node, idx) => {
-        const x = spacing * (idx + 1);
+        const x = PADDING_X + spacing * (idx + 1);
         const graphNode: GraphNode = { ...node, x, y };
         graphNodes.push(graphNode);
         nodeMap.set(node.node_id, graphNode);

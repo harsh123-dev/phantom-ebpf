@@ -4,7 +4,7 @@ import type { JsonObject } from "../../../types/phantom";
 import { extractCycloneDxComponents, filterComponents, type CycloneDxComponent } from "../sbomUtils";
 
 interface ComponentTableProps {
-  document: JsonObject;
+  document?: JsonObject | null;
   onSelectPurl: (purl: string) => void;
 }
 

@@ -125,6 +125,8 @@ export const GraphCanvas = ({
 
       <svg
         ref={svgRef}
+        viewBox="0 0 1150 650"
+        preserveAspectRatio="xMidYMid meet"
         className="absolute inset-0 w-full h-full"
         onClick={onBackgroundClick}
       >

@@ -22,7 +22,8 @@ const getString = (source: JsonObject, key: string): string => {
   return typeof value === "string" ? value : "";
 };
 
-export const extractCycloneDxComponents = (document: JsonObject): CycloneDxComponent[] => {
+export const extractCycloneDxComponents = (document?: JsonObject | null): CycloneDxComponent[] => {
+  if (!document || typeof document !== "object") return [];
   const rawComponents = document.components;
   if (!Array.isArray(rawComponents)) return [];
   return rawComponents.filter(isObject).map((component) => ({

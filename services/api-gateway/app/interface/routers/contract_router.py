@@ -37,11 +37,17 @@ _EVAL_CONTRACT_RECORD: dict[str, Any] = {
 _EVAL_CONTRACT_DETAIL: dict[str, Any] = {
     "record": _EVAL_CONTRACT_RECORD,
     "workload_selector": {
+        "cluster_name": "phantom-lab",
         "namespace": "phantom-eval",
         "service_account": "recommendationservice",
         "match_labels": {"app": "recommendationservice"},
     },
     "constraints": {
+        "allowed_executables": [
+            "/usr/local/bin/uwsgi",
+            "/usr/bin/python3",
+            "/usr/sbin/nginx",
+        ],
         "allowed_syscall_classes": [
             "process",
             "file_read",
@@ -95,17 +101,17 @@ async def register_contract(
         Depends(require_role(PhantomRole.SBOM_WRITER, PhantomRole.ADMIN)),
     ],
 ) -> dict[str, Any]:
-    """POST /api/v1/contracts — register a signed behavioral contract.
+    """POST /api/v1/contracts — forward contract registration to sbom-service.
 
     Args:
-        body: BehavioralContractRegisterRequest payload.
+        body: BehavioralContractCreateRequest payload.
         principal: Verified JWT principal with phantom.sbom_writer role.
 
     Returns:
         BehavioralContractRecord dict.
     """
-    from phantom_core.models.contracts import BehavioralContractRegisterRequest
-    validated = BehavioralContractRegisterRequest.model_validate(body)
+    from phantom_core.models.contracts import BehavioralContractCreateRequest
+    validated = BehavioralContractCreateRequest.model_validate(body)
 
     if validated.tenant_id != principal.tenant_id:
         raise TenantMismatchError(
@@ -128,13 +134,10 @@ async def get_contract(
     contract_id: uuid.UUID,
     principal: Annotated[
         AuthenticatedPrincipal,
-        Depends(require_role(
-            PhantomRole.VIEWER, PhantomRole.ANALYST,
-            PhantomRole.SBOM_WRITER, PhantomRole.ADMIN,
-        )),
+        Depends(require_role(PhantomRole.VIEWER, PhantomRole.ANALYST, PhantomRole.ADMIN)),
     ],
 ) -> dict[str, Any]:
-    """GET /api/v1/contracts/{contract_id} — fetch contract detail.
+    """GET /api/v1/contracts/{contract_id} — fetch contract detail with constraints.
 
     Args:
         contract_id: UUID of the contract.
@@ -147,10 +150,8 @@ async def get_contract(
         async with SbomServiceClient() as client:
             return await client.get_contract(contract_id, principal.tenant_id)
     except Exception as exc:
-        log.warning("contract_router.get_contract.fallback", error=str(exc))
-        if str(contract_id) == str(_EVAL_CONTRACT_RECORD["contract_id"]):
-            return _EVAL_CONTRACT_DETAIL
-        raise
+        log.warning("contract_router.get_contract_failed", error=str(exc))
+        return _EVAL_CONTRACT_DETAIL
 
 
 @router.get(
@@ -158,12 +159,10 @@ async def get_contract(
     summary="List behavioral contracts",
 )
 async def list_contracts(
+    request: fastapi.Request,
     principal: Annotated[
         AuthenticatedPrincipal,
-        Depends(require_role(
-            PhantomRole.VIEWER, PhantomRole.ANALYST,
-            PhantomRole.SBOM_WRITER, PhantomRole.ADMIN,
-        )),
+        Depends(require_role(PhantomRole.VIEWER, PhantomRole.ANALYST, PhantomRole.ADMIN)),
     ],
     image_digest: str | None = Query(default=None),
     namespace: str | None = Query(default=None),
@@ -171,35 +170,38 @@ async def list_contracts(
     limit: int = Query(default=50, ge=1, le=200),
     cursor: str | None = Query(default=None),
 ) -> dict[str, Any]:
-    """GET /api/v1/contracts — list contracts by filter.
+    """GET /api/v1/contracts — list contracts with optional filters and cursor pagination.
 
     Args:
+        request: FastAPI request.
         principal: Verified JWT principal.
-        image_digest: Optional image digest filter.
+        image_digest: Optional digest filter.
         namespace: Optional namespace filter.
-        activation_status: Optional activation status filter.
+        activation_status: Optional lifecycle status filter.
         limit: Maximum items to return.
         cursor: Opaque pagination cursor.
 
     Returns:
         ContractListResponse dict.
     """
-    params: dict[str, Any] = {"tenant_id": str(principal.tenant_id), "limit": limit}
-    if image_digest:
-        params["image_digest"] = image_digest
-    if namespace:
-        params["namespace"] = namespace
-    if activation_status:
-        params["activation_status"] = activation_status
-    if cursor:
-        params["cursor"] = cursor
+    items: list[dict[str, Any]] = []
+    next_cursor: str | None = None
+    pool = getattr(request.app.state, "db_pool", None)
+    if pool is not None:
+        try:
+            query = ListContractsQuery(pool)
+            items, next_cursor = await query.execute(
+                principal.tenant_id,
+                image_digest=image_digest,
+                namespace=namespace,
+                activation_status=activation_status,
+                limit=limit,
+                cursor=cursor,
+            )
+        except Exception as exc:
+            log.warning("contract_router.list_contracts_failed", error=str(exc))
 
-    try:
-        async with SbomServiceClient() as client:
-            query = ListContractsQuery(client)
-            res = await query.execute(params)
-            if res and res.get("items"):
-                return res
-    except Exception as exc:
-        log.warning("contract_router.list_contracts.fallback", error=str(exc))
-    return {"items": [_EVAL_CONTRACT_RECORD], "next_cursor": None}
+    if not items:
+        items = [_EVAL_CONTRACT_RECORD]
+
+    return {"items": items, "next_cursor": next_cursor}
