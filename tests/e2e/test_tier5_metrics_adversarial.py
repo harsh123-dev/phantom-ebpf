@@ -23,6 +23,7 @@ import csv
 import io
 import json
 import math
+import os
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
@@ -688,7 +689,7 @@ class TestTier5PipelineCLIAdversarial:
             "--out",
             str(out_json),
         ]
-        res = subprocess.run(cmd, cwd=str(Path(__file__).resolve().parents[2]), capture_output=True, text=True)
+        res = subprocess.run(cmd, cwd=str(Path(__file__).resolve().parents[2]), capture_output=True, text=True, env={**os.environ, "OPENBLAS_NUM_THREADS": "1", "OMP_NUM_THREADS": "1"})
         assert res.returncode == 0, f"CLI crashed: {res.stderr}"
         report = json.loads(out_json.read_text(encoding="utf-8"))
         assert report["total_runs_in_index"] == 2
@@ -735,7 +736,7 @@ class TestTier5PipelineCLIAdversarial:
             "--out",
             str(out_json),
         ]
-        res = subprocess.run(cmd, cwd=str(Path(__file__).resolve().parents[2]), capture_output=True, text=True)
+        res = subprocess.run(cmd, cwd=str(Path(__file__).resolve().parents[2]), capture_output=True, text=True, env={**os.environ, "OPENBLAS_NUM_THREADS": "1", "OMP_NUM_THREADS": "1"})
         assert res.returncode == 0
         report = json.loads(out_json.read_text(encoding="utf-8"))
         assert report["data_quality"]["failed_injections"] == 4
@@ -773,7 +774,7 @@ class TestTier5PipelineCLIAdversarial:
             "--out",
             str(out_json),
         ]
-        res = subprocess.run(cmd, cwd=str(Path(__file__).resolve().parents[2]), capture_output=True, text=True)
+        res = subprocess.run(cmd, cwd=str(Path(__file__).resolve().parents[2]), capture_output=True, text=True, env={**os.environ, "OPENBLAS_NUM_THREADS": "1", "OMP_NUM_THREADS": "1"})
         assert res.returncode == 0
         report = json.loads(out_json.read_text(encoding="utf-8"))
         assert report["data_quality"]["collection_dropouts"] == 3

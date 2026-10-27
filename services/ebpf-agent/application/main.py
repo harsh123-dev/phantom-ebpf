@@ -545,6 +545,8 @@ async def async_main() -> None:
     bpf_dir = "/agent/bpf"
     c_callback = RING_BUFFER_SAMPLE_FN(rb_callback)
 
+    rb_manager: RingBufferManager | None = None
+    processor_task: asyncio.Task[None] | None = None
     try:
         with PhantomBpfLoader(bpf_dir) as loader:
             rb_manager = RingBufferManager(c_callback)
@@ -567,6 +569,23 @@ async def async_main() -> None:
         # let the runtime record a non-zero failure and preserve its traceback.
         raise
     finally:
+        # Cancel the processor task and free the ring buffer before closing the
+        # web server so that in-flight events are not silently dropped.
+        if processor_task is not None and not processor_task.done():
+            processor_task.cancel()
+            try:
+                await processor_task
+            except (asyncio.CancelledError, Exception):  # noqa: BLE001
+                pass
+        if rb_manager is not None:
+            try:
+                rb_manager.close()
+            except Exception as cleanup_exc:  # noqa: BLE001
+                log.exception(
+                    "phantom_ebpf_agent.cleanup_failed",
+                    resource="ring_buffer_manager",
+                    error=str(cleanup_exc),
+                )
         for resource_name, cleanup in (
             ("metrics_site", metrics_site.stop),
             ("web_runner", runner.cleanup),

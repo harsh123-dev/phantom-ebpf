@@ -291,6 +291,7 @@ class PhantomBpfLoader:
         handle = BpfObjectHandle(obj_ptr=obj_ptr, bpf_file=str(obj_path))
 
         # Collect ring-buffer map file descriptors.
+        new_ringbuf_fds: list[tuple[str, int]] = []
         map_names = RINGBUF_MAPS_BY_OBJECT.get(obj_path.name, ())
         for map_name in map_names:
             map_ptr = lib.bpf_object__find_map_by_name(obj_ptr, map_name.encode())
@@ -299,10 +300,12 @@ class PhantomBpfLoader:
                 if fd >= 0:
                     handle.map_fds[map_name] = fd
                     object_map_name = f"{obj_path.name}:{map_name}"
-                    self._ringbuf_fds.append((object_map_name, fd))
+                    new_ringbuf_fds.append((object_map_name, fd))
 
-        # Attach all programs.
+        # Attach all programs. Partial attachment must fail fast so the agent
+        # does not falsely report healthy readiness while required probes are missing.
         prog_ptr = lib.bpf_object__next_program(obj_ptr, None)
+        attach_failures: list[tuple[str, int]] = []
         while prog_ptr:
             name_bytes = lib.bpf_program__name(prog_ptr)
             name = name_bytes.decode() if name_bytes else "<unknown>"
@@ -311,12 +314,23 @@ class PhantomBpfLoader:
                 handle.links.append(link_ptr)
                 log.info("ebpf_loader.program_attached", program=name)
             else:
-                log.warning(
+                err = ctypes.get_errno()
+                log.error(
                     "ebpf_loader.program_attach_failed",
                     program=name,
-                    errno=ctypes.get_errno(),
+                    errno=err,
                 )
+                attach_failures.append((name, err))
             prog_ptr = lib.bpf_object__next_program(obj_ptr, prog_ptr)
+
+        if attach_failures:
+            handle.close()
+            failed_str = ", ".join(f"{n} (errno={e})" for n, e in attach_failures)
+            raise RuntimeError(
+                f"Failed to attach {len(attach_failures)} program(s) in {obj_path.name}: {failed_str}"
+            )
+
+        self._ringbuf_fds.extend(new_ringbuf_fds)
 
         log.info(
             "ebpf_loader.bpf_object_loaded",
