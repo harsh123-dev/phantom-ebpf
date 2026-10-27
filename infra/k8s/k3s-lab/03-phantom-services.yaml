@@ -86,7 +86,7 @@ metadata:
   name: phantom-api-gateway
   namespace: phantom
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: phantom-api-gateway
   ports:
@@ -94,6 +94,7 @@ spec:
       port: 8080
       targetPort: http
       protocol: TCP
+      nodePort: 30080
 ---
 apiVersion: apps/v1
 kind: Deployment
