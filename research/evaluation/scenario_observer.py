@@ -72,7 +72,7 @@ def load_observer_private_key(path: str | Path) -> Ed25519PrivateKey:
     key_path = Path(path)
     if key_path.is_symlink() or not key_path.is_file():
         raise ValueError("observer signing key must be a regular non-symlink file")
-    if key_path.stat().st_mode & 0o077:
+    if os.name != "nt" and (key_path.stat().st_mode & 0o077):
         raise PermissionError("observer signing key must not be group/world accessible")
     loaded = serialization.load_pem_private_key(key_path.read_bytes(), password=None)
     if not isinstance(loaded, Ed25519PrivateKey):

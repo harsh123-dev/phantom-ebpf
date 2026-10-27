@@ -12,8 +12,6 @@ Imports from domain/ ports only; no infrastructure or interface imports.
 
 from __future__ import annotations
 
-from app.infrastructure.graph_store import serialize_bdg
-
 import uuid
 from datetime import datetime
 from typing import Any
@@ -152,7 +150,7 @@ class UpdateBdgUseCase:
         if mutation.snapshot_cut:
             # Persist the snapshot that was just cut.
             snapshot = self._bdg.snapshots[-1]
-            graph_data = serialize_bdg(self._bdg)
+            graph_data = self._bdg.to_dict()
             await self._bdg_repo.save_snapshot(snapshot, graph_data)
             log.info(
                 "update_bdg.snapshot_persisted",

@@ -143,7 +143,7 @@ class PostgresBdgRepository(BdgRepository):
                     str(snapshot.event_id_high_watermark)
                     if snapshot.event_id_high_watermark
                     else None,
-                    json.dumps(graph_data),
+                    json.dumps(graph_data, default=str),
                 )
             log.info(
                 "bdg_repo.snapshot_saved",

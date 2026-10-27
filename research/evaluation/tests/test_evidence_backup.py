@@ -42,7 +42,9 @@ def test_online_backup_and_restore_retain_receipts_and_verify_integrity(tmp_path
     assert backed_up["sqlite_integrity"] == "ok"
     assert backed_up["evidence_receipts"] == 1
     assert backed_up["tcp_receipts"] == 1
-    assert backup.stat().st_mode & 0o777 == 0o600
+    import os
+    if os.name != "nt":
+        assert backup.stat().st_mode & 0o777 == 0o600
     assert verify_database(backup)["database_sha256"] == backed_up["database_sha256"]
 
     recovered = restore_database(backup, restore)

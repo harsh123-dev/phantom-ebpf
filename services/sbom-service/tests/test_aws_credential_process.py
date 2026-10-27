@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import shlex
+import subprocess
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -134,10 +135,15 @@ async def test_aiobotocore_uses_configured_credential_process(
         "}))\n"
     )
     config = tmp_path / "config"
+    cmd_proc = (
+        subprocess.list2cmdline([sys.executable, str(helper)])
+        if sys.platform == "win32"
+        else f"{shlex.quote(sys.executable)} {shlex.quote(str(helper))}"
+    )
     config.write_text(
         "[profile phantom-sbom]\n"
         "region = ap-south-1\n"
-        f"credential_process = {shlex.quote(sys.executable)} {shlex.quote(str(helper))}\n"
+        f"credential_process = {cmd_proc}\n"
     )
     credentials_file = tmp_path / "credentials"
     credentials_file.write_text("")
