@@ -748,9 +748,18 @@ class BehavioralDependencyGraph:
         Returns:
             The newly created BDGSnapshot.
         """
+        parsed_tenant_id: uuid.UUID
+        if tenant_id:
+            try:
+                parsed_tenant_id = uuid.UUID(str(tenant_id))
+            except (ValueError, AttributeError):
+                parsed_tenant_id = uuid.uuid5(uuid.NAMESPACE_DNS, str(tenant_id))
+        else:
+            parsed_tenant_id = uuid.uuid4()
+
         snapshot = BDGSnapshot(
             snapshot_id=uuid.uuid4(),
-            tenant_id=uuid.UUID(tenant_id) if tenant_id else uuid.uuid4(),
+            tenant_id=parsed_tenant_id,
             created_at=datetime.now(tz=UTC),
             node_count=self._graph.number_of_nodes(),
             edge_count=self._graph.number_of_edges(),
@@ -916,3 +925,27 @@ class BehavioralDependencyGraph:
             A deep copy of the NetworkX MultiDiGraph.
         """
         return copy.deepcopy(self._graph)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize the BDG to a JSON-serializable dictionary.
+
+        Returns:
+            JSON-serializable dict matching the snapshot schema.
+        """
+        from app.domain.serialization import serialize_bdg
+
+        return serialize_bdg(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> BehavioralDependencyGraph:
+        """Construct a BehavioralDependencyGraph from a serialized snapshot dict.
+
+        Args:
+            data: Snapshot dictionary (version 1 or legacy).
+
+        Returns:
+            Restored BehavioralDependencyGraph instance.
+        """
+        from app.domain.serialization import deserialize_bdg
+
+        return deserialize_bdg(data)

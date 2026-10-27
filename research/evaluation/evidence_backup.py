@@ -29,44 +29,48 @@ def _readonly_connection(path: Path) -> sqlite3.Connection:
 def verify_database(path: str | Path) -> dict[str, Any]:
     """Verify SQLite integrity and canonical hashes for every stored receipt."""
     source = Path(path)
-    with _readonly_connection(source) as conn:
-        integrity = conn.execute("PRAGMA integrity_check").fetchone()[0]
-        if integrity != "ok":
-            raise ReceiptIntegrityError(f"SQLite integrity_check failed: {integrity}")
-        tables = {row[0] for row in conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table'"
-        )}
-        if "evidence_receipts" not in tables:
-            raise ReceiptIntegrityError("database has no evidence receipt table")
-        receipt_count = 0
-        for receipt_id, payload_json, expected_hash in conn.execute(
-            "SELECT receipt_id,payload_json,payload_sha256 FROM evidence_receipts"
-        ):
-            try:
-                payload = json.loads(payload_json)
-                validate_receipt(payload)
-            except (TypeError, ValueError, json.JSONDecodeError) as exc:
-                raise ReceiptIntegrityError(f"receipt {receipt_id} is malformed") from exc
-            if payload.get("receipt_id") != receipt_id or canonical_sha256(payload) != expected_hash:
-                raise ReceiptIntegrityError(f"receipt {receipt_id} hash/identity mismatch")
-            receipt_count += 1
-
-        tcp_count = 0
-        if "tcp_receipts" in tables:
-            for row in conn.execute(
-                "SELECT receipt_id,created_at,local_port,peer_address,peer_port,"
-                "bytes_received,content_sha256,receipt_sha256 FROM tcp_receipts"
+    conn = _readonly_connection(source)
+    try:
+        with conn:
+            integrity = conn.execute("PRAGMA integrity_check").fetchone()[0]
+            if integrity != "ok":
+                raise ReceiptIntegrityError(f"SQLite integrity_check failed: {integrity}")
+            tables = {row[0] for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            )}
+            if "evidence_receipts" not in tables:
+                raise ReceiptIntegrityError("database has no evidence receipt table")
+            receipt_count = 0
+            for receipt_id, payload_json, expected_hash in conn.execute(
+                "SELECT receipt_id,payload_json,payload_sha256 FROM evidence_receipts"
             ):
-                receipt_id, created, local_port, address, peer_port, size, content_hash, stored_hash = row
-                body = {
-                    "receipt_id": receipt_id, "created_at": created,
-                    "local_port": local_port, "peer_address": address,
-                    "peer_port": peer_port, "bytes_received": size,
-                    "content_sha256": content_hash,
-                }
-                if canonical_sha256(body) != stored_hash:
-                    raise ReceiptIntegrityError(f"TCP receipt {receipt_id} hash mismatch")
-                tcp_count += 1
+                try:
+                    payload = json.loads(payload_json)
+                    validate_receipt(payload)
+                except (TypeError, ValueError, json.JSONDecodeError) as exc:
+                    raise ReceiptIntegrityError(f"receipt {receipt_id} is malformed") from exc
+                if payload.get("receipt_id") != receipt_id or canonical_sha256(payload) != expected_hash:
+                    raise ReceiptIntegrityError(f"receipt {receipt_id} hash/identity mismatch")
+                receipt_count += 1
+
+            tcp_count = 0
+            if "tcp_receipts" in tables:
+                for row in conn.execute(
+                    "SELECT receipt_id,created_at,local_port,peer_address,peer_port,"
+                    "bytes_received,content_sha256,receipt_sha256 FROM tcp_receipts"
+                ):
+                    receipt_id, created, local_port, address, peer_port, size, content_hash, stored_hash = row
+                    body = {
+                        "receipt_id": receipt_id, "created_at": created,
+                        "local_port": local_port, "peer_address": address,
+                        "peer_port": peer_port, "bytes_received": size,
+                        "content_sha256": content_hash,
+                    }
+                    if canonical_sha256(body) != stored_hash:
+                        raise ReceiptIntegrityError(f"TCP receipt {receipt_id} hash mismatch")
+                    tcp_count += 1
+    finally:
+        conn.close()
     file_hash = hashlib.sha256()
     with source.open("rb") as handle:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
@@ -95,23 +99,31 @@ def backup_database(source: str | Path, destination: str | Path) -> dict[str, An
     fd = os.open(temporary, os.O_CREAT | os.O_EXCL | os.O_RDWR, 0o600)
     os.close(fd)
     try:
-        with _readonly_connection(source_path) as src, sqlite3.connect(temporary) as dst:
-            dst.execute("PRAGMA journal_mode=DELETE")
-            dst.execute("PRAGMA synchronous=FULL")
-            src.backup(dst)
-            dst.commit()
+        src = _readonly_connection(source_path)
+        try:
+            dst = sqlite3.connect(temporary)
+            try:
+                dst.execute("PRAGMA journal_mode=DELETE")
+                dst.execute("PRAGMA synchronous=FULL")
+                src.backup(dst)
+                dst.commit()
+            finally:
+                dst.close()
+        finally:
+            src.close()
         os.chmod(temporary, 0o600)
         result = verify_database(temporary)
-        with temporary.open("rb") as handle:
+        with temporary.open("r+b") as handle:
             os.fsync(handle.fileno())
         # Hard-link publishes atomically and fails if a competing file appeared.
         os.link(temporary, destination_path)
         temporary.unlink()
-        directory_fd = os.open(destination_path.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
-        try:
-            os.fsync(directory_fd)
-        finally:
-            os.close(directory_fd)
+        if os.name != "nt" and hasattr(os, "O_DIRECTORY"):
+            directory_fd = os.open(destination_path.parent, os.O_RDONLY | os.O_DIRECTORY)
+            try:
+                os.fsync(directory_fd)
+            finally:
+                os.close(directory_fd)
         result["path"] = str(destination_path)
         return result
     except Exception:

@@ -4,6 +4,8 @@ from __future__ import annotations
 import base64
 import uuid
 from datetime import UTC, datetime, timedelta
+import sys
+import pytest
 from pathlib import Path
 
 from cryptography.hazmat.primitives import serialization
@@ -149,6 +151,7 @@ def test_observer_rejects_tampered_contract_snapshot_signature():
     assert decision.signed_observation is None
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX file permission bits not supported on Windows NTFS")
 def test_observer_signing_key_file_permissions_fail_closed(tmp_path):
     key = Ed25519PrivateKey.generate()
     path = Path(tmp_path) / "observer-key.pem"

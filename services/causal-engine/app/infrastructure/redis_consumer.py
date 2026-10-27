@@ -305,7 +305,7 @@ class DriftEventRedisConsumer:
                 self._pending_acks.clear()
             log.debug(
                 "redis_consumer.acked",
-                count=len(self._pending_acks),
+                count=acknowledged,
             )
         except Exception as exc:  # noqa: BLE001
             log.warning("redis_consumer.ack_error", error=str(exc))
@@ -369,6 +369,8 @@ class DriftEventRedisConsumer:
                     # No new messages; timeout is normal.
                     await self._flush_acks()
                     lag_tick += 1
+                    if lag_tick % 6 == 0:  # every ~30 s, reclaim any PEL messages
+                        await self._reclaim_pending()
                     if lag_tick % 12 == 0:  # every ~60 s
                         await self._update_lag_metric()
                     continue
@@ -406,6 +408,9 @@ class DriftEventRedisConsumer:
                             await self._flush_acks()
 
                 await self._flush_acks()
+                lag_tick += 1
+                if lag_tick % 6 == 0:
+                    await self._reclaim_pending()
                 await self._update_lag_metric()
 
             except asyncio.CancelledError:

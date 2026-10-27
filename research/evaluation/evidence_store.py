@@ -6,6 +6,8 @@ prove that the submitted oracle evidence was independent.
 """
 from __future__ import annotations
 
+import contextlib
+
 import json
 import hashlib
 import os
@@ -195,10 +197,11 @@ class DurableEvidenceSink:
             """)
         for suffix in ("", "-wal", "-shm"):
             candidate = Path(str(self.path) + suffix)
-            if candidate.exists():
+            if candidate.exists() and os.name != "nt":
                 os.chmod(candidate, 0o600)
 
-    def _connect(self) -> sqlite3.Connection:
+    @contextlib.contextmanager
+    def _connect(self):
         previous_umask = os.umask(0o077)
         try:
             conn = sqlite3.connect(self.path, timeout=10, isolation_level=None)
@@ -208,9 +211,12 @@ class DurableEvidenceSink:
             conn.execute("PRAGMA busy_timeout=10000")
             for suffix in ("", "-wal", "-shm"):
                 candidate = Path(str(self.path) + suffix)
-                if candidate.exists():
+                if candidate.exists() and os.name != "nt":
                     os.chmod(candidate, 0o600)
-            return conn
+            try:
+                yield conn
+            finally:
+                conn.close()
         finally:
             os.umask(previous_umask)
 
