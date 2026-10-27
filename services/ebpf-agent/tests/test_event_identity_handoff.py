@@ -141,3 +141,97 @@ def test_callback_to_processor_handoff_is_event_scoped(monkeypatch):
     assert dispatcher.payloads[0]["workload"]["container_id"] == "containerd://" + cid
     assert dispatcher.payloads[0]["workload"]["cgroup_id"] == 2002
     assert main._CONTAINER_ID_CACHE == {}
+
+
+def test_short_lived_process_identity_capture_drops_gracefully(monkeypatch):
+    """A short-lived process (e.g. /bin/true) whose /proc entry disappears before
+    _read_container_id_sync runs must be counted with the correct per-reason label
+    and must not raise an exception or leave stale entries in _CONTAINER_ID_CACHE.
+
+    Regression test for the proc-race / identity-missing counter introduced
+    alongside AGENT_IDENTITY_DROP_TOTAL.
+    """
+    import importlib
+    import asyncio
+    from types import SimpleNamespace
+    from unittest.mock import patch
+    from prometheus_client import REGISTRY
+
+    main = importlib.import_module("application.main")
+
+    queue: asyncio.Queue = asyncio.Queue(maxsize=10)
+    monkeypatch.setattr(main, "event_queue", queue)
+    monkeypatch.setattr(main, "_CONTAINER_ID_CACHE", {})
+    monkeypatch.setattr(main.ctypes, "string_at", lambda _data, _size: b"fixture")
+
+    # Simulate an EXEC event for a short-lived process.
+    short_lived_event = _event(42, 9001)
+    monkeypatch.setattr(main, "parse_event", lambda _raw: short_lived_event)
+
+    # Simulate /proc being gone by the time the callback reads it.
+    proc_race_capture = main.ProcessIdentityCapture(
+        None, None, False, None,
+        "proc_or_cgroup_unavailable:FileNotFoundError",
+    )
+    monkeypatch.setattr(main, "_read_container_id_sync", lambda *_a: proc_race_capture)
+
+    # Fire the ring-buffer callback.
+    assert main.rb_callback(None, 1, 7) == 0
+    assert len(main._CONTAINER_ID_CACHE) == 1  # stashed by callback
+
+    # Attributor returns MISSING (the strict path for unvalidated cgroup).
+    missing_identity = SimpleNamespace(
+        status=SimpleNamespace(value="missing"),
+        pod_uid=None, namespace=None, container_name=None,
+        image_digest=None, container_id=None,
+    )
+
+    class _Attributor:
+        _node_name = "node-x"
+        async def attribute(self, cgroup_id, container_id, *, event_cgroup_validated):
+            return missing_identity
+
+    class _Dispatcher:
+        async def dispatch_event(self, payload):
+            pass  # should not be called
+
+    # Snapshot the drop counter before processing.
+    def _counter_value(metric_name, **labels):
+        for metric in REGISTRY.collect():
+            if metric.name == metric_name:
+                for sample in metric.samples:
+                    if all(sample.labels.get(k) == v for k, v in labels.items()):
+                        return sample.value
+        return 0.0
+
+    before = _counter_value(
+        "phantom_agent_identity_drop",
+        event_type="exec",
+        capture_reason="proc_exited_before_read",
+        attribution_status="missing",
+    )
+
+    async def _run():
+        task = asyncio.create_task(
+            main.event_processor(_Attributor(), _Dispatcher(), "tenant")
+        )
+        await queue.join()
+        task.cancel()
+        await task
+
+    asyncio.run(_run())
+
+    after = _counter_value(
+        "phantom_agent_identity_drop",
+        event_type="exec",
+        capture_reason="proc_exited_before_read",
+        attribution_status="missing",
+    )
+
+    # The counter must have incremented by exactly 1.
+    assert after - before == 1.0, (
+        f"Expected identity drop counter to increment by 1; was {before} -> {after}"
+    )
+
+    # The cache entry must have been consumed by the processor.
+    assert main._CONTAINER_ID_CACHE == {}
