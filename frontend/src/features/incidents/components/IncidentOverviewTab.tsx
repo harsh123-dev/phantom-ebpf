@@ -150,8 +150,10 @@ export const IncidentOverviewTab = ({ incident, onUpdate }: IncidentOverviewTabP
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+        <label htmlFor="incident-title-input" className="block text-sm font-medium text-gray-700 mb-1">Title</label>
         <input
+          id="incident-title-input"
+          aria-label="Title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}

@@ -77,6 +77,71 @@ async def ingest_sbom(
 
 
 @router.get(
+    "/sboms",
+    summary="List SBOMs",
+)
+async def list_sboms(
+    request: fastapi.Request,
+    principal: Annotated[
+        AuthenticatedPrincipal,
+        Depends(require_role(
+            PhantomRole.VIEWER, PhantomRole.ANALYST,
+            PhantomRole.SBOM_WRITER, PhantomRole.ADMIN,
+        )),
+    ],
+    image_digest: str | None = fastapi.Query(default=None),
+    limit: int = fastapi.Query(default=25, ge=1, le=100),
+    cursor: str | None = fastapi.Query(default=None),
+) -> dict[str, Any]:
+    """GET /api/v1/sboms — list SBOM records."""
+    import asyncpg
+    pool = getattr(request.app.state, "db_pool", None)
+    items: list[dict[str, Any]] = []
+    if pool is not None:
+        try:
+            async with pool.acquire() as conn:
+                for table_name in ("phantom_sbom.sboms", "sboms"):
+                    try:
+                        query = f"""
+                            SELECT sbom_id, image_digest, sbom_digest, spec_version,
+                                   verification_status, purl_count, created_at
+                            FROM {table_name}
+                            WHERE ($1::uuid IS NULL OR tenant_id = $1)
+                        """
+                        params: list[Any] = [principal.tenant_id]
+                        if image_digest:
+                            query += f" AND image_digest ILIKE ${len(params) + 1}"
+                            params.append(f"%{image_digest}%")
+                        query += f" ORDER BY created_at DESC LIMIT ${len(params) + 1}"
+                        params.append(limit)
+
+                        rows = await conn.fetch(query, *params)
+                        for row in rows:
+                            items.append({
+                                "sbom_id": str(row["sbom_id"]),
+                                "image_digest": row["image_digest"],
+                                "sbom_digest": row["sbom_digest"],
+                                "format": "CycloneDX",
+                                "spec_version": row["spec_version"] or "1.4",
+                                "component_count": row["purl_count"] or 0,
+                                "verification_status": row["verification_status"] or "pending",
+                                "created_at": (
+                                    row["created_at"].isoformat()
+                                    if hasattr(row["created_at"], "isoformat")
+                                    else str(row["created_at"])
+                                ),
+                            })
+                        if items:
+                            break
+                    except (asyncpg.UndefinedTableError, Exception):
+                        continue
+        except Exception as exc:
+            log.warning("sbom_router.list_sboms.failed", error=str(exc))
+
+    return {"items": items, "next_cursor": None}
+
+
+@router.get(
     "/sboms/{sbom_id}",
     summary="Get SBOM detail",
 )

@@ -2,10 +2,10 @@
  * @vitest-environment happy-dom
  */
 import React from 'react';
-import { describe, it, expect as vitestExpect, vi, beforeEach } from 'vitest';
+import { describe, it, expect as vitestExpect, vi, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import * as matchers from '@testing-library/jest-dom/matchers';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 
 vitestExpect.extend(matchers);
 const expect = vitestExpect;
@@ -17,6 +17,10 @@ import { usePhantomClient } from '../src/hooks/usePhantomClient';
 import { useAttributionPoller } from '../src/hooks/useAttributionPoller';
 
 // Mock the hooks
+afterEach(() => {
+  cleanup();
+});
+
 vi.mock('../src/hooks/usePhantomClient');
 vi.mock('../src/hooks/useAttributionPoller');
 
