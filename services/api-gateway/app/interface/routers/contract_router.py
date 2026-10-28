@@ -120,10 +120,7 @@ async def register_contract(
         )
 
     async with SbomServiceClient() as client:
-        return await client.register_contract(
-            {k: str(v) if isinstance(v, uuid.UUID) else v
-             for k, v in validated.model_dump().items()}
-        )
+        return await client.register_contract(validated.model_dump(mode='json'))
 
 
 @router.get(

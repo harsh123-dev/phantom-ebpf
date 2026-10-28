@@ -81,10 +81,7 @@ async def ingest_sbom(
         )
 
     async with SbomServiceClient() as client:
-        result = await client.ingest_sbom(
-            {k: str(v) if isinstance(v, uuid.UUID) else v
-             for k, v in validated.model_dump().items()}
-        )
+        result = await client.ingest_sbom(validated.model_dump(mode='json'))
     return result
 
 
@@ -272,7 +269,7 @@ async def trigger_verification(
     from phantom_core.models.sbom import SbomVerificationRequest
     validated = SbomVerificationRequest.model_validate(body)
     async with SbomServiceClient() as client:
-        return await client.trigger_verification(sbom_id, validated.model_dump())
+        return await client.trigger_verification(sbom_id, validated.model_dump(mode='json'))
 
 
 @router.get(
